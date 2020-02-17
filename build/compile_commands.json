@@ -1,0 +1,52 @@
+[
+{
+  "directory": "/home/anarion/Documents/CppProjects/MyCppBase/build/src",
+  "command": "/usr/bin/g++-7   -I/home/anarion/Documents/CppProjects/MyCppBase/src/../include  -g   -o CMakeFiles/SRC.dir/main.cpp.o -c /home/anarion/Documents/CppProjects/MyCppBase/src/main.cpp",
+  "file": "/home/anarion/Documents/CppProjects/MyCppBase/src/main.cpp"
+},
+{
+  "directory": "/home/anarion/Documents/CppProjects/MyCppBase/build/src/allocator",
+  "command": "/usr/bin/g++-7   -I/home/anarion/Documents/CppProjects/MyCppBase/src/allocator/../../include -I/home/anarion/Documents/CppProjects/MyCppBase/src/allocator/../../include/allocator  -g   -o CMakeFiles/ALLOCATOR.dir/Allocator.cpp.o -c /home/anarion/Documents/CppProjects/MyCppBase/src/allocator/Allocator.cpp",
+  "file": "/home/anarion/Documents/CppProjects/MyCppBase/src/allocator/Allocator.cpp"
+},
+{
+  "directory": "/home/anarion/Documents/CppProjects/MyCppBase/build/src/allocator",
+  "command": "/usr/bin/g++-7   -I/home/anarion/Documents/CppProjects/MyCppBase/src/allocator/../../include -I/home/anarion/Documents/CppProjects/MyCppBase/src/allocator/../../include/allocator  -g   -o CMakeFiles/ALLOCATOR.dir/DynamicListAllocator.cpp.o -c /home/anarion/Documents/CppProjects/MyCppBase/src/allocator/DynamicListAllocator.cpp",
+  "file": "/home/anarion/Documents/CppProjects/MyCppBase/src/allocator/DynamicListAllocator.cpp"
+},
+{
+  "directory": "/home/anarion/Documents/CppProjects/MyCppBase/build/src/allocator",
+  "command": "/usr/bin/g++-7   -I/home/anarion/Documents/CppProjects/MyCppBase/src/allocator/../../include -I/home/anarion/Documents/CppProjects/MyCppBase/src/allocator/../../include/allocator  -g   -o CMakeFiles/ALLOCATOR.dir/ListAllocator.cpp.o -c /home/anarion/Documents/CppProjects/MyCppBase/src/allocator/ListAllocator.cpp",
+  "file": "/home/anarion/Documents/CppProjects/MyCppBase/src/allocator/ListAllocator.cpp"
+},
+{
+  "directory": "/home/anarion/Documents/CppProjects/MyCppBase/build/src/allocator",
+  "command": "/usr/bin/g++-7   -I/home/anarion/Documents/CppProjects/MyCppBase/src/allocator/../../include -I/home/anarion/Documents/CppProjects/MyCppBase/src/allocator/../../include/allocator  -g   -o CMakeFiles/ALLOCATOR.dir/PoolAllocator.cpp.o -c /home/anarion/Documents/CppProjects/MyCppBase/src/allocator/PoolAllocator.cpp",
+  "file": "/home/anarion/Documents/CppProjects/MyCppBase/src/allocator/PoolAllocator.cpp"
+},
+{
+  "directory": "/home/anarion/Documents/CppProjects/MyCppBase/build/src/concurrent/base",
+  "command": "/usr/bin/g++-7   -I/home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/base/../../../include -I/home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/base/../../../include/concurrent/base  -g   -o CMakeFiles/CONCURRENT_BASE.dir/Mutex.cpp.o -c /home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/base/Mutex.cpp",
+  "file": "/home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/base/Mutex.cpp"
+},
+{
+  "directory": "/home/anarion/Documents/CppProjects/MyCppBase/build/src/concurrent/base",
+  "command": "/usr/bin/g++-7   -I/home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/base/../../../include -I/home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/base/../../../include/concurrent/base  -g   -o CMakeFiles/CONCURRENT_BASE.dir/RwMutex.cpp.o -c /home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/base/RwMutex.cpp",
+  "file": "/home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/base/RwMutex.cpp"
+},
+{
+  "directory": "/home/anarion/Documents/CppProjects/MyCppBase/build/src/concurrent/base",
+  "command": "/usr/bin/g++-7   -I/home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/base/../../../include -I/home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/base/../../../include/concurrent/base  -g   -o CMakeFiles/CONCURRENT_BASE.dir/Thread.cpp.o -c /home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/base/Thread.cpp",
+  "file": "/home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/base/Thread.cpp"
+},
+{
+  "directory": "/home/anarion/Documents/CppProjects/MyCppBase/build/src/concurrent/pool",
+  "command": "/usr/bin/g++-7   -I/home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/pool/../../../include -I/home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/pool/../../../include/concurrent/pool  -g   -o CMakeFiles/CONCURRENT_POOL.dir/ThreadPool.cpp.o -c /home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/pool/ThreadPool.cpp",
+  "file": "/home/anarion/Documents/CppProjects/MyCppBase/src/concurrent/pool/ThreadPool.cpp"
+},
+{
+  "directory": "/home/anarion/Documents/CppProjects/MyCppBase/build/src/container",
+  "command": "/usr/bin/g++-7   -I/home/anarion/Documents/CppProjects/MyCppBase/src/container/../../include -I/home/anarion/Documents/CppProjects/MyCppBase/src/container/../../include/container  -g   -o CMakeFiles/CONTAINER.dir/String.cpp.o -c /home/anarion/Documents/CppProjects/MyCppBase/src/container/String.cpp",
+  "file": "/home/anarion/Documents/CppProjects/MyCppBase/src/container/String.cpp"
+}
+]

@@ -1,0 +1,3 @@
+file(REMOVE_RECURSE
+  "libALLOCATOR.a"
+)

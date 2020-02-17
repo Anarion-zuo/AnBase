@@ -1,0 +1,1 @@
+/usr/bin/g++-7  -g     -o MyCppBase src/libSRC.a src/allocator/libALLOCATOR.a src/concurrent/libCONCURRENT.a src/concurrent/base/libCONCURRENT_BASE.a src/concurrent/pool/libCONCURRENT_POOL.a src/container/libCONTAINER.a 

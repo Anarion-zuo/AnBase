@@ -1,0 +1,2 @@
+/usr/bin/ar qc libCONCURRENT.a  
+/usr/bin/ranlib libCONCURRENT.a

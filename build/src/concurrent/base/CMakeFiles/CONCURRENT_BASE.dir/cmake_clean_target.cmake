@@ -1,0 +1,3 @@
+file(REMOVE_RECURSE
+  "libCONCURRENT_BASE.a"
+)
