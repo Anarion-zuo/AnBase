@@ -97,6 +97,129 @@ namespace anarion {
             return (T*)operator new(num * sizeof(T));
         }
 
+        // optimized copy
+
+        /*
+            The reverse functions follow the convention of [) regardless of its copying order
+            The input dst and src would not be copied
+        */
+        void reverse_copy(T *dst, T *src, size_type num) {
+            reverse_copy_impl(dst, src, type_trait<T>::is_pod());
+        }
+
+        void reverse_copy_impl(T *dst, T *src, size_type num, true_type) {
+            dst -= num;
+            src -= num;
+            memcpy(dst, src, num * sizeof(T));
+        }
+
+        void reverse_copy_impl(T *dst, T *src, size_type num, false_type) {
+            for (size_type i = 0; i < num; ++i) {
+                --dst;
+                --src;
+                new(dst) T(*src);
+            }
+        }
+
+        void reverse_move(T *dst, T *src, size_type num) {
+            reverse_move_impl(dst, src, type_trait<T>::has_move_ctor());
+        }
+
+        void reverse_move_impl(T *dst, T *src, size_type num, true_type) {
+            for (size_type i = 0; i < num; ++i) {
+                --dst;
+                --src;
+                new(dst) T(move(*src));
+            }
+        }
+
+        void reverse_move_impl(T *dst, T *src, size_type num, false_type) {
+            reverse_copy(dst, src, num);
+        }
+
+        void copy_back_expand(size_type index, size_type steps) {
+            size_type oldsize = size(), oldcap = capacity(), newcap;
+            if (index > oldsize) { throw IndexOutOfRange(); }
+            T *new_cur = cur + steps;
+            if (new_cur > end) {   // require expand
+                newcap = (steps + oldsize) << 1u;
+                T *n_space = new_space(newcap);
+                // copy head
+                moveCtorObjects(n_space, begin, index);
+                // copy tail
+                moveCtorObjects(n_space + index + steps, begin + index, oldsize - index);
+                // clean up
+                clear_space(begin, oldsize);
+                operator delete(begin, sizeof(T) * oldcap);
+                // reset
+                begin = n_space;
+                cur = begin + steps + oldsize;
+                end = begin + newcap;
+            } else {   // no expand
+                reverse_copy(new_cur, begin + index + steps, steps);
+                cur = new_cur;
+            }
+        }
+
+        void seq_move(T *dst, T *src, size_type num) {
+            seq_move_impl(dst, src, num, type_trait<T>::has_move_ctor());
+        }
+
+        void seq_move_impl(T *dst, T *src, size_type num, true_type) {
+            for (size_type i = 0; i < num; ++i) {
+                new (dst) T(move(*src));
+                ++dst;
+                ++src;
+            }
+        }
+
+        void seq_move_impl(T *dst, T *src, size_type num, false_type) {
+            seq_copy(dst, src, num);
+        }
+
+        void seq_copy(T *dst, T *src, size_type num) {
+            seq_copy_impl(dst, src, num, type_trait<T>::is_pod());
+        }
+
+        void seq_copy_impl(T *dst, T *src, size_type num, true_type) {
+            memcpy(dst, src, sizeof(T) * num);
+        }
+
+        void seq_copy_impl(T *dst, T *src, size_type num, false) {
+            for (size_type i = 0; i < num; ++i) {
+                new (dst) T(*src);
+                ++dst;
+                ++src;
+            }
+        }
+
+        void copy_forward_expand(size_type index, size_type steps) {
+            size_type oldsize = size();
+            T *new_cur = cur - steps;
+            if (new_cur < begin || index > oldsize) { throw IndexOutOfRange(); }
+            size_type oldcap = capacity(),  newsize = oldsize - steps;
+            if (newsize * 3 <= oldcap) {
+                size_type newcap = newsize << 1;
+                T *n_space = new_space(newcap);
+                // copy head
+                seq_move(n_space, begin, index);
+                // copy tail
+                seq_move(n_space, begin + index + steps, oldsize - index);
+                // clean up
+                clear_space(begin, oldsize);
+                operator delete (begin, oldcap * sizeof(T));
+                // reset
+                begin = n_space;
+                cur = n_space + newsize;
+                end = n_space + newcap;
+                return;
+            }
+            size_type new_index = index - steps;
+            clear_space(begin + new_index, steps);
+            seq_move(begin + new_index, begin + index, steps);
+            cur -= steps;
+        }
+
     public:
 
         typedef T *iterator;
@@ -255,6 +378,11 @@ namespace anarion {
             return get(index);
         }
 
+        iterator insert(size_type index, const T &o) {
+            if (index > size()) { throw IndexOutOfRange(); }
+
+        }
+
         iterator insert(iterator it, const T &o) {
             if (it > cur) { throw IndexOutOfRange(); }
             size_type index = it - begin;
@@ -267,7 +395,7 @@ namespace anarion {
             if (it > cur) { throw IndexOutOfRange(); }
             size_type index = it - begin;
             copy_back_n(it, 1);
-            new(begin + index) T(forward(o));
+            new(begin + index) T(forward<T>(o));
             return begin + index;
         }
 
