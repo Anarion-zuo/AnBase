@@ -18,10 +18,10 @@ namespace anarion {
 
         T *begin = nullptr, *cur = nullptr, *end = nullptr;
 
-        void expand_push() {
-            resize(size() << 1u);
-        }
 
+        void expand_push() { resize(size() << 1u); }
+
+        #pragma region memory
         void clear_space_impl(T *first, size_type num, true_type) {
             // nothing here
         }
@@ -41,9 +41,10 @@ namespace anarion {
             if (num == 0) { return nullptr; }
             return (T*)operator new(num * sizeof(T));
         }
+        #pragma endregion
 
         // optimized copy
-
+        #pragma region optimized_copy
         /*
             The reverse functions follow the convention of [) regardless of its copying order
             The input dst and src would not be copied
@@ -168,6 +169,7 @@ namespace anarion {
             seq_move(begin + new_index, begin + index, oldsize - index);
             cur -= steps;
         }
+        #pragma endregion
 
     public:
 
@@ -177,6 +179,7 @@ namespace anarion {
         iterator end_iterator() const { return cur; }
         bool has_iterator(iterator it) const { return it < cur && it >= begin; }
 
+        #pragma region ctors_assigns_dtor
         Vector() = default;
 
         explicit Vector(size_type initialSize) {
@@ -254,7 +257,9 @@ namespace anarion {
             end = nullptr;
             cur = nullptr;
         }
+        #pragma endregion
 
+        #pragma region sizes
         bool empty() const {
             return !size();
         }
@@ -266,7 +271,7 @@ namespace anarion {
         size_type capacity() const {
             return end - begin;
         }
-
+        
         void resize(size_type new_size) {
             if (new_size == 0) { return; }
             size_type oldsize = size(), oldcap = capacity(), newcap;
@@ -294,7 +299,9 @@ namespace anarion {
             cur = newp + newcap;
             end = newp + new_size;
         }
+        #pragma endregion
 
+        #pragma region back_front
         void push_back(const T &o) {
             if (begin == nullptr) {
                 resize(1);
@@ -321,6 +328,7 @@ namespace anarion {
             T &last = *cur;
             return move(last);
         }
+        #pragma endregion
 
         T &get(size_type index) {
             if (index > size()) { throw IndexOutOfRange(); }
@@ -331,6 +339,7 @@ namespace anarion {
             return get(index);
         }
 
+        #pragma region insert
         iterator insert(iterator it, const T &o) {
             if (it > cur) { throw IndexOutOfRange(); }
             size_type index = it - begin;
@@ -392,7 +401,9 @@ namespace anarion {
             seq_copy(begin + index, p, num);
             return begin + old_index;
         }
+        #pragma endregion
 
+        #pragma region assign_remove
         void assign(const T &o, size_type num) {
             clear();
             resize(num);
@@ -428,6 +439,7 @@ namespace anarion {
             }
             copy_forward_expand(b - begin + num, num);
         }
+        #pragma endregion
 
         T *getArr() const {
             return begin;
