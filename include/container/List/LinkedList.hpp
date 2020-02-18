@@ -18,14 +18,9 @@ namespace anarion {
 
             list_node() : next(nullptr), prev(nullptr) {}
 
-            explicit list_node(const T &o, list_node *next = nullptr, list_node *prev = nullptr) : obj(o), next(next),
-                                                                                                   prev(prev) {}
-
-            explicit list_node(T &&o, list_node *next = nullptr, list_node *prev = nullptr) : obj(forward<T>(o)),
-                                                                                              next(next), prev(prev) {}
-
+            explicit list_node(const T &o, list_node *next = nullptr, list_node *prev = nullptr) : obj(o), next(next), prev(prev) {}
+            explicit list_node(T &&o, list_node *next = nullptr, list_node *prev = nullptr) : obj(forward<T>(o)), next(next), prev(prev) {}
             list_node(const list_node &rhs) : obj(rhs.obj), next(nullptr), prev(nullptr) {}
-
             list_node(list_node &&rhs) noexcept : obj(move(rhs.obj)), next(nullptr), prev(nullptr) {}
         };
 

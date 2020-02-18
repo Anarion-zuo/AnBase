@@ -23,6 +23,8 @@ ListAllocator.h
 ../src/container/../../include/container/base/container_utility.hpp
 ../../exceptions/container/EmptyContainer.h
 ../src/container/../../include/exceptions/container/EmptyContainer.h
+iostream
+-
 
 ../src/container/../../include/container/SString.h
 List/Vector.hpp

@@ -9,6 +9,7 @@
 #include "../base/type_trait.hpp"
 #include "../base/container_utility.hpp"
 #include "../../exceptions/container/EmptyContainer.h"
+#include <iostream>
 
 namespace anarion {
     template<typename T>
@@ -17,65 +18,8 @@ namespace anarion {
 
         T *begin = nullptr, *cur = nullptr, *end = nullptr;
 
-        void expandWhenAdd() {
+        void expand_push() {
             resize(size() << 1u);
-        }
-
-        void copy_reverse_pod_impl(T *it, size_type num, true_type) {
-            if (cur == it) { return; }
-            memcpy(it + num, it, (cur - it) * sizeof(T));
-        }
-
-        void copy_reverse_pod_impl(T *it, size_type num, false_type) {
-            if (cur == it) { return; }
-            // copy from end to begin
-            T *p = cur;
-            --p;
-            // made sure the destination is released
-            for (; p >= it; --p) {
-                T *np = p + num;
-                new(np) T(move(*p));
-                p->~T();   // release old space
-            }
-        }
-
-        void copy_back_n(T *it, size_type num) {
-            size_type oldsize = size(), newsize = oldsize + num, index = it - begin;
-            // make for more space
-            if (newsize >= capacity()) {
-                newsize += newsize >> 1u;
-                resize(newsize);
-            }
-            // old pointer may not be valid
-            copy_reverse_pod_impl(begin + index, num, typename type_trait<T>::is_pod());
-            // destruct remaining objects
-            // unnecessary
-            // update members
-            cur += num;
-        }
-
-        void copy_forward_pod_impl(T *it, size_type num, true_type) {
-            memcpy(it - num, it, (it - begin) * sizeof(T));
-        }
-
-        void copy_forward_pod_impl(T *it, size_type num, false_type) {
-            // copy from begin to end
-            T *p = it;
-            for (; p < cur; ++p) {
-                T *np = p - num;
-                np->~T();   // release in advance
-                new(np) T(std::move(*p));
-            }
-        }
-
-        void copy_forward_n(T *it, size_type num) {
-            copy_forward_pod_impl(it, num, type_trait<T>::is_pod());
-            // destruct remaining objects
-            T *p;
-            p = cur - num;
-            clear_space(p, num);
-            // update members
-            cur -= num;
         }
 
         void clear_space_impl(T *first, size_type num, true_type) {
@@ -94,6 +38,7 @@ namespace anarion {
         }
 
         T *new_space(size_type num) {
+            if (num == 0) { return nullptr; }
             return (T*)operator new(num * sizeof(T));
         }
 
@@ -104,7 +49,7 @@ namespace anarion {
             The input dst and src would not be copied
         */
         void reverse_copy(T *dst, T *src, size_type num) {
-            reverse_copy_impl(dst, src, type_trait<T>::is_pod());
+            reverse_copy_impl(dst, src, num, typename type_trait<T>::is_pod());
         }
 
         void reverse_copy_impl(T *dst, T *src, size_type num, true_type) {
@@ -118,11 +63,12 @@ namespace anarion {
                 --dst;
                 --src;
                 new(dst) T(*src);
+                src->~T();
             }
         }
 
         void reverse_move(T *dst, T *src, size_type num) {
-            reverse_move_impl(dst, src, type_trait<T>::has_move_ctor());
+            reverse_move_impl(dst, src, typename type_trait<T>::has_move_ctor());
         }
 
         void reverse_move_impl(T *dst, T *src, size_type num, true_type) {
@@ -130,6 +76,7 @@ namespace anarion {
                 --dst;
                 --src;
                 new(dst) T(move(*src));
+                src->~T();
             }
         }
 
@@ -145,9 +92,9 @@ namespace anarion {
                 newcap = (steps + oldsize) << 1u;
                 T *n_space = new_space(newcap);
                 // copy head
-                moveCtorObjects(n_space, begin, index);
+                seq_move(n_space, begin, index);
                 // copy tail
-                moveCtorObjects(n_space + index + steps, begin + index, oldsize - index);
+                seq_move(n_space + index + steps, begin + index, oldsize - index);
                 // clean up
                 clear_space(begin, oldsize);
                 operator delete(begin, sizeof(T) * oldcap);
@@ -156,18 +103,19 @@ namespace anarion {
                 cur = begin + steps + oldsize;
                 end = begin + newcap;
             } else {   // no expand
-                reverse_copy(new_cur, begin + index + steps, steps);
+                reverse_copy(new_cur, cur, oldsize - index);
                 cur = new_cur;
             }
         }
 
         void seq_move(T *dst, T *src, size_type num) {
-            seq_move_impl(dst, src, num, type_trait<T>::has_move_ctor());
+            seq_move_impl(dst, src, num, typename type_trait<T>::has_move_ctor());
         }
 
         void seq_move_impl(T *dst, T *src, size_type num, true_type) {
             for (size_type i = 0; i < num; ++i) {
                 new (dst) T(move(*src));
+                src->~T();
                 ++dst;
                 ++src;
             }
@@ -178,16 +126,17 @@ namespace anarion {
         }
 
         void seq_copy(T *dst, T *src, size_type num) {
-            seq_copy_impl(dst, src, num, type_trait<T>::is_pod());
+            seq_copy_impl(dst, src, num, typename type_trait<T>::is_pod());
         }
 
         void seq_copy_impl(T *dst, T *src, size_type num, true_type) {
             memcpy(dst, src, sizeof(T) * num);
         }
 
-        void seq_copy_impl(T *dst, T *src, size_type num, false) {
+        void seq_copy_impl(T *dst, T *src, size_type num, false_type) {
             for (size_type i = 0; i < num; ++i) {
                 new (dst) T(*src);
+                src->~T();
                 ++dst;
                 ++src;
             }
@@ -202,9 +151,9 @@ namespace anarion {
                 size_type newcap = newsize << 1;
                 T *n_space = new_space(newcap);
                 // copy head
-                seq_move(n_space, begin, index);
+                seq_move(n_space, begin, index - steps);
                 // copy tail
-                seq_move(n_space, begin + index + steps, oldsize - index);
+                seq_move(n_space + index - steps, begin + index, oldsize - index);
                 // clean up
                 clear_space(begin, oldsize);
                 operator delete (begin, oldcap * sizeof(T));
@@ -216,7 +165,7 @@ namespace anarion {
             }
             size_type new_index = index - steps;
             clear_space(begin + new_index, steps);
-            seq_move(begin + new_index, begin + index, steps);
+            seq_move(begin + new_index, begin + index, oldsize - index);
             cur -= steps;
         }
 
@@ -224,11 +173,9 @@ namespace anarion {
 
         typedef T *iterator;
 
-        iterator begin_iterator() { return begin; }
-
-        iterator end_iterator() { return cur; }
-
-        bool has_iterator(iterator it) { return it < cur && it >= begin; }
+        iterator begin_iterator() const { return begin; }
+        iterator end_iterator() const { return cur; }
+        bool has_iterator(iterator it) const { return it < cur && it >= begin; }
 
         Vector() = default;
 
@@ -321,7 +268,14 @@ namespace anarion {
         }
 
         void resize(size_type new_size) {
+            if (new_size == 0) { return; }
             size_type oldsize = size(), oldcap = capacity(), newcap;
+            if (oldcap == 0) {
+                begin = new_space(new_size);
+                cur = begin;
+                end = begin + new_size;
+                return;
+            }
             if (new_size < oldsize) {
                 newcap = new_size;
                 // release the extra objects
@@ -334,7 +288,6 @@ namespace anarion {
             // move to new space
             seq_move(newp, begin, newcap);
             // release old space
-            clear_space(begin, oldsize);
             operator delete(begin, oldcap * sizeof(T));
             // update members
             begin = newp;
@@ -347,7 +300,7 @@ namespace anarion {
                 resize(1);
             }
             if (cur == end) {
-                expandWhenAdd();
+                expand_push();
             }
             new(cur++) T(o);
         }
@@ -357,7 +310,7 @@ namespace anarion {
                 resize(1);
             }
             if (cur == end) {
-                expandWhenAdd();
+                expand_push();
             }
             new(cur++) T(forward<T>(o));
         }
@@ -389,7 +342,7 @@ namespace anarion {
         iterator insert(iterator it, T &&o) {
             if (it > cur) { throw IndexOutOfRange(); }
             size_type index = it - begin;
-            copy_back_n(it, 1);
+            copy_back_expand(index, 1);
             new(begin + index) T(forward<T>(o));
             return begin + index;
         }
@@ -436,9 +389,7 @@ namespace anarion {
             size_type index = it - begin;
             copy_back_expand(index, num);
             size_type old_index = index;
-            for (size_type i = 0; i < num; ++i, ++b, ++index) {
-                seq_copy(begin + index, p, num);
-            }
+            seq_copy(begin + index, p, num);
             return begin + old_index;
         }
 
@@ -461,7 +412,7 @@ namespace anarion {
 
         void remove(iterator it) {
             if (it > cur) { throw IndexOutOfRange(); }
-            copy_forward_n(it, 1);
+            copy_forward_expand(it, 1);
         }
 
         void remove(iterator b, iterator e) {
@@ -475,7 +426,7 @@ namespace anarion {
             if (num == 0) {
                 return;
             }
-            copy_forward_n(b + num, num);
+            copy_forward_expand(b - begin + num, num);
         }
 
         T *getArr() const {
@@ -510,6 +461,13 @@ namespace anarion {
                 ++p;
             }
             return end_iterator();
+        }
+
+        void print() {
+            for (size_type i = 0; i < size(); ++i) {
+                std::cout << begin[i] << ", ";
+            }
+            std::cout << std::endl;
         }
     };
 

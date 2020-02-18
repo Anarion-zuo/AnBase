@@ -48,7 +48,7 @@ void Buffer::put(int fd) {
         if (num <= len) {
             break;
         }
-        expandWhenAdd();
+        expand_push();
         len = unWrittenSize();
     }
 }
@@ -68,7 +68,7 @@ bool Buffer::recv(int cfd) {
         if (num <= len) {
             break;
         }
-        expandWhenAdd();
+        expand_push();
         len = unWrittenSize();
     }
     return true;
