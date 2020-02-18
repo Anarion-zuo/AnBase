@@ -9,7 +9,7 @@ using namespace anarion;
 void ThreadPool::joinAll() {
     BlockQueue<info*> hold;
     for (size_type i = 0; i < count; ++i) {
-        hold.put(idles.poll());
+        hold.put(idles.pop());
     }
     idles = std::move(hold);
 }
@@ -45,7 +45,7 @@ void ThreadPool::schedule(Callable *callee) {
     if (idles.empty()) {
         info = createThread();
     } else {
-        info = idles.poll();
+        info = idles.pop();
     }
     info->callee = callee;
     info->mutex.unlock();

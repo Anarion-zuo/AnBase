@@ -332,10 +332,10 @@ namespace anarion {
             // create new space
             T *newp = new_space(newcap);
             // move to new space
-            moveCtorObjects(newp, begin, newcap);
+            seq_move(newp, begin, newcap);
             // release old space
             clear_space(begin, oldsize);
-            operator delete(begin, oldcap);
+            operator delete(begin, oldcap * sizeof(T));
             // update members
             begin = newp;
             cur = newp + newcap;
@@ -378,15 +378,10 @@ namespace anarion {
             return get(index);
         }
 
-        iterator insert(size_type index, const T &o) {
-            if (index > size()) { throw IndexOutOfRange(); }
-
-        }
-
         iterator insert(iterator it, const T &o) {
             if (it > cur) { throw IndexOutOfRange(); }
             size_type index = it - begin;
-            copy_back_n(it, 1);
+            copy_back_expand(index, 1);
             new(begin + index) T(o);
             return begin + index;
         }
@@ -399,8 +394,21 @@ namespace anarion {
             return begin + index;
         }
 
-        template<typename It>
-        iterator insert(iterator it, It b, It e) {
+        iterator insert(size_type index, const T &o) {
+            if (index >= size()) { throw IndexOutOfRange(); }
+            copy_back_expand(index, 1);
+            new(begin + index) T(o);
+            return begin + index;
+        }
+
+        iterator insert(size_type index, T &&o) {
+            if (index >= size()) { throw IndexOutOfRange(); }
+            copy_back_expand(index, 1);
+            new(begin + index) T(forward<T>(o));
+            return begin + index;
+        }
+
+        iterator insert(iterator it, iterator b, iterator e) {
             if (it > cur) { throw IndexOutOfRange(); }
             size_type index = it - begin;
             while (b != e) {
@@ -411,18 +419,27 @@ namespace anarion {
             return index + begin;
         }
 
+        template <typename It>
+        iterator insert(iterator it, It b, size_type num) {
+            if (it > cur) { throw IndexOutOfRange(); }
+            size_type index = it - begin;
+            copy_back_expand(index, num);
+            size_type old_index = index;
+            for (size_type i = 0; i < num; ++i, ++b, ++index) {
+                new (begin + index) T(*b);
+            }
+            return begin + old_index;
+        }
+
         iterator insert(iterator it, T *p, size_type num) {
             if (it > cur) { throw IndexOutOfRange(); }
             size_type index = it - begin;
-            if (empty()) {
-                resize(num);
-                copyCtorObjects(begin, p, num);
-                cur += num;
-                return begin;
+            copy_back_expand(index, num);
+            size_type old_index = index;
+            for (size_type i = 0; i < num; ++i, ++b, ++index) {
+                seq_copy(begin + index, p, num);
             }
-            copy_back_n(it, num);
-            copyCtorObjects(begin + index, p, num);
-            return begin + index;
+            return begin + old_index;
         }
 
         void assign(const T &o, size_type num) {

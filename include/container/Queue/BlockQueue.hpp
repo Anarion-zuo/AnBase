@@ -60,7 +60,7 @@ namespace anarion {
             cond.signalAll();
         }
 
-        T poll() {
+        T pop() {
             cond.wait();
             T o = list.pop_back();
             cond.unlock();

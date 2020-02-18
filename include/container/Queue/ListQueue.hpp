@@ -31,7 +31,7 @@ namespace anarion {
 
         void put(const T &o) { list.push_back(o); }
         void put(T &&o) { list.push_back(forward(o)); }
-        T poll() { return list.pop_front(); }
+        T pop() { return list.pop_front(); }
 
         bool empty() const { return list.empty(); }
     };
