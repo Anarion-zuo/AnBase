@@ -27,7 +27,6 @@ namespace anarion {
         static void copy_list(list_node *begin, list_node *stop, list_node *rethead) {
             list_node h, *node = begin, *newnode = &h;
             while (node != stop->next) {
-//                newnode->next = newObject<list_node>(node->obj, nullptr, newnode);
                 newnode->next = new list_node(node->obj, nullptr, newnode);
                 newnode = newnode->next;
                 node = node->next;
@@ -65,6 +64,15 @@ namespace anarion {
         }
 
     public:
+
+        // swap in-place
+        static void swap_nodes(list_node *x, list_node *y) {
+            list_node *xnext = x->next, *xprev = x->prev;
+            x->next = y->next;
+            x->prev = y->prev;
+            y->next = xnext;
+            y->prev = xprev;
+        }
 
         friend class iterator;
         class iterator {
@@ -348,6 +356,11 @@ namespace anarion {
             return end_iterator();
         }
     };
+
+    template <typename T>
+    void swap(typename LinkedList<T>::iterator x, typename LinkedList<T>::iterator y) {
+        LinkedList<T>::swap_nodes(x.operator->(), y.operator->());
+    }
 
 };
 #endif //MYCPPLIB_LINKED_LIST_HPP

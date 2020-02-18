@@ -471,6 +471,15 @@ namespace anarion {
         }
     };
 
+    template <typename T>
+    void swap(typename Vector<T>::iterator x, typename Vector<T>::iterator y) {
+        T o = move(*x);
+        x->~T();
+        new (x) T(move(*y));
+        y->~T();
+        new (y) T(move(o));
+    }
+
 };
 
 #endif //MYCPPLIB_VECTOR_HPP

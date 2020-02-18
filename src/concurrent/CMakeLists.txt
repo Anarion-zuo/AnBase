@@ -6,3 +6,6 @@ add_library(CONCURRENT ${DIR_CONCURRENT_SRCS})
 add_subdirectory(base)
 add_subdirectory(pool)
 target_link_libraries(CONCURRENT CONCURRENT_BASE CONCURRENT_POOL)
+
+include_directories(../../include)
+include_directories(../../include/concurrent)

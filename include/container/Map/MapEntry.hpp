@@ -39,7 +39,8 @@ public:
     }
 };
 
-template <typename K, typename V> struct hash_function<MapEntry<K, V>> {
+template <typename K, typename V>
+struct hash_function<MapEntry<K, V>> {
     hash_type operator()(const MapEntry<K, V> &o) const { return hash_function().operator()(o.get_key()); }
     hash_type operator()(const K &o) const { return hash_function<K>().operator()(o); }
 };
