@@ -26,10 +26,10 @@ class Channel {
 protected:
     bool is_valid;
 
-    Channel(bool is_valid) : is_valid(is_valid) {}
 
 public:
 
+    Channel(bool is_valid) : is_valid(is_valid) {}
     Channel(Channel &&rhs) : is_valid(rhs.is_valid) { rhs.is_valid = false; }
 
     virtual void in(char *p, size_type nbytes) = 0;

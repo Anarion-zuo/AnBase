@@ -29,16 +29,20 @@ namespace anarion {
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
+
+        static const char *name() { return typeid(T).name(); }
     };
 
+    #pragma region partial specializations
     template<typename T>
     struct type_trait<T *> {
         typedef true_type is_pod;
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
-    };
 
+        static const char *name() { return typename type_trait<T>::name(); }
+    };
 
     template<typename T>
     struct type_trait<const T *> {
@@ -46,14 +50,37 @@ namespace anarion {
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
+
+        static const char *name() { return type_trait<T>::name(); }
     };
 
+    template <typename T>
+    struct type_trait<T&> {
+        typedef typename type_trait<T>::is_pod is_pod;
+        typedef typename type_trait<T>::has_empty_ctor has_empty_ctor;
+        typedef typename type_trait<T>::has_move_ctor has_move_ctor;
+        typedef typename type_trait<T>::has_move_assign has_move_assign;
+        static const char *name() { return typename type_trait<T>::name(); }
+    };
+
+    template <typename T>
+    struct type_trait<const T&> {
+        typedef typename type_trait<T>::is_pod is_pod;
+        typedef typename type_trait<T>::has_empty_ctor has_empty_ctor;
+        typedef typename type_trait<T>::has_move_ctor has_move_ctor;
+        typedef typename type_trait<T>::has_move_assign has_move_assign;
+        static const char *name() { return typename type_trait<T>::name(); }
+    };
+    #pragma endregion
+
+    #pragma region fundamental types
     template<>
     struct type_trait<char> {
         typedef true_type is_pod;
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
+        static const char *name() { return "char"; }
     };
 
     template<>
@@ -62,6 +89,7 @@ namespace anarion {
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
+        static const char *name() { return "short"; }
     };
 
     template<>
@@ -70,6 +98,7 @@ namespace anarion {
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
+        static const char *name() { return "int"; }
     };
 
     template<>
@@ -78,6 +107,7 @@ namespace anarion {
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
+        static const char *name() { return "long"; }
     };
 
     template<>
@@ -86,6 +116,7 @@ namespace anarion {
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
+        static const char *name() { return "unsigned char"; }
     };
 
     template<>
@@ -94,6 +125,7 @@ namespace anarion {
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
+        static const char *name() { return "unsigned short"; }
     };
 
     template<>
@@ -102,6 +134,7 @@ namespace anarion {
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
+        static const char *name() { return "unsigned int"; }
     };
 
     template<>
@@ -110,6 +143,7 @@ namespace anarion {
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
+        static const char *name() { return "unsigned long"; }
     };
 
     template<>
@@ -118,6 +152,7 @@ namespace anarion {
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
+        static const char *name() { return "float"; }
     };
 
     template<>
@@ -126,7 +161,10 @@ namespace anarion {
         typedef false_type has_empty_ctor;
         typedef false_type has_move_ctor;
         typedef false_type has_move_assign;
+        static const char *name() { return "double"; }
     };
+
+    #pragma endregion
 
 };
 

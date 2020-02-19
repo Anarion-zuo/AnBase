@@ -9,11 +9,11 @@ class FileChannel : virtual public RandomChannel {
 protected:
     int fd;
 
-    explicit FileChannel(int fd) : RandomChannel(true), fd(fd) {}
+    explicit FileChannel(int fd) : Channel(true), RandomChannel(true), fd(fd) {}
 
 public:
 
-    FileChannel(FileChannel &&rhs) noexcept : RandomChannel(forward<FileChannel>(rhs)), fd(rhs.fd) {}
+    FileChannel(FileChannel &&rhs) noexcept : Channel(forward<FileChannel>(rhs), RandomChannel(forward<FileChannel>(rhs)), fd(rhs.fd) {}
     ~FileChannel() { if (is_valid) { close(); } }
 
     static FileChannel open(const SString &dir);

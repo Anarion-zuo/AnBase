@@ -13,9 +13,6 @@ src/CMakeFiles/SRC.dir/main.cpp.o: ../src/../include/container/base/type_trait.h
 src/CMakeFiles/SRC.dir/main.cpp.o: ../src/../include/exceptions/MyException.h
 src/CMakeFiles/SRC.dir/main.cpp.o: ../src/../include/exceptions/container/EmptyContainer.h
 src/CMakeFiles/SRC.dir/main.cpp.o: ../src/../include/exceptions/container/IndexOutOfRange.h
-src/CMakeFiles/SRC.dir/main.cpp.o: ../src/../include/io/buffer/Buffer.h
-src/CMakeFiles/SRC.dir/main.cpp.o: ../src/../include/io/channel/Channel.h
-src/CMakeFiles/SRC.dir/main.cpp.o: ../src/../include/io/channel/RandomChannel.h
-src/CMakeFiles/SRC.dir/main.cpp.o: ../src/../include/io/channel/file/FileChannel.h
+src/CMakeFiles/SRC.dir/main.cpp.o: ../src/../include/reflection/reflector.hpp
 src/CMakeFiles/SRC.dir/main.cpp.o: ../src/main.cpp
 

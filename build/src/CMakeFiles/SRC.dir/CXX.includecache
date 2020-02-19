@@ -68,23 +68,7 @@ exception
 ../MyException.h
 ../src/../include/exceptions/MyException.h
 
-../src/../include/io/buffer/Buffer.h
-../../container/List/Vector.hpp
-../src/../include/container/List/Vector.hpp
-
-../src/../include/io/channel/Channel.h
-../buffer/Buffer.h
-../src/../include/io/buffer/Buffer.h
-
-../src/../include/io/channel/RandomChannel.h
-Channel.h
-../src/../include/io/channel/Channel.h
-
-../src/../include/io/channel/file/FileChannel.h
-../RandomChannel.h
-../src/../include/io/channel/RandomChannel.h
-container/SString.h
-../src/../include/io/channel/file/container/SString.h
+../src/../include/reflection/reflector.hpp
 
 /home/anarion/Documents/CppProjects/MyCppBase/src/main.cpp
 iostream
@@ -95,6 +79,6 @@ allocator/PoolAllocator.h
 /home/anarion/Documents/CppProjects/MyCppBase/src/allocator/PoolAllocator.h
 container/SString.h
 /home/anarion/Documents/CppProjects/MyCppBase/src/container/SString.h
-io/channel/file/FileChannel.h
-/home/anarion/Documents/CppProjects/MyCppBase/src/io/channel/file/FileChannel.h
+reflection/reflector.hpp
+/home/anarion/Documents/CppProjects/MyCppBase/src/reflection/reflector.hpp
 

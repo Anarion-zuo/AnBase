@@ -24,7 +24,7 @@ class RandomChannel : virtual public Channel {
 protected:
 
     RandomChannel(bool is_valid) : Channel(is_valid) {}
-    RandomChannel(RandomChannel &&rhs) = default;
+    RandomChannel(RandomChannel &&rhs) : Channel(forward<RandomChannel>(rhs)) {}
 
 public:
 
