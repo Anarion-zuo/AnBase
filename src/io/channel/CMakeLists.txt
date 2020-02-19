@@ -3,7 +3,9 @@ project (MyCppBase)
 
 aux_source_directory(. DIR_IO_CHANNEL_SRCS)
 add_library(IO_CHANNEL ${DIR_IO_CHANNEL_SRCS})
-target_link_libraries(IO_CHANNEL)
+target_link_libraries(IO_CHANNEL IO_CHANNEL_FILE IO_CHANNEL_NETWORK)
+add_subdirectory(file)
+add_subdirectory(network)
 
 include_directories(../../include)
 include_directories(../../include/io/channel)

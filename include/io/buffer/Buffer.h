@@ -25,7 +25,6 @@ public:
     // lengths
     size_type unread() const { return cur - pos; }
     size_type unwritten() const { return end - pos; }
-    size_type readed() const { return pos - begin; }
 
     // arr
     void append_arr(char *p, size_type len);
@@ -35,11 +34,14 @@ public:
     // file descriptor
     size_type append_fd(int fd, size_type nbytes);
     size_type write_fd(int fd, size_type nbytes);
-
-
+    size_type send_fd(int cfd, size_type nbytes);
+    size_type recv_fd(int cfd);
 };
-size_type  writen(int fd, void *buf, size_type nbytes);
-size_type  readn(int fd, void *buf, size_type nbytes);
-// void sendn(int );
+
+size_type writen(int fd, void *buf, size_type nbytes);
+size_type readn(int fd, void *buf, size_type nbytes);
+size_type sendn(int cfd, void *buf, size_type nbytes, int flags);
+size_type recvn(int cfd, void *buf, size_type nbytes, int flags);
+
 }
 #endif // BUFFER_H

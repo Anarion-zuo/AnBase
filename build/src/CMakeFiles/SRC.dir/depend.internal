@@ -14,4 +14,8 @@ src/CMakeFiles/SRC.dir/main.cpp.o
  ../src/../include/exceptions/MyException.h
  ../src/../include/exceptions/container/EmptyContainer.h
  ../src/../include/exceptions/container/IndexOutOfRange.h
+ ../src/../include/io/buffer/Buffer.h
+ ../src/../include/io/channel/Channel.h
+ ../src/../include/io/channel/RandomChannel.h
+ ../src/../include/io/channel/file/FileChannel.h
  /home/anarion/Documents/CppProjects/MyCppBase/src/main.cpp
