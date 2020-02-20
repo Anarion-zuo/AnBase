@@ -2,7 +2,7 @@
 #define CHANNEL_H
 
 #include "../buffer/Buffer.h"
-
+#include "unistd.h"
 
 /**
  * @Name: Channel
@@ -32,10 +32,10 @@ public:
     Channel(bool is_valid) : is_valid(is_valid) {}
     Channel(Channel &&rhs) : is_valid(rhs.is_valid) { rhs.is_valid = false; }
 
-    virtual void in(char *p, size_type nbytes) = 0;
-    virtual void in(Buffer &buffer) = 0;
-    virtual void in(Buffer &buffer, size_type nbytes) = 0;
-    virtual void out(char *p, size_type nbytes) = 0;
+    virtual size_type in(char *p, size_type nbytes) = 0;
+    virtual size_type in(Buffer &buffer) = 0;
+    virtual size_type in(Buffer &buffer, size_type nbytes) = 0;
+    virtual size_type out(char *p, size_type nbytes) = 0;
     virtual Buffer out(size_type nbytes) = 0;
     
     bool valid() const { return is_valid; }

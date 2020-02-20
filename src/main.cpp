@@ -1,14 +1,15 @@
 #include <iostream>
 #include <cstring>
+#include <functional>
 #include "allocator/PoolAllocator.h"
 #include "container/SString.h"
-#include "reflection/reflector.hpp"
+#include "reflection/static_reflector.hpp"
+#include "container/Bind/binded.hpp"
 
 using namespace std;
 using namespace anarion;
 
 class A {
-    friend struct reflect<A>;
     friend int main();
 private:
     int x;
@@ -27,17 +28,16 @@ public:
 };
 
 template <typename T>
-void get_type(A* _this, T o) {
+void get_type(T o) {
     // o(_this);
     // (_this->*o)(777);
-    cout << typeid(T).name() << endl;
-    cout << "x:  " << (_this->*o) <<endl;
+    cout << o << endl;
     return;
 }
 
 int main() {
     A a(666);
-    // reflect<A>::call(&A::hello, a, 777);
-    reflect<A>::get_attr(&A::x, a) = 333;
+    auto f = anarion::bind(&get_type<int>, 777);
+    f();
     return 0;
 }

@@ -9,80 +9,46 @@
 #include "Mutex.h"
 #include "../../context/functors/Functor.h"
 #include <pthread.h>
+#include <container/Bind/binded.hpp>
 #include "../../exceptions/concurrent/CondVarCreateException.h"
 
+/*
+ * The condition variable type is arranged in a most convenient way that I can ever think of.
+ * By the well-celebrated knowledge of concurrence programming, the use of condition variable must follow the rules:
+ * 1) acquire lock before waiting
+ * 2) wait in a loop
+ * 3) release lock after signal
+ * No. 3 must be implemented outside the design of this class, manually and with cautions.
+ */
+
 namespace anarion {
-template <typename cond_func> class CondVar : virtual public UnCopyable {
+class CondVar : virtual public UnCopyable {
 protected:
     pthread_cond_t cond;
-    Mutex mutex;
-    cond_func func;
+    Mutex &mutex;
 public:
-    explicit CondVar() {
-        int ret;
-        ret = pthread_cond_init(&cond, nullptr);
-        if (ret) {
-            throw CondVarCreateException();
-        }
-    }
+    explicit CondVar(Mutex &mutex);
+    ~CondVar() { ::pthread_cond_destroy(&cond); }
+    CondVar(CondVar &&rhs) noexcept ;
+    CondVar &operator=(CondVar &&rhs) noexcept ;
 
-    ~CondVar() {
-        pthread_cond_destroy(&cond);
-    }
-
-    CondVar(CondVar &&rhs) noexcept : mutex(std::move(rhs.mutex)), cond(rhs.cond) {
-        rhs.cond = pthread_cond_t{0};
-    }
-    CondVar &operator=(CondVar &&rhs) noexcept {
-        mutex = std::move(rhs.mutex);
-        cond = rhs.cond;
-        rhs.cond = pthread_cond_t{0};
-        return *this;
-    }
-
-    cond_func &getFuncObject() { return func; }
-
-    void wait() {
-        int ret;
-        if (func()) {
-            mutex.lock();
-            return;
-        }
+    /*
+     * An event is represented by a callable object.
+     * The callable object must follow the semantic of taking no input and return a boolean type.
+     * A return value of true suggests the event has taken place and waiting requirement is met.
+     * It is encouraged to use the bind adapting mechanism to pass as the event.
+     * Once the event is met and a lock is acquired, the lock must be released to prevent deadlock.
+     */
+    template <typename binded_t>
+    void wait(binded_t event) {
         mutex.lock();
-        while (true) {   // use double check when competition is fierce
-            ret = pthread_cond_wait(&cond, &mutex.getHandle());
-            if (ret) {
-
-            }
-            if (func()) {
-                break;
-            }
+        while (!event()) {
+            ::pthread_cond_wait(&cond, &mutex.getHandle());
         }
     }
 
-    void signal() {
-        int ret;
-        ret = pthread_cond_signal(&cond);
-        if (ret) {
-
-        }
-    }
-
-    void signalAll() {
-        int ret;
-        ret = pthread_cond_broadcast(&cond);
-        if (ret) {
-
-        }
-    }
-
-    void lock() {
-        mutex.lock();
-    }
-
-    void unlock() {
-        mutex.unlock();
-    }
+    void signal();
+    void broadcast();
 };
 }
 

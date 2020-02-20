@@ -13,16 +13,16 @@ protected:
 
 public:
 
-    FileChannel(FileChannel &&rhs) noexcept : Channel(forward<FileChannel>(rhs), RandomChannel(forward<FileChannel>(rhs)), fd(rhs.fd) {}
+    FileChannel(FileChannel &&rhs) noexcept : Channel(forward<FileChannel>(rhs)), RandomChannel(forward<FileChannel>(rhs)), fd(rhs.fd) {}
     ~FileChannel() { if (is_valid) { close(); } }
 
     static FileChannel open(const SString &dir);
     void close() override;
 
-    void in(char *p, size_type nbytes) override;
-    void in(Buffer &buffer) override;
-    void in(Buffer &buffer, size_type nbytes) override;
-    void out(char *p, size_type nbytes) override;
+    size_type in(char *p, size_type nbytes) override;
+    size_type in(Buffer &buffer) override;
+    size_type in(Buffer &buffer, size_type nbytes) override;
+    size_type out(char *p, size_type nbytes) override;
     Buffer out(size_type nbytes) override;
 
     void rewind() override;

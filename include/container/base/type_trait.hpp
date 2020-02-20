@@ -6,6 +6,8 @@
 #ifndef MYCPPLIB_TYPE_TRAIT_HPP
 #define MYCPPLIB_TYPE_TRAIT_HPP
 
+#include <typeinfo>
+
 /*
     POD -- plain old type
     clases requiring no special treatments when constructing, copying, and destructing

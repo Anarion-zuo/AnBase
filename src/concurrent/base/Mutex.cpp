@@ -62,3 +62,9 @@ Mutex &Mutex::operator=(Mutex &&rhs) noexcept {
 pthread_mutex_t &Mutex::getHandle() {
     return mu;
 }
+
+bool Mutex::check() {
+    bool flag = trylock();
+    if (flag) { unlock(); }
+    return flag;
+}
