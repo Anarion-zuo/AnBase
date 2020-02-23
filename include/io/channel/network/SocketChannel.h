@@ -20,6 +20,8 @@ namespace anarion {
         void setNonBlock() const ;
         virtual void connect(const char *host_ip, in_port_t host_port) = 0;
 
+        int getFd() const { return sockfd; }
+
         static void throwSocket();
 
         size_type in(char *p, size_type nbytes) override;
