@@ -475,12 +475,6 @@ namespace anarion {
             return end_iterator();
         }
 
-        void print() {
-            for (size_type i = 0; i < size(); ++i) {
-                std::cout << begin[i] << ", ";
-            }
-            std::cout << std::endl;
-        }
     };
 
     template <typename T>

@@ -1,0 +1,16 @@
+struct SocketConnectionRefusedException : public SocketException { explicit SocketConnectionRefusedException(int error_num) : SocketException(error_num) {} };
+struct SocketNetUnreachableException : public SocketException { explicit SocketNetUnreachableException(int error_num) : SocketException(error_num) {} };
+struct SocketHostUnreachableException : public SocketException { explicit SocketHostUnreachableException(int error_num) : SocketException(error_num) {} };
+struct SocketTimeOutException : public SocketException { explicit SocketTimeOutException(int error_num) : SocketException(error_num) {} };
+struct SocketConnectionResetException : public SocketException { explicit SocketConnectionResetException(int error_num) : SocketException(error_num) {} };
+
+
+
+
+
+case ECONNREFUSED: throw SocketConnectionRefusedException(__errno);
+case ENETUNREACH: throw SocketNetUnreachableException(__errno);
+case EHOSTUNREACH: throw SocketHostUnreachableException(__errno);
+case ETIMEDOUT: throw SocketTimeOutException(__errno);
+case ECONNRESET: throw SocketConnectionResetException(__errno);
+default: throw SocketException(__errno);

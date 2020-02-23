@@ -1,9 +1,10 @@
+#include <io/channel/Channel.h>
+#include <sys/socket.h>
 #include "Buffer.h"
-#include <unistd.h>
 #include "exceptions/io/FdWriteException.h"
 #include "exceptions/io/FdReadException.h"
 #include "exceptions/io/socket/SocketSendException.h"
-#include <sys/socket.h>
+#include <unistd.h>
 
 using namespace anarion;
 
@@ -22,52 +23,53 @@ using namespace anarion;
 
     other attributes may also be added to the functions, as they must provide a most general interface
 */
-
-size_type writen(int fd, void *buf, size_type nbytes) {
-    int len;
-    size_type oldlen = nbytes;
-    while (true) {
-        len = ::write(fd, buf, nbytes);
-        if (len < 0) { throw FdWriteException(); }
-        nbytes -= len;
-        buf = (char*)buf + len;
-        if (len == 0 || nbytes == 0) { return oldlen - nbytes; }
+namespace anarion {
+    size_type writen(int fd, void *buf, size_type nbytes) {
+        int len;
+        size_type oldlen = nbytes;
+        while (true) {
+            len = ::write(fd, buf, nbytes);
+            if (len < 0) { throw FdWriteException(); }
+            nbytes -= len;
+            buf = (char *) buf + len;
+            if (len == 0 || nbytes == 0) { return oldlen - nbytes; }
+        }
     }
-}
 
-size_type readn(int fd, void *buf, size_type nbytes) {
-    int len;
-    size_type oldlen = nbytes;
-    while (true) {
-        len = ::read(fd, buf, nbytes);
-        if (len < 0) { throw FdReadException(); }
-        nbytes -= len;
-        buf = (char*)buf + len;
-        if (len == 0 || nbytes == 0) { return oldlen - nbytes; }
+    size_type readn(int fd, void *buf, size_type nbytes) {
+        int len;
+        size_type oldlen = nbytes;
+        while (true) {
+            len = ::read(fd, buf, nbytes);
+            if (len < 0) { throw FdReadException(); }
+            nbytes -= len;
+            buf = (char *) buf + len;
+            if (len == 0 || nbytes == 0) { return oldlen - nbytes; }
+        }
     }
-}
 
-size_type sendn(int cfd, void *buf, size_type nbytes, int flags) {
-    int len;
-    size_type oldn = nbytes;
-    while (true) {
-        len = ::send(cfd, buf, nbytes, flags);
-        if (len < 0) { throw SocketSendException(); }
-        buf = (char*)buf + len;
-        nbytes -= len;
-        if (len == 0 || nbytes == 0) { return oldn - nbytes; }
+    size_type sendn(int cfd, void *buf, size_type nbytes, int flags) {
+        int len;
+        size_type oldn = nbytes;
+        while (true) {
+            len = ::send(cfd, buf, nbytes, flags);
+            if (len < 0) { throw SocketSendException(); }
+            buf = (char *) buf + len;
+            nbytes -= len;
+            if (len == 0 || nbytes == 0) { return oldn - nbytes; }
+        }
     }
-}
 
-size_type recvn(int cfd, void *buf, size_type nbytes, int flags) {
-    int len;
-    size_type oldn = nbytes;
-    while (true) {
-        len = ::recv(cfd, buf, nbytes, flags);
-        if (len < 0) { throw SocketSendException(); }
-        buf = (char*)buf + len;
-        nbytes -= len;
-        if (len == 0 || nbytes == 0) { return oldn - nbytes; }
+    size_type recvn(int cfd, void *buf, size_type nbytes, int flags) {
+        int len;
+        size_type oldn = nbytes;
+        while (true) {
+            len = ::recv(cfd, buf, nbytes, flags);
+            if (len < 0) { throw SocketSendException(); }
+            buf = (char *) buf + len;
+            nbytes -= len;
+            if (len == 0 || nbytes == 0) { return oldn - nbytes; }
+        }
     }
 }
 
@@ -141,9 +143,9 @@ size_type Buffer::write_fd(int fd, size_type nbytes) {
     return len;
 }
 
-size_type Buffer::send_fd(int cfd, size_type nbytes) {
+size_type Buffer::send_fd(int cfd, size_type nbytes, int flags) {
     if (nbytes > unread()) { throw IndexOutOfRange(); }
-    size_type len = sendn(cfd, pos, nbytes, 0);
+    size_type len = sendn(cfd, pos, nbytes, flags);
     pos += len;
     return len;
 }
@@ -154,11 +156,14 @@ size_type Buffer::send_fd(int cfd, size_type nbytes) {
  * therefore it must be checked and carefully handled at each term of iteration
  */
 
-size_type Buffer::recv_fd(int cfd) {
+size_type Buffer::recv_fd(int cfd, int flags) {
     size_type ret = 0;   // keep record of recved bytes
+    if (capacity() == 0) {
+        resize(128);
+    }
     while (true) {
         size_type nbytes = unwritten();
-        size_type len = recvn(cfd, cur, nbytes, 0);
+        size_type len = recvn(cfd, cur, nbytes, flags);
         cur += len;
         ret += len;
         if (len < nbytes) {
@@ -169,3 +174,78 @@ size_type Buffer::recv_fd(int cfd) {
         resize(capacity() << 1);
     }
 }
+
+size_type Buffer::recv_fd(int cfd, size_type nbytes, int flags) {
+    size_type ret = 0, newsize = nbytes + size();
+    if (newsize > capacity()) {
+        newsize = newsize + (newsize >> 1);
+        resize(newsize);
+    }
+    size_type len = recvn(cfd, cur, nbytes, flags);
+    cur += len;
+    return len;
+}
+
+static bool str_has_c(char c, char *arr, size_type len) {
+    for (size_type i = 0; i < len; ++i) {
+        if (arr[i] == c) {
+            return true;
+        }
+    }
+    return false;
+}
+
+size_type Buffer::skip(char *cs, size_type len) {
+    char *old = pos;
+    while (str_has_c(*pos, cs, len)) {
+        ++pos;
+    }
+    return pos - old;
+}
+
+size_type Buffer::skip(const char *cs) {
+    return skip(const_cast<char*>(cs), ::strlen(cs));
+}
+
+Buffer Buffer::write_arr_to(char c) {
+    size_type index = index_of(c);
+    Buffer buffer(index);
+    buffer.append_arr(*this, index);
+    return move(buffer);
+}
+
+size_type Buffer::index_of(char c) const {
+    char *p = pos;
+    while (p < cur) {
+        if (*p == c) {
+            return p - pos;
+        }
+        ++p;
+    }
+    return p - pos;
+}
+
+void Buffer::append_arr(Buffer &buffer, size_type len) {
+    if (len > buffer.unread()) {
+        throw IndexOutOfRange();
+    }
+    size_type new_size = len + unwritten();
+    if (len > unwritten()) {
+        new_size = new_size + (new_size >> 1);
+        resize(new_size);
+    }
+    append_arr(buffer.pos, len);
+    buffer.pos += len;
+}
+
+void Buffer::write_arr(Buffer &buffer, size_type len) {
+    buffer.append_arr(*this, len);
+}
+
+void Buffer::print() {
+    for (size_type i = 0; i < size(); ++i) {
+        printf("%c", begin[i]);
+    }
+    printf("\n");
+}
+

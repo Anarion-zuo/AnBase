@@ -1,7 +1,8 @@
 #ifndef RANDOMCHANNEL_H
 #define RANDOMCHANNEL_H
 
-#include "Channel.h"
+#include "OutChannel.h"
+#include "InChannel.h"
 
 /**
  * @Name: RandomChannel
@@ -20,19 +21,26 @@
  */
 
 namespace anarion {
-class RandomChannel : virtual public Channel {
+class RandomChannel : virtual public InChannel, virtual public OutChannel {
 protected:
 
-    RandomChannel(bool is_valid) : Channel(is_valid) {}
-    RandomChannel(RandomChannel &&rhs) : Channel(forward<RandomChannel>(rhs)) {}
+    RandomChannel(bool is_valid) : Channel(), InChannel(is_valid), OutChannel(is_valid) {}
+    RandomChannel(RandomChannel &&) = default;
+
+    bool valid() const { return i_valid && o_valid; }
+    void set_invalid() { i_valid = false; o_valid = false; }
+    void set_valid() { i_valid = true; o_valid = true; }
+
+    void closei() override {}
+    void closeo() override {}
 
 public:
 
     // position
-    virtual void rewind();
-    virtual void set_append();
-    virtual void move_forth(size_type nbytes);
-    virtual void move_back(size_type nbytes);
+    virtual void rewind() = 0;
+    virtual void set_append() = 0;
+    virtual void move_forth(size_type nbytes) = 0;
+    virtual void move_back(size_type nbytes) = 0;
     virtual size_type size() const = 0;
 
 };

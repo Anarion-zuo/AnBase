@@ -12,8 +12,6 @@
 
 namespace anarion {
     class Thread : virtual public Callable, virtual public UnCopyable {
-        friend class ThreadPool;
-
     protected:
         pthread_t pid;
 

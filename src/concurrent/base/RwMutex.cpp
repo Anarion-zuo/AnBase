@@ -8,22 +8,22 @@ using namespace anarion;
 
 RwMutex::RwMutex() {
     int ret;
-    ret = pthread_rwlock_init(&rwm, nullptr);
+    ret = ::pthread_rwlock_init(&rwm, nullptr);
 }
 
-void RwMutex::readLock() {
-    pthread_rwlock_rdlock(&rwm);
+void RwMutex::rlock() {
+    ::pthread_rwlock_rdlock(&rwm);
 }
 
 void RwMutex::unlock() {
-    pthread_rwlock_unlock(&rwm);
+    ::pthread_rwlock_unlock(&rwm);
 }
 
 bool RwMutex::trylock() {
     
 }
 
-void RwMutex::writeLock() {
+void RwMutex::wlock() {
     pthread_rwlock_wrlock(&rwm);
 }
 
@@ -39,4 +39,8 @@ RwMutex &RwMutex::operator=(RwMutex &&rhs) noexcept {
     rwm = rhs.rwm;
     rhs.rwm = pthread_rwlock_t{0};
     return *this;
+}
+
+bool RwMutex::check() {
+    return false;
 }

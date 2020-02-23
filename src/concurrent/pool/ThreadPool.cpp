@@ -6,59 +6,103 @@
 
 using namespace anarion;
 
-void ThreadPool::joinAll() {
-    BlockQueue<info*> hold;
-    for (size_type i = 0; i < count; ++i) {
-        hold.put(idles.pop());
-    }
-    idles = std::move(hold);
+ThreadPool::ThreadPool(size_type num) {
+    addIdle(num);
 }
 
+ThreadPool::pool_ins *ThreadPool::createThread() {
+    ::pthread_t pid;
+    pool_ins *ins = new pool_ins(this, pid);
+    ::pthread_create(&pid, nullptr, pool_routine, ins);
+    ++count;
+    return ins;
+}
+
+/*
+ * routine loaded to pthread_create
+ * 1) wait for monitor signal to proceed
+ * 2) run loaded callable object
+ * 3) put thread back to idle queue
+ * 4) restore state
+ */
 void *ThreadPool::pool_routine(void *p) {
-    auto *info = reinterpret_cast<struct info*>(p);
+    pool_ins *thread = reinterpret_cast<pool_ins*>(p);
     while (true) {
-        info->mutex.lock();   // waiting to be signalled
-        info->callee->run();
-        // put back idle queue
-        info->pool->idles.put(info);
+        thread->mutex.lock();
+        thread->cond.wait(thread->flag);
+        if (thread->flag == 2) {
+            return nullptr;
+        }
+//        thread->pool->running.insert(thread);
+
+        thread->func->run();
+
+//        thread->pool->running.remove(thread);
+        thread->pool->idles.push(thread);
+        thread->flag = false;
+        thread->mutex.unlock();
     }
-    // never here
     return nullptr;
 }
 
-ThreadPool::ThreadPool(size_type num) : idles(){
-    // initialize some threads
+void ThreadPool::addIdle(size_type num) {
     for (size_type i = 0; i < num; ++i) {
-        auto *info = createThread();
-        idles.put(info);
+        pool_ins *p = createThread();
+        idles.push(p);
     }
 }
 
-ThreadPool::info * ThreadPool::createThread() {
-    struct info *info = new struct info(this);
-    ++count;
-    return info;
+void ThreadPool::putBack(ThreadPool::pool_ins *ins) {
+    idles.push(ins);
 }
 
-void ThreadPool::schedule(Callable *callee) {
-    struct info *info;
-    if (idles.empty()) {
-        info = createThread();
-    } else {
-        info = idles.pop();
-    }
-    info->callee = callee;
-    info->mutex.unlock();
+/*
+ * this has to be applied to an idle thread
+ * pthread_join is not necessary
+ * an idle thread would enter return right away
+ */
+void ThreadPool::joinIdleThread(ThreadPool::pool_ins *ins) {
+    ins->flag = 2;
+    ins->cond.broadcast();
+//    ::pthread_join(ins->pid, nullptr);
+}
+
+/*
+ * the procedure of running a thread is implemented as following:
+ * 1) pop an instance from idle queue
+ *      a) if the queue is empty, allocate one new
+ *      b) if not, proceed
+ * 2) load callable object to pool_ins
+ * 3) signal
+ */
+void ThreadPool::schedule(const Callable &callee) {
+    pool_ins *p = getIns();
+    delete p->func;
+    p->func = callee.clone();
+    p->flag = 1;
+    p->cond.signal();
 }
 
 ThreadPool::~ThreadPool() {
+    joinAll();
 }
 
-ThreadPool::info::info(ThreadPool *_this) : pool(_this) {
-    mutex.lock();
-    pthread_create(&pid, nullptr, pool_routine, this);
+ThreadPool::pool_ins *ThreadPool::getIns() {
+    pool_ins *p;
+    if (idles.empty()) {
+        p = createThread();
+    } else {
+        p = idles.pop();
+    }
+    return p;
 }
 
-bool ThreadPool::info::equals(ThreadPool::info *rhs) {
-    return this == rhs;
+void ThreadPool::joinAll() {
+
+    for (size_type i = 0; i < count; ++i) {
+        pool_ins *ins = idles.pop();
+        joinIdleThread(ins);
+        delete ins;
+    }
+    count = 0;
 }

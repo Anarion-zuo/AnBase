@@ -9,7 +9,8 @@
 namespace anarion {
     class Callable {
     public:
-        virtual void run() = 0;
+        virtual void run() {}
+        virtual Callable *clone() const { return new Callable(); }
     };
 }
 

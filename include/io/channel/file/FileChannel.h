@@ -9,12 +9,12 @@ class FileChannel : virtual public RandomChannel {
 protected:
     int fd;
 
-    explicit FileChannel(int fd) : Channel(true), RandomChannel(true), fd(fd) {}
+    explicit FileChannel(int fd) : Channel(), InChannel(true), OutChannel(true), RandomChannel(true), fd(fd) {}
 
 public:
 
-    FileChannel(FileChannel &&rhs) noexcept : Channel(forward<FileChannel>(rhs)), RandomChannel(forward<FileChannel>(rhs)), fd(rhs.fd) {}
-    ~FileChannel() { if (is_valid) { close(); } }
+    FileChannel(FileChannel &&rhs) noexcept : Channel(forward<FileChannel>(rhs)), InChannel(forward<FileChannel>(rhs)), OutChannel(forward<FileChannel>(rhs)), RandomChannel(forward<FileChannel>(rhs)), fd(rhs.fd) {}
+    ~FileChannel() { if (valid()) { close(); } }
 
     static FileChannel open(const SString &dir);
     void close() override;
@@ -24,12 +24,14 @@ public:
     size_type in(Buffer &buffer, size_type nbytes) override;
     size_type out(char *p, size_type nbytes) override;
     Buffer out(size_type nbytes) override;
+    Buffer out() override ;
 
     void rewind() override;
     void set_append() override;
     void move_forth(size_type nbytes) override;
     void move_back(size_type nbytes) override;
     size_type size() const override;
+
 };
 }
 

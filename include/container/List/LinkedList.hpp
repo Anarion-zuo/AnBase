@@ -284,6 +284,7 @@ namespace anarion {
             T obj{move(node->obj)};
             head.next = node->next;
             node->next->prev = &head;
+            --count;
             delete (node);
             return move(obj);
         }
@@ -294,6 +295,7 @@ namespace anarion {
             head.prev = node->prev;
             node->prev->next = &head;
             delete (node);
+            --count;
             return move(obj);
         }
 
@@ -302,6 +304,7 @@ namespace anarion {
             prev->next = next;
             next->prev = prev;
             delete (it.node);
+            --count;
             return iterator(next);  // the next one
         }
 

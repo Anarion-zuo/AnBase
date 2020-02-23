@@ -1,0 +1,14 @@
+//
+// Created by anarion on 2020/2/22.
+//
+
+#ifndef MYCPPBASE_MEMORYMAPPEDFILECHANNEL_H
+#define MYCPPBASE_MEMORYMAPPEDFILECHANNEL_H
+
+
+class MemoryMappedFileChannel {
+
+};
+
+
+#endif //MYCPPBASE_MEMORYMAPPEDFILECHANNEL_H

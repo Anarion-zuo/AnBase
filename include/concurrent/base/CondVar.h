@@ -18,7 +18,7 @@
  * 1) acquire lock before waiting
  * 2) wait in a loop
  * 3) release lock after signal
- * No. 3 must be implemented outside the design of this class, manually and with cautions.
+ * No. 1&3 must be implemented outside the design of this class, manually and with cautions.
  */
 
 namespace anarion {
@@ -41,8 +41,13 @@ public:
      */
     template <typename binded_t>
     void wait(binded_t event) {
-        mutex.lock();
         while (!event()) {
+            ::pthread_cond_wait(&cond, &mutex.getHandle());
+        }
+    }
+
+    void wait(const int &flag) {
+        while (!flag) {
             ::pthread_cond_wait(&cond, &mutex.getHandle());
         }
     }

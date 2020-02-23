@@ -6,12 +6,13 @@
 #define MYCPPBASE_BINDED_HPP
 
 #include "Tuple.hpp"
+#include "context/Callable.h"
 
 #define CALL_TUPLE(t)  t.get(), CALL_TUPLE(t.get_parent())
 
 namespace anarion {
     template <typename T, typename Fn, typename ...Args>
-    class binded {
+    class binded : public Callable {
     protected:
 
         template <size_type ...> struct index_tuple {};
@@ -44,10 +45,12 @@ namespace anarion {
         binded(binded &&) noexcept = default;
 
         constexpr auto operator()() { return invoke(indexes()); }
+        void run() override { invoke(indexes()); }
+        Callable *clone() const override { return new binded(*this); }
     };
 
     template <typename Fn, typename ...Args>
-    class binded<void, Fn, Args...> {
+    class binded<void, Fn, Args...> : public Callable {
     protected:
 
         template <size_type ...> struct index_tuple {};
@@ -79,6 +82,8 @@ namespace anarion {
         binded(binded &&) noexcept = default;
 
         constexpr auto operator()() { return invoke(indexes()); }
+        void run() override { invoke(indexes()); }
+        Callable *clone() const override { return new binded(*this); }
     };
 
 //    template <typename Fn, typename ...Args>

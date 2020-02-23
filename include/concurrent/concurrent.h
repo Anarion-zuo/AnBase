@@ -5,4 +5,6 @@
 #ifndef MYCPPBASE_CONCURRENT_H
 #define MYCPPBASE_CONCURRENT_H
 
+void hello_concurrent();
+
 #endif //MYCPPBASE_CONCURRENT_H

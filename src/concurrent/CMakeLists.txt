@@ -5,7 +5,7 @@ aux_source_directory(. DIR_CONCURRENT_SRCS)
 add_library(CONCURRENT ${DIR_CONCURRENT_SRCS})
 add_subdirectory(base)
 add_subdirectory(pool)
-target_link_libraries(CONCURRENT CONCURRENT_BASE CONCURRENT_POOL)
+target_link_libraries(CONCURRENT CONCURRENT_BASE CONCURRENT_POOL pthread)
 
 include_directories(../../include)
 include_directories(../../include/concurrent)

@@ -23,17 +23,17 @@ SString::~SString() {
     // memory released by Vector destructor
 }
 
-SString SString::copy(const char *str, size_type num) {
-    char *s = (char*)operator new(num);
-    memcpy(s, str, num);
-    return SString(s, num);
+SString::SString(char *p, size_type num) : Vector<char>(num) {
+    insert(cur, p, num);
 }
 
-SString::SString(char *p, size_type num) : Vector<char>(p, num) {
-}
-
-SString SString::move(const char *str, size_type num) {
-    return SString(const_cast<char *>(str), num);
+SString SString::move(const char *str) {
+    SString s;
+    s.begin = const_cast<char *>(str);
+    size_type len = ::strlen(str);
+    s.cur = s.begin + len;
+    s.end = s.cur;
+    return anarion::move(s);
 }
 
 void SString::append(char *p, size_type num) {
@@ -98,7 +98,7 @@ SString SString::suffix(char dot) const {
     if (index == 0) {
         return SString();
     }
-    return copy(p + 1, index);
+    return SString(p + 1, index);
 }
 
 void SString::copy_cstr(char *p) const {
@@ -148,3 +148,22 @@ bool SString::operator!=(const SString &rhs) const {
 size_type SString::hash() const {
     return MySQLHash(begin, length());
 }
+
+static bool is_lower(char c) { return c <= 'z' && c >= 'a'; }
+static bool is_upper(char c) { return c <= 'Z' && c >= 'A'; }
+
+static void cstr_upper(char *p, size_type len) {
+    for (size_type i = 0; i < len; ++i) {
+        if (is_lower(p[i])) { p[i] += 'A' - 'a'; }
+    }
+}
+
+static void cstr_lower(char *p, size_type len) {
+    for (size_type i = 0; i < len; ++i) {
+        if (is_upper(p[i])) { p[i] += 'a' - 'A'; }
+    }
+}
+
+void SString::upperCase() { cstr_upper(begin, size()); }
+
+void SString::lowerCase() { cstr_lower(begin, size()); }

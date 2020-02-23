@@ -17,7 +17,7 @@ namespace anarion {
 
         ~SString();
 
-        SString(char *p, size_type num);  // constructor for moving
+        SString(char *p, size_type num);
         SString(SString &&rhs) noexcept;
         SString(const SString &rhs);
 
@@ -27,8 +27,7 @@ namespace anarion {
         bool operator==(const SString &rhs) const ;
         bool operator!=(const SString &rhs) const ;
 
-        static SString move(const char *str, size_type num);
-        static SString copy(const char *str, size_type num);
+        static SString move(const char *str);
 
         bool equals(SString *rhs) const ;
         bool equals(const char *c) const ;
@@ -41,6 +40,9 @@ namespace anarion {
         void append(char *p, size_type num);
         void append(const SString &rhs);
         SString suffix(char dot) const ;   // appointed separator
+
+        void upperCase();
+        void lowerCase();
     };
 
     template <> struct hash_function<SString> {

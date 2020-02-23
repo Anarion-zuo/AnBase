@@ -24,9 +24,9 @@ public:
 
     pthread_mutex_t &getHandle();
 
-    virtual void lock();
-    virtual void unlock();
-    virtual bool trylock();
+    void lock();
+    void unlock();
+    bool trylock();
 
     bool check() ;
 };

@@ -19,10 +19,12 @@ public:
     RwMutex(RwMutex &&rhs) noexcept ;
     RwMutex &operator=(RwMutex &&rhs) noexcept ;
 
-    void readLock();
-    void writeLock();
+    void rlock();
+    void wlock();
     void unlock();
     bool trylock();
+
+    bool check();
 };
 }
 
