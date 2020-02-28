@@ -5,6 +5,6 @@
 #ifndef CPPBASE_STRING_H
 #define CPPBASE_STRING_H
 
-#include "../src/container/SString.h"
+#include "/home/anarion/Documents/CppProjects/MyCppBase/include/container/SString.h"
 
 #endif //CPPBASE_STRING_H

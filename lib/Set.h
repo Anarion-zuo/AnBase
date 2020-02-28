@@ -5,6 +5,6 @@
 #ifndef CPPBASE_SET_H
 #define CPPBASE_SET_H
 
-#include "../src/container/Set/HashSet.hpp"
+#include "/home/anarion/Documents/CppProjects/MyCppBase/include/container/Set/HashSet.hpp"
 
 #endif //CPPBASE_SET_H

@@ -1,6 +1,6 @@
 #include <io/channel/Channel.h>
 #include <sys/socket.h>
-#include "Buffer.h"
+#include "io/buffer/Buffer.h"
 #include "exceptions/io/FdWriteException.h"
 #include "exceptions/io/FdReadException.h"
 #include "exceptions/io/socket/SocketSendException.h"

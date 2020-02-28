@@ -2,7 +2,7 @@
 // Created by 左钰 on 2020/1/15.
 //
 
-#include "Thread.h"
+#include <concurrent/base/Thread.h>
 #include "exceptions/concurrent/ThreadCreateException.h"
 
 using namespace anarion;

@@ -3,7 +3,7 @@
 //
 
 #include <cstring>
-#include "SString.h"
+#include <container/SString.h>
 #include "exceptions/container/IndexOutOfRange.h"
 
 using namespace anarion;

@@ -3,6 +3,6 @@
 //
 
 #include <exceptions/io/socket/SocketCreateException.h>
-#include "ServerSocketChannel.h"
+#include <io/channel/network/ServerSocketChannel.h>
 
 anarion::ServerSocketChannel::ServerSocketChannel(in_port_t port_num) {}

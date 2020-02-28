@@ -5,5 +5,6 @@ set(CMAKE_SOURCE_DIR .)
 
 aux_source_directory(. DIR_SRCS)
 add_subdirectory(src)
-add_executable(MyCppBase .)
-target_link_libraries(MyCppBase SRC)
+add_executable(MyCppBase src/main.cpp)
+target_link_libraries(MyCppBase anarionbase)
+include_directories(${CMAKE_SOURCE_DIR}/include)

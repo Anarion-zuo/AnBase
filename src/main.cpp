@@ -44,7 +44,7 @@ int main() {
         TcpSocketChannel client(server.accept());
         Buffer buffer = client.out();
         buffer.print();
-
+        client.in(buffer);
     }
     return 0;
 }

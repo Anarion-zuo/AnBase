@@ -4,7 +4,7 @@
 
 #include <fcntl.h>
 #include <exceptions/InvalidOperation.h>
-#include "SocketChannel.h"
+#include <io/channel/network/SocketChannel.h>
 #include "exceptions/io/socket/FcntlException.h"
 
 void anarion::SocketChannel::setNonBlock() const {

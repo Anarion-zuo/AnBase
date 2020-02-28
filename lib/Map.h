@@ -5,6 +5,6 @@
 #ifndef CPPBASE_MAP_H
 #define CPPBASE_MAP_H
 
-#include "../src/container/Map/HashMap.hpp"
+#include "/home/anarion/Documents/CppProjects/MyCppBase/include/container/Map/HashMap.hpp"
 
 #endif //CPPBASE_MAP_H

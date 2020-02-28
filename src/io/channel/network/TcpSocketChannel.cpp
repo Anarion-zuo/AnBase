@@ -13,7 +13,7 @@ void anarion::TcpSocketChannel::connect(const char *host_ip, in_port_t host_port
     ::memset(&addr, 0, sizeof(sockaddr_in));
     addr.sin_addr.s_addr = ::inet_addr(host_ip);
     addr.sin_family = AF_INET;
-    addr.sin_port = ::htons(host_port);
+    addr.sin_port = htons(host_port);
     int ret = ::connect(sockfd, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in));
     if (ret < 0) { throwSocket(); }
 }
