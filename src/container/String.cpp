@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include <container/SString.h>
+#include <io/buffer/Buffer.h>
 #include "exceptions/container/IndexOutOfRange.h"
 
 using namespace anarion;
@@ -34,6 +35,26 @@ SString SString::move(const char *str) {
     s.cur = s.begin + len;
     s.end = s.cur;
     return anarion::move(s);
+}
+
+SString SString::move(char *p, size_type len) {
+    SString ret;
+    ret.begin = p;
+    ret.cur = p + len;
+    ret.end = ret.cur;
+    return ::move(ret);
+}
+
+SString SString::move(Buffer &&buffer) {
+    SString ret;
+    ret.begin = buffer.begin;
+    ret.cur = buffer.cur;
+    ret.end = buffer.end;
+    buffer.begin = nullptr;
+    buffer.cur = nullptr;
+    buffer.end = nullptr;
+    buffer.pos = nullptr;
+    return ::move(ret);
 }
 
 void SString::append(char *p, size_type num) {
@@ -167,3 +188,58 @@ static void cstr_lower(char *p, size_type len) {
 void SString::upperCase() { cstr_upper(begin, size()); }
 
 void SString::lowerCase() { cstr_lower(begin, size()); }
+
+long SString::toDecSigned() const {
+    size_type index = size() - 1;
+    long ret = 0, tens = 1;
+    for (; index > 0; --index) {
+        ret += (begin[index] - ('0' - 0)) * tens;
+        tens *= 10;
+    }
+    if (*begin == '-') {
+        return -ret;
+    }
+    return ret + *begin * tens;
+}
+
+size_type SString::toDecUnsigned() const {
+    size_type index = size() - 1;
+    long ret = 0, tens = 1;
+    for (; index > 0; --index) {
+        ret += (begin[index] - ('0' - 0)) * tens;
+        tens *= 10;
+    }
+    return ret + *begin * tens;
+}
+
+SString SString::parseDec(size_type num) {
+    char *s = static_cast<char *>(operator new(21));
+    int len = sprintf(s, "%lu", num);
+    SString ret;
+    ret.begin = s;
+    ret.cur = s + len;
+    ret.end = s + 21;
+    return ::move(ret);
+}
+
+size_type SString::indexOf(char c) const {
+    for (char *p = begin; p < cur; ++p) {
+        if (*p == c) { return p - begin; }
+    }
+    return cur - begin;
+}
+
+size_type SString::indexOf(const char *str) const {
+    return 0;
+}
+
+size_type SString::indexOf(const SString &rhs) const {
+    return 0;
+}
+
+size_type SString::indexOf(char *p, size_type len) {
+    // most fit length
+
+}
+
+

@@ -7,6 +7,7 @@
 namespace anarion {
 
 class Buffer : public Vector<char> {
+    friend class SString;
 protected:
 
     typedef Vector<char> parent;
@@ -27,6 +28,7 @@ public:
     // lengths
     size_type unread() const { return cur - pos; }
     size_type unwritten() const { return end - pos; }
+    constexpr void rewind() { pos = begin; }
 
     // arr
     void append_arr(char *p, size_type len);
@@ -45,7 +47,8 @@ public:
     // char
     size_type skip(char *cs, size_type len);
     size_type skip(const char *cs);
-    size_type index_of(char c) const ;
+    constexpr void skip() { ++pos; }
+    size_type index_of(char c) const ;  // from pos on
     Buffer write_arr_to(char c);
 
     void print();  // debug

@@ -17,6 +17,7 @@ add_library(anarionbase STATIC
         concurrent/pool/ThreadPool.cpp
 
         container/String.cpp
+        container/StringBuilder.cpp
 
         context/Callable.cpp
         context/Context.cpp
@@ -33,6 +34,7 @@ add_library(anarionbase STATIC
         io/channel/network/TcpSocketChannel.cpp
 
         reflector/dynamic_reflect.cpp
+
         )
 #add_library(anarionbase SHARED ${DIR_SRCS})
 

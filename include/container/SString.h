@@ -10,7 +10,10 @@
 #include "base/container_utility.hpp"
 
 namespace anarion {
+    class Buffer;
     class SString : public Vector<char> {
+        friend class StringBuilder;
+        friend class Buffer;
     public:
         SString();
         explicit SString(const char *str);
@@ -28,6 +31,8 @@ namespace anarion {
         bool operator!=(const SString &rhs) const ;
 
         static SString move(const char *str);
+        static SString move(char *p, size_type len);
+        static SString move(Buffer &&buffer);
 
         bool equals(SString *rhs) const ;
         bool equals(const char *c) const ;
@@ -41,8 +46,18 @@ namespace anarion {
         void append(const SString &rhs);
         SString suffix(char dot) const ;   // appointed separator
 
+        size_type indexOf(char c) const ;
+        size_type indexOf(char *p, size_type len);
+        size_type indexOf(const char *str) const ;  // KMP
+        size_type indexOf(const SString &rhs) const ;
+
         void upperCase();
         void lowerCase();
+
+        long toDecSigned() const ;
+        size_type toDecUnsigned() const ;
+        static SString parseDec(size_type num);
+
     };
 
     template <> struct hash_function<SString> {
