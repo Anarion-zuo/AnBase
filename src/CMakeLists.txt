@@ -36,6 +36,8 @@ add_library(anarionbase STATIC
 
         reflector/dynamic_reflect.cpp
 
+        parser/MapParser.cpp
+
         )
 #add_library(anarionbase SHARED ${DIR_SRCS})
 

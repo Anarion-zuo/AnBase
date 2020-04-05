@@ -13,6 +13,7 @@
 #include <container/Pointer.h>
 #include <allocator/ListConcurrentAllocator.h>
 #include <container/Map/HashMap.hpp>
+#include <parser/MapParser.h>
 
 using namespace std;
 using namespace anarion;
@@ -40,11 +41,7 @@ void printx(int x) {
 }
 
 int main() {
-    Vector<int> v1, v2;
-    v2.push_back(1);
-    v2.push_back(1);
-    v2.push_back(1);
-    v2.push_back(1);
-    v1.assign(v2.begin_iterator(), v2.end_iterator());
+    MapParser parser('=', ';');
+    parser.parse(SString("max=100;timeout=99"));
     return 0;
 }
