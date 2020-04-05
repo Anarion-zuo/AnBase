@@ -99,6 +99,9 @@ Buffer &Buffer::operator=(Buffer &&rhs) noexcept {
 
 void Buffer::append_arr(char *p, size_type len) {
     insert(cur, p, len);
+    if (pos == nullptr) {
+        pos = begin;
+    }
 }
 
 void Buffer::append_arr(const char *str) {
@@ -159,11 +162,11 @@ size_type Buffer::send_fd(int cfd, size_type nbytes, int flags) {
 size_type Buffer::recv_fd(int cfd, int flags) {
     size_type ret = 0;   // keep record of recved bytes
     if (capacity() == 0) {
-        resize(128);
+        resize(1);
     }
     while (true) {
         size_type nbytes = unwritten();
-        size_type len = recvn(cfd, cur, nbytes, flags);
+        size_type len = ::recv(cfd, cur, nbytes, flags);
         cur += len;
         ret += len;
         if (len < nbytes) {
@@ -171,7 +174,7 @@ size_type Buffer::recv_fd(int cfd, int flags) {
             return ret;
         }
         // pipe not drained, expand capacity
-        resize(capacity() << 1);
+        resize(capacity() << 1u);
     }
 }
 
@@ -247,5 +250,11 @@ void Buffer::print() {
         printf("%c", begin[i]);
     }
     printf("\n");
+}
+
+void Buffer::resize(size_type newsize) {
+    size_type posIndex = pos - begin;
+    Vector<char>::resize(newsize);
+    pos = begin + posIndex;
 }
 

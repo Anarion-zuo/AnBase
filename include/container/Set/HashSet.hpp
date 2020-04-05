@@ -37,7 +37,7 @@ namespace anarion {
 
     template<typename T, typename hash_func = hash_function<T>>
     class HashSet {
-    protected:
+    public:
         struct hash_node {
             T obj;
             hash_type hash_val;
@@ -50,6 +50,7 @@ namespace anarion {
             hash_node(hash_node &&rhs) noexcept : hash_val(rhs.hash_val), obj(move(rhs.obj)), next(nullptr) { rhs.next = nullptr; }
         };
 
+    protected:
         hash_node **heads = nullptr;
         size_type heads_count = 0, obj_count = 0;
 
@@ -201,7 +202,8 @@ namespace anarion {
             }
 
             // delete head array
-            delObjects(heads, heads_count);
+//            delObjects(heads, heads_count);
+            operator delete (heads, heads_count * sizeof(hash_node*));
 
             // clear members
             clear_move();
@@ -306,7 +308,9 @@ namespace anarion {
                 ++index;
                 node = heads[index];
             }
-            if (node == nullptr && index == heads_count) { return iterator(nullptr, 0, this); }
+            if (index == heads_count) {
+                return iterator(nullptr, 0, this);
+            }
             return iterator(node, index, this);
         }
 

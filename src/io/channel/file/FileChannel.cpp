@@ -4,6 +4,7 @@
 #include <sys/file.h>
 #include <exceptions/InvalidOperation.h>
 #include <io/channel/file/FileChannel.h>
+#include <sys/stat.h>
 
 //using namespace anarion;
 
@@ -85,4 +86,17 @@ anarion::Buffer anarion::FileChannel::out() {
     ::lseek(fd, cur, SEEK_SET);
     off_t unread = size - cur;
     return out(unread);
+}
+
+bool anarion::FileChannel::modifiedLaterThan(const timespec &time) {
+    struct ::stat buf;
+    ::fstat(fd, &buf);
+    timespec mod = buf.st_mtim;
+    if (time.tv_sec > mod.tv_sec) {
+        return false;
+    }
+    if (time.tv_sec < mod.tv_sec) {
+        return true;
+    }
+    return time.tv_nsec < mod.tv_nsec;
 }

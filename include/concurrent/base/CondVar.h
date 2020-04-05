@@ -52,6 +52,17 @@ public:
         }
     }
 
+    /*
+     * bare wait without any binding
+     */
+    void wait() {
+        ::pthread_cond_wait(&cond, &mutex.getHandle());
+    }
+
+    void waitTime(const timespec &timespec) {
+        ::pthread_cond_timedwait(&cond, &mutex.getHandle(), &timespec);
+    }
+
     void signal();
     void broadcast();
 };

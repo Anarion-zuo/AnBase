@@ -5,12 +5,14 @@
 #include <io/channel/file/FileChannel.h>
 #include <concurrent/concurrent.h>
 #include <io/channel/network/TcpServerSocketChannel.h>
-#include "allocator/PoolAllocator.h"
 #include "container/SString.h"
 #include "reflection/static_reflector.hpp"
 #include "container/Bind/binded.hpp"
 #include "concurrent/base/Barrier.h"
 #include "io/buffer/Buffer.h"
+#include <container/Pointer.h>
+#include <allocator/ListConcurrentAllocator.h>
+#include <container/Map/HashMap.hpp>
 
 using namespace std;
 using namespace anarion;
@@ -38,13 +40,11 @@ void printx(int x) {
 }
 
 int main() {
-    TcpServerSocketChannel server (9898);
-    server.listen(1024);
-    while (true) {
-        TcpSocketChannel client(server.accept());
-        Buffer buffer = client.out();
-        buffer.print();
-        client.in(buffer);
-    }
+    Vector<int> v1, v2;
+    v2.push_back(1);
+    v2.push_back(1);
+    v2.push_back(1);
+    v2.push_back(1);
+    v1.assign(v2.begin_iterator(), v2.end_iterator());
     return 0;
 }

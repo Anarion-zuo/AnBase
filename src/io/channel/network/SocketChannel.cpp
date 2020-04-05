@@ -62,6 +62,10 @@ anarion::Buffer anarion::SocketChannel::out(anarion::size_type nbytes) {
     return move(buffer);
 }
 
+anarion::Buffer anarion::SocketChannel::outUntil(char *chars) {
+    return anarion::Buffer();
+}
+
 const char *anarion::SocketException::what() const noexcept {
     return strerror(errno);
 }

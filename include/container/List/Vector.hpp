@@ -252,7 +252,7 @@ namespace anarion {
 
         void clear() {
             clear_space(begin, size());
-            operator delete(begin, capacity() * sizeof(T));
+            operator delete(begin, (end - begin) * sizeof(T));
             begin = nullptr;
             end = nullptr;
             cur = nullptr;
@@ -273,8 +273,11 @@ namespace anarion {
         }
         
         void resize(size_type new_size) {
-            if (new_size == 0) { return; }
-            size_type oldsize = size(), oldcap = capacity(), newcap;
+            if (new_size == 0) {
+                clear();
+                return;
+            }
+            size_type oldsize = size(), oldcap = capacity(), newcap, newsize;
             if (oldcap == 0) {
                 begin = new_space(new_size);
                 cur = begin;
@@ -283,21 +286,23 @@ namespace anarion {
             }
             if (new_size < oldsize) {
                 newcap = new_size;
+                newsize = new_size;
                 // release the extra objects
-                clear_space(&begin[new_size], oldsize - new_size);
+//                clear_space(&begin[new_size], oldsize - new_size);
             } else {
-                newcap = oldsize;
+                newcap = new_size;
+                newsize = oldsize;
             }
             // create new space
             T *newp = new_space(newcap);
             // move to new space
-            seq_move(newp, begin, newcap);
+            seq_move(newp, begin, newsize);
             // release old space
-            operator delete(begin, oldcap * sizeof(T));
+            operator delete(begin, oldsize * sizeof(T));
             // update members
             begin = newp;
-            cur = newp + newcap;
-            end = newp + new_size;
+            cur = newp + newsize;
+            end = newp + newcap;
         }
         #pragma endregion
 
@@ -412,8 +417,8 @@ namespace anarion {
             }
         }
 
-        template<typename C>
-        void assign(typename C::iterator begin, typename C::iterator end) {
+        template<typename I>
+        void assign(I begin, I end) {
             clear();
             while (begin != end) {
                 push_back(*begin);

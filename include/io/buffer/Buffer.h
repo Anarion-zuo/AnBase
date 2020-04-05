@@ -25,9 +25,11 @@ public:
     Buffer &operator=(const Buffer &rhs);
     Buffer &operator=(Buffer &&rhs) noexcept ;
 
+    void resize(size_type newsize);  // must update pos member, or corrupt heap
+
     // lengths
     size_type unread() const { return cur - pos; }
-    size_type unwritten() const { return end - pos; }
+    size_type unwritten() const { return end - cur; }
     constexpr void rewind() { pos = begin; }
 
     // arr

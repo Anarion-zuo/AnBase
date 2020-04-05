@@ -18,6 +18,7 @@ size_type SString::length() const {
 }
 
 SString::SString() {
+    hash();
 }
 
 SString::~SString() {
@@ -26,6 +27,7 @@ SString::~SString() {
 
 SString::SString(char *p, size_type num) : Vector<char>(num) {
     insert(cur, p, num);
+    hash();
 }
 
 SString SString::move(const char *str) {
@@ -34,6 +36,7 @@ SString SString::move(const char *str) {
     size_type len = ::strlen(str);
     s.cur = s.begin + len;
     s.end = s.cur;
+    s.hash();
     return anarion::move(s);
 }
 
@@ -42,6 +45,7 @@ SString SString::move(char *p, size_type len) {
     ret.begin = p;
     ret.cur = p + len;
     ret.end = ret.cur;
+    ret.hash();
     return ::move(ret);
 }
 
@@ -54,11 +58,13 @@ SString SString::move(Buffer &&buffer) {
     buffer.cur = nullptr;
     buffer.end = nullptr;
     buffer.pos = nullptr;
+    ret.hash();
     return ::move(ret);
 }
 
 void SString::append(char *p, size_type num) {
     insert(end_iterator(), p, p + num);
+    hash();
 }
 
 void SString::append(const SString &rhs) {
@@ -71,6 +77,7 @@ SString::SString(const char *str) {
     end = begin + len;
     cur = end;
     memcpy(begin, str, len);
+    hash();
 }
 
 bool SString::equals(const char *c) const{
@@ -87,6 +94,9 @@ bool SString::equals(const char *c) const{
 }
 
 bool SString::equals(SString *rhs) const {
+    if (rhs->hashVal != hashVal) {
+        return false;
+    }
     if (rhs->length() != length()) {
         return false;
     }
@@ -104,7 +114,8 @@ static hash_type MySQLHash(const char *ptr, size_type len) {
     return nr;
 }
 
-SString::SString(SString &&rhs) noexcept : Vector<char>(std::forward<SString>(rhs)) {
+SString::SString(SString &&rhs) noexcept : Vector<char>(std::forward<SString>(rhs)), hashVal(rhs.hashVal) {
+    rhs.hash();
 }
 
 SString SString::suffix(char dot) const {
@@ -139,7 +150,7 @@ void SString::release_copied(char *p) const {
 }
 
 SString::SString(const SString &rhs) : Vector<char>(rhs) {
-
+    hash();
 }
 
 SString &SString::operator=(const SString &rhs) {
@@ -147,15 +158,21 @@ SString &SString::operator=(const SString &rhs) {
         return *this;
     }
     Vector<char>::operator=(rhs);
+    hashVal = rhs.hashVal;
     return *this;
 }
 
 SString &SString::operator=(SString &&rhs) noexcept {
     Vector<char>::operator=(std::forward<SString>(rhs));
+    hashVal = rhs.hashVal;
+    rhs.hash();
     return *this;
 }
 
 bool SString::operator==(const SString &rhs) const {
+    if (rhs.hashVal != hashVal) {
+        return false;
+    }
     if (rhs.length() != length()) {
         return false;
     }
@@ -166,8 +183,14 @@ bool SString::operator!=(const SString &rhs) const {
     return !(*this == rhs);
 }
 
-size_type SString::hash() const {
-    return MySQLHash(begin, length());
+hash_type SString::hash() {
+    hash_type hv = MySQLHash(begin, length());
+    hashVal = hv;
+    return hv;
+}
+
+hash_type SString::getHashVal() const {
+    return hashVal;
 }
 
 static bool is_lower(char c) { return c <= 'z' && c >= 'a'; }
@@ -185,9 +208,9 @@ static void cstr_lower(char *p, size_type len) {
     }
 }
 
-void SString::upperCase() { cstr_upper(begin, size()); }
+void SString::upperCase() { cstr_upper(begin, size()); hash(); }
 
-void SString::lowerCase() { cstr_lower(begin, size()); }
+void SString::lowerCase() { cstr_lower(begin, size()); hash(); }
 
 long SString::toDecSigned() const {
     size_type index = size() - 1;
@@ -219,6 +242,7 @@ SString SString::parseDec(size_type num) {
     ret.begin = s;
     ret.cur = s + len;
     ret.end = s + 21;
+    ret.hash();
     return ::move(ret);
 }
 
@@ -240,6 +264,36 @@ size_type SString::indexOf(const SString &rhs) const {
 size_type SString::indexOf(char *p, size_type len) {
     // most fit length
 
+}
+
+size_type SString::indexOfSince(char c, size_type index) {
+    char *p = begin + index;
+    for (; p < cur; ++p) {
+        if (*p == c) {
+            return p - begin;
+        }
+    }
+    return cur - begin;
+}
+
+inline static bool cstr_hasc(const char *str, char c) {
+    while (*str) {
+        if (*str == c) {
+            return true;
+        }
+        ++str;
+    }
+    return false;
+}
+
+size_type SString::indexSkip(const char *str, size_type index) {
+    char *p = begin + index;
+    for (; p < cur; ++p) {
+        if (!cstr_hasc(str, *p)) {
+            return p - begin;
+        }
+    }
+    return cur - begin;
 }
 
 

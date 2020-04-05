@@ -6,6 +6,7 @@
 #ifndef MYCPPLIB_HASH_MAP_HPP
 #define MYCPPLIB_HASH_MAP_HPP
 
+#include <initializer_list>
 #include "../Set/HashSet.hpp"
 #include "MapEntry.hpp"
 
@@ -34,6 +35,13 @@ namespace anarion {
 
     public:
         HashMap() = default;
+
+        HashMap(std::initializer_list<entry> initList) {
+            for (auto &it : initList) {
+                this->insert(move(it));
+            }
+        }
+
         HashMap(const this_type &rhs) : parent(rhs) {}
         HashMap(this_type &&rhs) noexcept : parent((forward<this_type>(rhs))) {}
 

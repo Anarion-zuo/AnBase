@@ -7,7 +7,9 @@
 
 #include "Channel.h"
 
+
 namespace anarion {
+    class OutChannel;
     class InChannel : virtual public Channel {
     protected:
         bool i_valid;
@@ -23,6 +25,9 @@ namespace anarion {
         virtual void closei() = 0;
 
         bool inOn() const { return i_valid; }
+        void invalidi() { i_valid = false; }
+
+        void transferFrom(OutChannel &src);
     };
 }
 

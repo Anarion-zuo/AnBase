@@ -10,7 +10,7 @@
 
 class DbcHandleInitFailed : public DbcException {
 public:
-    DbcHandleInitFailed(::MYSQL *mysql) : DbcException(mysql) {}
+    DbcHandleInitFailed(anarion::native_mysql::MYSQL *mysql) : DbcException(mysql) {}
 };
 
 

@@ -11,7 +11,7 @@
 namespace anarion {
     class TcpServerSocketChannel : virtual public ServerSocketChannel, public TcpSocketChannel {
     public:
-        TcpServerSocketChannel(in_port_t port_num);
+        explicit TcpServerSocketChannel(in_port_t port_num);
 
         void bind(in_port_t port_num) override;
         void listen(int backlog) override;

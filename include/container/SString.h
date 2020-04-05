@@ -14,6 +14,8 @@ namespace anarion {
     class SString : public Vector<char> {
         friend class StringBuilder;
         friend class Buffer;
+
+        hash_type hashVal = 1;
     public:
         SString();
         explicit SString(const char *str);
@@ -36,7 +38,8 @@ namespace anarion {
 
         bool equals(SString *rhs) const ;
         bool equals(const char *c) const ;
-        size_type hash() const ;
+        size_type hash() ;
+        hash_type getHashVal() const ;
         size_type length() const;
         char *cstr() const;
         void copy_cstr(char *p) const;
@@ -50,6 +53,8 @@ namespace anarion {
         size_type indexOf(char *p, size_type len);
         size_type indexOf(const char *str) const ;  // KMP
         size_type indexOf(const SString &rhs) const ;
+        size_type indexOfSince(char c, size_type index);
+        size_type indexSkip(const char *str, size_type index);
 
         void upperCase();
         void lowerCase();
@@ -61,7 +66,7 @@ namespace anarion {
     };
 
     template <> struct hash_function<SString> {
-        hash_type operator()(const SString &str) { return str.hash(); }
+        hash_type operator()(const SString &str) { return str.getHashVal(); }
     };
 };
 

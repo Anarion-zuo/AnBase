@@ -25,6 +25,7 @@ namespace anarion {
 class Channel {
 public:
     virtual void close() = 0;
+
 };
 }
 

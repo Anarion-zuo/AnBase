@@ -4,9 +4,7 @@ project (MyCppBase)
 #aux_source_directory(. DIR_SRCS)
 add_library(anarionbase STATIC
         allocator/Allocator.cpp
-        allocator/DynamicListAllocator.cpp
-        allocator/ListAllocator.cpp
-        allocator/PoolAllocator.cpp
+        allocator/ListConcurrentAllocator.cpp
 
         concurrent/base/Barrier.cpp
         concurrent/base/CondVar.cpp
@@ -24,6 +22,9 @@ add_library(anarionbase STATIC
         context/LocalContext.cpp
 
         io/buffer/Buffer.cpp
+        io/channel/Channel.cpp
+        io/channel/InChannel.cpp
+        io/channel/OutChannel.cpp
         io/channel/file/FileChannel.cpp
         io/channel/file/MemoryMappedFileChannel.cpp
         io/channel/listener/Listener.cpp
@@ -47,4 +48,5 @@ add_library(anarionbase STATIC
 #add_subdirectory(io)
 #target_link_libraries(anarionbase )#ALLOCATOR CONCURRENT CONTAINER REFLECTOR IO CONTEXT)
 
+target_link_libraries(anarionbase pthread)
 include_directories(${CMAKE_SOURCE_DIR}/include)

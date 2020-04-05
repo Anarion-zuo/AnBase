@@ -8,6 +8,7 @@
 #include "Channel.h"
 
 namespace anarion {
+    class InChannel;
     class OutChannel : virtual public Channel {
     protected:
         bool o_valid;
@@ -23,7 +24,11 @@ namespace anarion {
         virtual void closeo() = 0;
 
         bool outOn() const { return o_valid; }
+        void invalido() { o_valid = false; }
+
+        void transferTo(InChannel &dst);
     };
+
 }
 
 #endif //MYCPPBASE_OUTCHANNEL_H

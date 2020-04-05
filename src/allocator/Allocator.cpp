@@ -4,12 +4,3 @@
 
 #include "allocator/Allocator.h"
 
-char *Allocator::allocate(size_t size) {
-    char *p;
-    execListAllocatorAllocate(&p, size);
-    return p;
-}
-
-void Allocator::deallocate(char *p, size_t num) {
-    execListAllocatorDeallocate(p, num);
-}

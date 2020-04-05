@@ -69,7 +69,10 @@ namespace anarion {
              * this class must make sure of correctness therefore add lock to each public functions
              * we do not need extra lock here
              */
-            cond.wait(bind(&LinkedList<T>::size, list));
+//            cond.wait(bind(&LinkedList<T>::size, list));
+            while (list.empty()) {
+                cond.wait();
+            }
             T o = list.pop_back();
             lock.unlock();
             return move(o);

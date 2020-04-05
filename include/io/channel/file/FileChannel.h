@@ -32,6 +32,7 @@ public:
     void move_back(size_type nbytes) override;
     size_type size() const override;
 
+    bool modifiedLaterThan(const timespec &time);
 };
 }
 
