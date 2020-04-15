@@ -30,6 +30,7 @@ namespace anarion {
         MapParser(char equal, char separator);
 
         HashMap<SString, SString> parse(const SString &inputExpression);
+        HashMap<SString, SString> parse(const char *cstr, size_type length);
 
     };
 }

@@ -72,7 +72,7 @@ namespace anarion {
         void expand_heads() {
             if (heads_count == 0) {
                 heads_count = 8;
-                heads = (hash_node**)operator new(heads_count * sizeof(hash_node**));
+                heads = (hash_node**)operator new(heads_count * sizeof(hash_node*));
                 memset(heads, 0, sizeof(hash_node*) * heads_count);
                 return;
             }
@@ -80,7 +80,7 @@ namespace anarion {
             size_type old_count = heads_count, new_count = old_count << 1u;
             heads_count = new_count;  // update heads count
             hash_node **old_heads = heads;   // record old heads
-            heads = (hash_node**)operator new(new_count * sizeof(hash_node**));  // update new heads
+            heads = (hash_node**)operator new(new_count * sizeof(hash_node*));  // update new heads
             memset(heads, 0, sizeof(hash_node*) * new_count);
             for (size_type i = 0; i < old_count; ++i) {
                 hash_node *node = old_heads[i];
@@ -90,7 +90,7 @@ namespace anarion {
                     node = next;
                 }
             }
-            operator delete (old_heads, old_count);  // release old resource
+            operator delete (old_heads, old_count * sizeof(hash_node*));  // release old resource
         }
 
         void insert_node(hash_node *node) {
@@ -99,6 +99,7 @@ namespace anarion {
             hash_node *head = heads[index];
             while (head) {
                 if (head->obj == node->obj) {
+                    delete node;
                     return;
                 }
                 head = head->next;
@@ -171,7 +172,7 @@ namespace anarion {
             }
         }
 
-        HashSet(HashSet<T, hash_func> &&rhs) noexcept : heads(rhs.heads), heads_count(rhs.heads_count), obj_count(rhs.obj_count) { clear_move(); }
+        HashSet(HashSet<T, hash_func> &&rhs) noexcept : heads(rhs.heads), heads_count(rhs.heads_count), obj_count(rhs.obj_count) { rhs.clear_move(); }
 
         HashSet<T, hash_func> &operator=(const HashSet<T, hash_func> &rhs) {
             if (this == &rhs) { return *this; }
@@ -208,6 +209,8 @@ namespace anarion {
             // clear members
             clear_move();
         }
+
+        virtual ~HashSet() { clear(); }
 
         void insert(const T &o) {
             if (heads_count <= obj_count) {

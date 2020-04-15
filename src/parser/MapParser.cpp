@@ -83,21 +83,60 @@ anarion::MapParser::parse(const anarion::SString &inputExpression) {
 
         size_type keyLen = equalOffset;
         size_type valLen = separatorOffset - equalOffset - 1;
-        char *key = static_cast<char *>(operator new(keyLen));
-        char *val = static_cast<char *>(operator new(valLen));
-        memcpy(key, cstr + leftIndex, keyLen);
-        memcpy(val, cstr + leftIndex + equalOffset + 1, valLen);
+//        char *key = static_cast<char *>(operator new(keyLen));
+//        char *val = static_cast<char *>(operator new(valLen));
+//        memcpy(key, cstr + leftIndex, keyLen);
+//        memcpy(val, cstr + leftIndex + equalOffset + 1, valLen);
 
         size_type oldKeyLen = keyLen;
         size_type oldValLen = valLen;
-        char *cleanKey = getRidOfEndSpaces(key, keyLen);
-        char *cleanVal = getRidOfEndSpaces(val, valLen);
-        operator delete (key, oldKeyLen);
-        operator delete (val, oldValLen);
+        char *cleanKey = getRidOfEndSpaces(cstr + leftIndex, keyLen);
+        char *cleanVal = getRidOfEndSpaces(cstr + leftIndex + equalOffset + 1, valLen);
+//        operator delete (key, oldKeyLen);
+//        operator delete (val, oldValLen);
 
-        ret.put(SString::move(key, keyLen), SString::move(val, valLen));
+        ret.put(SString::move(cleanKey, keyLen), SString::move(cleanVal, valLen));
 
         leftIndex += separatorOffset + 1;
     }
+    auto it = ret.find(SString("timeout"));
+    return move(ret);
+}
+
+HashMap<SString, SString> MapParser::parse(const char *cstr, size_type length) {
+    HashMap<SString, SString> ret;
+    // initialize variables
+    size_type unParsedLength = length;
+    size_type leftIndex = 0;
+    // not indices, but offset with respect to present leftIndex
+    size_type equalOffset;
+    size_type separatorOffset;
+
+    // iterate for each line
+    while (unParsedLength <= length) {
+        equalOffset = indexOfCStr(cstr + leftIndex, unParsedLength, equal);
+        separatorOffset = indexOfCStr(cstr + leftIndex, unParsedLength, separator);
+        unParsedLength -= equalOffset + 1;
+        unParsedLength -= separatorOffset - equalOffset;
+
+        size_type keyLen = equalOffset;
+        size_type valLen = separatorOffset - equalOffset - 1;
+//        char *key = static_cast<char *>(operator new(keyLen));
+//        char *val = static_cast<char *>(operator new(valLen));
+//        memcpy(key, cstr + leftIndex, keyLen);
+//        memcpy(val, cstr + leftIndex + equalOffset + 1, valLen);
+
+        size_type oldKeyLen = keyLen;
+        size_type oldValLen = valLen;
+        char *cleanKey = getRidOfEndSpaces(cstr + leftIndex, keyLen);
+        char *cleanVal = getRidOfEndSpaces(cstr + leftIndex + equalOffset + 1, valLen);
+//        operator delete (key, oldKeyLen);
+//        operator delete (val, oldValLen);
+
+        ret.put(SString::move(cleanKey, keyLen), SString::move(cleanVal, valLen));
+
+        leftIndex += separatorOffset + 1;
+    }
+    auto it = ret.find(SString("timeout"));
     return move(ret);
 }

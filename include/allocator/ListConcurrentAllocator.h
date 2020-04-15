@@ -25,6 +25,9 @@ namespace anarion {
         void *allocate(size_t size) override;
         void deallocate(void *p, size_t num) override;
 
+        static void * operator new (size_t nbytes);
+        static void operator delete (void *p, size_t nbytes);
+
     };
 }
 

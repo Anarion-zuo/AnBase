@@ -13,7 +13,7 @@ anarion::FileChannel anarion::FileChannel::open(const SString &dir) {
     int fd = ::open(cdir, O_RDWR | O_CREAT, 0666);
     dir.release_copied(cdir);
     if (fd < 0) { throw OpenFdException(); }
-    return FileChannel(fd);
+    return FileChannel(SString(dir), fd);
 }
 
 void anarion::FileChannel::close() {
@@ -99,4 +99,39 @@ bool anarion::FileChannel::modifiedLaterThan(const timespec &time) {
         return true;
     }
     return time.tv_nsec < mod.tv_nsec;
+}
+
+void anarion::FileChannel::open() {
+    return;
+}
+
+void anarion::FileChannel::release() {
+    close();
+}
+
+anarion::size_type anarion::FileChannel::in(anarion::FixedBuffer &buffer) {
+    if (!valid()) { throw InvalidOperation(); }
+    return buffer.write_fd(fd, buffer.unread());
+}
+
+anarion::size_type anarion::FileChannel::in(anarion::FixedBuffer &buffer, anarion::size_type nbytes) {
+    if (!valid()) { throw InvalidOperation(); }
+    if (nbytes > buffer.unread()) { throw IndexOutOfRange(); }
+    return buffer.write_fd(fd, nbytes);
+}
+
+anarion::FixedBuffer anarion::FileChannel::outBuffer(anarion::size_type nbytes) {
+    if (!valid()) { throw InvalidOperation(); }
+    FixedBuffer buffer(nbytes);
+    buffer.append_fd(fd, nbytes);
+    return move(buffer);
+}
+
+anarion::FixedBuffer anarion::FileChannel::outBuffer() {
+    if (!o_valid) { throw InvalidOperation(); }
+    off_t cur = ::lseek(fd, 0, SEEK_CUR);
+    off_t size = ::lseek(fd, 0, SEEK_END);
+    ::lseek(fd, cur, SEEK_SET);
+    off_t unread = size - cur;
+    return outBuffer(unread);
 }

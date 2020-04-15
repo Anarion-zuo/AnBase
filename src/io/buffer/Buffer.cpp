@@ -139,6 +139,25 @@ size_type Buffer::append_fd(int fd, size_type nbytes) {
     return len;
 }
 
+size_type Buffer::append_fd(int fd) {
+    size_type ret = 0;   // keep record of recved bytes
+    if (capacity() == 0) {
+        resize(1);
+    }
+    while (true) {
+        size_type nbytes = unwritten();
+        size_type len = ::read(fd, cur, nbytes);
+        cur += len;
+        ret += len;
+        if (len < nbytes) {
+            // the pipe is drained
+            return ret;
+        }
+        // pipe not drained, expand capacity
+        resize(capacity() << 1u);
+    }
+}
+
 size_type Buffer::write_fd(int fd, size_type nbytes) {
     if (nbytes > unread()) { throw IndexOutOfRange(); }
     size_type len = writen(fd, pos, nbytes);
@@ -214,7 +233,7 @@ Buffer Buffer::write_arr_to(char c) {
     size_type index = index_of(c);
     Buffer buffer(index);
     buffer.append_arr(*this, index);
-    return move(buffer);
+    return ::move(buffer);
 }
 
 size_type Buffer::index_of(char c) const {
@@ -256,5 +275,17 @@ void Buffer::resize(size_type newsize) {
     size_type posIndex = pos - begin;
     Vector<char>::resize(newsize);
     pos = begin + posIndex;
+}
+
+Buffer Buffer::move(char *p, size_type nbytes) {
+    if (p == nullptr || nbytes == 0) {
+        return Buffer();
+    }
+    Buffer buffer;
+    buffer.begin = p;
+    buffer.end = p + nbytes;
+    buffer.cur = buffer.end;
+    buffer.pos = p;
+    return ::move(buffer);
 }
 

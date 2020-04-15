@@ -22,6 +22,8 @@ public:
     Buffer(Buffer &&rhs) noexcept : Vector<char>(forward<Buffer>(rhs)), pos(rhs.pos) { rhs.pos = nullptr; }
     ~Buffer() = default;
 
+    static Buffer move(char *p, size_type nbytes);
+
     Buffer &operator=(const Buffer &rhs);
     Buffer &operator=(Buffer &&rhs) noexcept ;
 
@@ -41,6 +43,7 @@ public:
 
     // file descriptor
     size_type append_fd(int fd, size_type nbytes);
+    size_type append_fd(int fd);
     size_type write_fd(int fd, size_type nbytes);
     size_type send_fd(int cfd, size_type nbytes, int flags);
     size_type recv_fd(int cfd, int flags);

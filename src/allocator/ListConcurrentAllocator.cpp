@@ -100,3 +100,11 @@ void anarion::ListConcurrentAllocator::deallocate(void *p, size_t num) {
     ::deallocate(static_cast<chunk *>(p), num);
 }
 
+void *ListConcurrentAllocator::operator new(size_t nbytes) {
+    return ::allocate(nbytes);
+}
+
+void ListConcurrentAllocator::operator delete(void *p, size_t nbytes) {
+    ::deallocate(static_cast<chunk *>(p), nbytes);
+}
+

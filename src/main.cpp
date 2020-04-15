@@ -41,7 +41,24 @@ void printx(int x) {
 }
 
 int main() {
-    MapParser parser('=', ';');
-    parser.parse(SString("max=100;timeout=99"));
+//    MapParser parser('=', ';');
+//    while (true) {
+//        HashMap<SString, SString> map = parser.parse(SString("timeout=99"));
+//        auto it = map.find(SString("timeout"));
+//    }
+    TcpServerSocketChannel server(9898);
+    server.listen(128);
+    while (true) {
+        TcpSocketChannel client{server.accept()};
+        FixedBuffer buffer = client.outBuffer();
+        buffer.print();
+        client.close();
+    }
+
+//    LinkedList<int> list;
+//    list.push_back(1);
+//    list.push_back(2);
+//    list.push_back(3);
+//    list.push_back(4);
     return 0;
 }

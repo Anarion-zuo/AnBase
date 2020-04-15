@@ -46,7 +46,7 @@ SString SString::move(char *p, size_type len) {
     ret.cur = p + len;
     ret.end = ret.cur;
     ret.hash();
-    return ::move(ret);
+    return anarion::move(ret);
 }
 
 SString SString::move(Buffer &&buffer) {
@@ -59,7 +59,7 @@ SString SString::move(Buffer &&buffer) {
     buffer.end = nullptr;
     buffer.pos = nullptr;
     ret.hash();
-    return ::move(ret);
+    return anarion::move(ret);
 }
 
 void SString::append(char *p, size_type num) {
@@ -176,7 +176,14 @@ bool SString::operator==(const SString &rhs) const {
     if (rhs.length() != length()) {
         return false;
     }
-    return equals(rhs.cstr());
+//    return equals(rhs);
+    const char *rhs_cstr = rhs.cstr();
+    for (size_type i = 0; i < length(); ++i) {
+        if (begin[i] != rhs_cstr[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool SString::operator!=(const SString &rhs) const {

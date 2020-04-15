@@ -66,6 +66,21 @@ anarion::Buffer anarion::SocketChannel::outUntil(char *chars) {
     return anarion::Buffer();
 }
 
+anarion::FixedBuffer anarion::SocketChannel::outBuffer(anarion::size_type nbytes) {
+    if (!o_valid) { InvalidOperation(); }
+    FixedBuffer buffer(nbytes);
+    buffer.recv_fd(sockfd, 0);
+    return move(buffer);
+}
+
+anarion::FixedBuffer anarion::SocketChannel::outBuffer() {
+    if (!o_valid) { InvalidOperation(); }
+    FixedBuffer buffer;
+    buffer.recv_fd(sockfd, 0);
+    return move(buffer);
+}
+
+
 const char *anarion::SocketException::what() const noexcept {
     return strerror(errno);
 }

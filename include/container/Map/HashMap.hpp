@@ -72,6 +72,9 @@ namespace anarion {
         }
 
         typename parent::iterator find(const K &key) const {
+            if (this->heads_count == 0 || this->obj_count == 0) {
+                return this->end_iterator();
+            }
             hash_func func;
             hash_type hash_val = func(key);
             size_type index = hash_val % this->heads_count;

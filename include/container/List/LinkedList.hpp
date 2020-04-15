@@ -37,14 +37,14 @@ namespace anarion {
             newnode->next = rethead;
         }
 
-        static void del_list(list_node *begin, list_node *stop) {
-            list_node *node = begin;
-            while (node != stop->next) {
-                list_node *next = node->next;
-                delete (node);
-                node = next;
-            }
-        }
+//        static void del_list(list_node *begin, list_node *stop) {
+//            list_node *node = begin;
+//            while (node != stop->next) {
+//                list_node *next = node->next;
+//                delete (node);
+//                node = next;
+//            }
+//        }
 
         list_node head;
         size_type count = 0;
@@ -80,6 +80,7 @@ namespace anarion {
             list_node *node;
         public:
             explicit iterator(list_node *node) : node(node) {}
+            iterator(const iterator &rhs) : node(rhs.node) {}
 
             // traits
             typedef seq_iterator category;
@@ -226,12 +227,18 @@ namespace anarion {
 
         void clear() {
             count = 0;
-            del_list(head.next, head.prev);
+//            del_list(head.next, head.prev);
+            list_node *node = head.next;
+            while (node != &head) {
+                list_node *next = node->next;
+                delete node;
+                node = next;
+            }
             head.next = &head;
             head.prev = &head;
         }
 
-        size_type size() const {
+        constexpr size_type size() const {
             return count;
         }
 
@@ -243,9 +250,9 @@ namespace anarion {
             return !size();
         }
 
-        iterator begin_iterator() { return iterator(head.next); }
+        iterator begin_iterator() const { return iterator(head.next); }
 
-        iterator end_iterator() { return iterator(&head); }
+        iterator end_iterator() const { return iterator(const_cast<list_node*>(&head)); }
 
         void push_back(const T &o) {
 //            list_node *node = newObject<list_node>(o, &head, head.prev);

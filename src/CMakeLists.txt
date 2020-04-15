@@ -5,6 +5,7 @@ project (MyCppBase)
 add_library(anarionbase STATIC
         allocator/Allocator.cpp
         allocator/ListConcurrentAllocator.cpp
+        allocator/FixedLengthAllocator.cpp
 
         concurrent/base/Barrier.cpp
         concurrent/base/CondVar.cpp
@@ -22,21 +23,30 @@ add_library(anarionbase STATIC
         context/LocalContext.cpp
 
         io/buffer/Buffer.cpp
+        io/buffer/FixedBuffer.cpp
         io/channel/Channel.cpp
         io/channel/InChannel.cpp
         io/channel/OutChannel.cpp
         io/channel/file/FileChannel.cpp
         io/channel/file/MemoryMappedFileChannel.cpp
+        io/channel/file/FileEntry.cpp
+        io/channel/file/Directory.cpp
         io/channel/listener/Listener.cpp
         io/channel/listener/EpollListener.cpp
         io/channel/network/ServerSocketChannel.cpp
         io/channel/network/SocketChannel.cpp
         io/channel/network/TcpServerSocketChannel.cpp
         io/channel/network/TcpSocketChannel.cpp
+        io/channel/terminal/TerminalPrintChannel.cpp
+        io/channel/terminal/TerminalScanChannel.cpp
 
         reflector/dynamic_reflect.cpp
 
         parser/MapParser.cpp
+        parser/ListParser.cpp
+        parser/xml/XmlNode.cpp
+
+        logger/Logger.cpp
 
         )
 #add_library(anarionbase SHARED ${DIR_SRCS})
