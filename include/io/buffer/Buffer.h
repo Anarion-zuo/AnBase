@@ -1,69 +1,144 @@
-#ifndef BUFFER_H
-#define BUFFER_H
+//
+// Created by anarion on 4/14/20.
+//
 
-#include "../../container/List/Vector.hpp"
-#include "../base/sys_utility.h"
+#ifndef MYCPPBASE_TTBUFFER_H
+#define MYCPPBASE_TTBUFFER_H
+
+#include <container/List/LinkedList.hpp>
+#include <allocator/FixedLengthAllocator.h>
+#include <container/Map/HashMap.hpp>
 
 namespace anarion {
 
-class Buffer : public Vector<char> {
-    friend class SString;
-protected:
+    size_type writen(int fd, void *buf, size_type nbytes);
+    size_type readn(int fd, void *buf, size_type nbytes);
+    size_type sendn(int cfd, void *buf, size_type nbytes, int flags);
+    size_type recvn(int cfd, void *buf, size_type nbytes, int flags);
 
-    typedef Vector<char> parent;
+    class TTBuffer {
 
-    char *pos = nullptr;
+        /*
+         * unit of buffer memory
+         * Directly uses the FixedLengthAllocator for fast memory allocation.
+         *
+         * Initialization:
+         *      Must provide an empty parameter constructor, therefore no direct constructor is available.
+         *      1) set allocator pointer
+         *      2) allocate memory and set begin and cur
+         *      3) reset pos to begin for readings from the beginning
+         */
+//        struct frame {
+//            char *begin = nullptr, *cur = nullptr, *pos = nullptr;
+//            FixedLengthAllocator *allocator = nullptr;
+//
+//            frame() = default;
+//
+//            frame(const frame &rhs) :
+//                begin(static_cast<char *>(rhs.allocator->allocate())),
+//                cur(begin + rhs.writtenSize()),
+//                pos(begin + rhs.readSize()),
+//                allocator(rhs.allocator)
+//            {
+//                memcpy(begin, rhs.begin, rhs.writtenSize());
+//            }
+//
+//            frame(frame &&rhs) noexcept :
+//                begin(rhs.begin), cur(rhs.cur), pos(rhs.pos), allocator(rhs.allocator)
+//            {
+//                rhs.begin = nullptr;
+//                rhs.cur = nullptr;
+//                rhs.pos = nullptr;
+//            }
+//
+//            ~frame() {
+//                allocator->deallocate(begin);
+//            }
+//
+//            constexpr size_type capacity() const { return allocator->getLength(); }
+//            constexpr size_type writtenSize() const { return cur - begin; }
+//            constexpr size_type readSize() const { return pos - begin; }
+//        };
 
-public:
-    
-    Buffer() = default;
-    explicit Buffer(size_type nbytes) : Vector<char>(nbytes), pos(Vector<char>::begin) {}
-    Buffer(const Buffer &rhs) : Vector<char>(rhs), pos(rhs.pos - rhs.begin + begin) {}
-    Buffer(Buffer &&rhs) noexcept : Vector<char>(forward<Buffer>(rhs)), pos(rhs.pos) { rhs.pos = nullptr; }
-    ~Buffer() = default;
+        LinkedList<void *> frames;
+        const size_type frameLength;
+        FixedLengthAllocator *allocator;
 
-    static Buffer move(char *p, size_type nbytes);
+        // allocate a new frame
+        void newFrame();
+        void newFrames(size_type n);
 
-    Buffer &operator=(const Buffer &rhs);
-    Buffer &operator=(Buffer &&rhs) noexcept ;
+        // select allocator
+        static HashMap<size_type, FixedLengthAllocator*> allocatorMap;
+        static FixedLengthAllocator *getAllocator(size_type frameLength);
+        static Mutex allocatorMapLock;
 
-    void resize(size_type newsize);  // must update pos member, or corrupt heap
+        struct iterator {
+            LinkedList<void*>::iterator listIt;
+            size_type offset, listIndex = 0;
 
-    // lengths
-    size_type unread() const { return cur - pos; }
-    size_type unwritten() const { return end - cur; }
-    constexpr void rewind() { pos = begin; }
+            iterator() : offset(0), listIt(nullptr) {}
+            iterator(const iterator &rhs) = default;
+            iterator(iterator &&rhs) noexcept :
+                listIt(rhs.listIt), offset(rhs.offset)
+            {
+                rhs.offset = 0;
+                rhs.listIt = LinkedList<void*>::iterator(nullptr);
+            }
+            iterator &operator=(const iterator &rhs) = default;
 
-    // arr
-    void append_arr(char *p, size_type len);
-    void append_arr(const char *str);
-    void write_arr(char *p, size_type len);
-    void append_arr(Buffer &buffer, size_type len);
-    void write_arr(Buffer &buffer, size_type len);
+            void *offsettedPtr() { return (char*)(*listIt) + offset; }
+            constexpr void increaseOffset(size_type off) { offset += off; }
+        };
+        iterator readIterator, writeIterator;
+        constexpr size_type iteratorUnTouched(const iterator &it) const { return frameLength - it.offset; }
+        static void iteratorNext(iterator &it) {
+            it.offset = 0;
+            it.listIt++;
+            it.listIndex++;
+        }
+        bool iteratorIsEnd(const iterator &it) {
+            return frames.end_iterator() == it.listIt;
+        }
 
-    // file descriptor
-    size_type append_fd(int fd, size_type nbytes);
-    size_type append_fd(int fd);
-    size_type write_fd(int fd, size_type nbytes);
-    size_type send_fd(int cfd, size_type nbytes, int flags);
-    size_type recv_fd(int cfd, int flags);
-    size_type recv_fd(int cfd, size_type nbytes, int flags);
+        void allocateNew(size_type more_size);
 
-    // char
-    size_type skip(char *cs, size_type len);
-    size_type skip(const char *cs);
-    constexpr void skip() { ++pos; }
-    size_type index_of(char c) const ;  // from pos on
-    Buffer write_arr_to(char c);
+    public:
+        explicit TTBuffer(size_type frameLength = 1024);
+        TTBuffer(const TTBuffer &);
+        TTBuffer(TTBuffer &&) noexcept ;
+        ~TTBuffer() { clear(); }
 
-    void print();  // debug
+        void clear();
 
-};
+        constexpr size_type unread() const { return size() - (readIterator.listIndex * frameLength + readIterator.offset); }
+        constexpr size_type size() const { return writeIterator.listIndex * frameLength + writeIterator.offset; }
+        constexpr size_type unwritten() const { return capacity() - size(); }
+        constexpr size_type capacity() const { return frames.size() * frameLength; }
+        constexpr bool empty() const { return size() == 0; }
 
-size_type writen(int fd, void *buf, size_type nbytes);
-size_type readn(int fd, void *buf, size_type nbytes);
-size_type sendn(int cfd, void *buf, size_type nbytes, int flags);
-size_type recvn(int cfd, void *buf, size_type nbytes, int flags);
+        void rewind();
+        void refresh();
+        void setWriteIndex(size_type index);
+
+        // arr
+        void append_arr(char *p, size_type len);
+        void append_arr(const char *str);
+        void write_arr(char *p, size_type len);
+        void append_arr(TTBuffer &buffer, size_type len);
+        void write_arr(TTBuffer &buffer, size_type len);
+
+        // file descriptor
+        size_type append_fd(int fd, size_type nbytes);
+        size_type append_fd(int fd);
+        size_type write_fd(int fd, size_type nbytes);
+        size_type send_fd(int cfd, size_type nbytes, int flags);
+        size_type recv_fd(int cfd, int flags);
+        size_type recv_fd(int cfd, size_type nbytes, int flags);
+
+        void print();
+    };
 
 }
-#endif // BUFFER_H
+
+#endif //MYCPPBASE_TTBUFFER_H
