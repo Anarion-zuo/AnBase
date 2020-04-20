@@ -2,8 +2,8 @@
 // Created by anarion on 4/14/20.
 //
 
-#ifndef MYCPPBASE_TTBUFFER_H
-#define MYCPPBASE_TTBUFFER_H
+#ifndef MYCPPBASE_BUFFER_H
+#define MYCPPBASE_BUFFER_H
 
 #include <container/List/LinkedList.hpp>
 #include <allocator/FixedLengthAllocator.h>
@@ -16,7 +16,7 @@ namespace anarion {
     size_type sendn(int cfd, void *buf, size_type nbytes, int flags);
     size_type recvn(int cfd, void *buf, size_type nbytes, int flags);
 
-    class TTBuffer {
+    class Buffer {
 
         /*
          * unit of buffer memory
@@ -104,10 +104,10 @@ namespace anarion {
         void allocateNew(size_type more_size);
 
     public:
-        explicit TTBuffer(size_type frameLength = 1024);
-        TTBuffer(const TTBuffer &);
-        TTBuffer(TTBuffer &&) noexcept ;
-        ~TTBuffer() { clear(); }
+        explicit Buffer(size_type frameLength = 1024);
+        Buffer(const Buffer &);
+        Buffer(Buffer &&) noexcept ;
+        ~Buffer() { clear(); }
 
         void clear();
 
@@ -125,8 +125,8 @@ namespace anarion {
         void append_arr(char *p, size_type len);
         void append_arr(const char *str);
         void write_arr(char *p, size_type len);
-        void append_arr(TTBuffer &buffer, size_type len);
-        void write_arr(TTBuffer &buffer, size_type len);
+        void append_arr(Buffer &buffer, size_type len);
+        void write_arr(Buffer &buffer, size_type len);
 
         // file descriptor
         size_type append_fd(int fd, size_type nbytes);
@@ -141,4 +141,4 @@ namespace anarion {
 
 }
 
-#endif //MYCPPBASE_TTBUFFER_H
+#endif //MYCPPBASE_BUFFER_H

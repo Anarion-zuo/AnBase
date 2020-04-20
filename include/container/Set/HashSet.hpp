@@ -12,6 +12,7 @@ class iterator;
 #include "../base/container_utility.hpp"
 #include "allocator/Allocator.h"
 #include "../base/iterator_traits.hpp"
+#include <utility>
 
 namespace anarion {
 
@@ -163,6 +164,12 @@ namespace anarion {
 
     public:
         HashSet() = default; // : heads_count(0), obj_count(0), heads(nullptr) {}
+
+        HashSet(std::initializer_list<T> &&initList) {
+            for (auto &item : initList) {
+                insert(move(item));
+            }
+        }
 
         HashSet(const HashSet<T, hash_func> &rhs)
         : obj_count(rhs.obj_count), heads_count(rhs.heads_count), heads((hash_node**)operator new(heads_count * sizeof(hash_node**))) {
@@ -326,7 +333,7 @@ namespace anarion {
             hash_func func;
             hash_type hash_val = func(o);
             size_type index = hash_val % heads_count;
-            hash_node *node = find_node(o);
+            hash_node *node = find_node(o, hash_val);
             if (node == nullptr) {
                 return end_iterator();
             }

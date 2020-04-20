@@ -13,16 +13,18 @@ namespace anarion {
 
     class FileEntry {
     protected:
-        SString name;
+        SString name, nameSuffix;
         LinkedList<FileEntry*> childs;
 //        FileEntry *parent;
 
     public:
         explicit FileEntry(SString &&name);
-        FileEntry(FileEntry &&rhs) noexcept : name(move(rhs.name)), childs(move(rhs.childs)) {}
+        FileEntry(FileEntry &&rhs) noexcept : name(move(rhs.name)), nameSuffix(move(rhs.nameSuffix)), childs(move(rhs.childs)) {}
+        virtual ~FileEntry() = default;
 
         constexpr const SString &getName() const { return name; }
         bool isFile() const { return childs.empty(); }
+        constexpr const SString &getSuffix() const { return nameSuffix; }
 
         FileEntry * getChild(const SString &name);
         constexpr LinkedList<FileEntry*> &getChilds() { return childs; }

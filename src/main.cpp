@@ -14,31 +14,12 @@
 #include <allocator/ListConcurrentAllocator.h>
 #include <container/Map/HashMap.hpp>
 #include <parser/MapParser.h>
+#include <parser/ListParser.h>
+#include <io/channel/file/Directory.h>
 
 using namespace std;
 using namespace anarion;
 
-class A {
-    friend int main();
-private:
-    int x;
-
-public:
-
-    A(int x) : x(x) { cout << "A(): " << x << " " << this << endl; }
-    A(const A &) = default;
-    A(A &&) = default;
-    ~A() { cout << "~A(): " << this << endl; }
-
-    void hello(int y) {
-        cout << "hello function call... " << x << ", " << y << endl;
-        return;
-    }
-};
-
-void printx(int x) {
-    cout << "thread: " << x << endl;
-}
 
 int main() {
 //    MapParser parser('=', ';');
@@ -46,19 +27,25 @@ int main() {
 //        HashMap<SString, SString> map = parser.parse(SString("timeout=99"));
 //        auto it = map.find(SString("timeout"));
 //    }
-    TcpServerSocketChannel server(9898);
-    server.listen(128);
-    while (true) {
-        TcpSocketChannel client{server.accept()};
-        FixedBuffer buffer = client.outBuffer();
-        buffer.print();
-        client.close();
-    }
+//    TcpServerSocketChannel server(9898);
+//    server.listen(128);
+//    while (true) {
+//        TcpSocketChannel client{server.accept()};
+//        Buffer buffer = client.out();
+//        buffer.print();
+//        char *p = "HTTP/1.1 200 OK\r\n\r\nhahaha";
+//        Buffer outbuf;
+//        outbuf.append_arr(p, strlen(p));
+//        client.in(outbuf);
+//        client.close();
+//    }
 
-//    LinkedList<int> list;
-//    list.push_back(1);
-//    list.push_back(2);
-//    list.push_back(3);
-//    list.push_back(4);
+    Directory directory(SString("/home/anarion/Documents/CppProjects/MyMVC/static/"));
+    directory.open();
+    FileChannel * file = dynamic_cast<FileChannel *>(directory.getChild(SString("html"))->getChild(
+            SString("hello.html")));
+    file->rewind();
+    Buffer buffer = file->out();
+    buffer.print();
     return 0;
 }

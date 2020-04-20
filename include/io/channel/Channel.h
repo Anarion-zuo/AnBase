@@ -1,7 +1,7 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
-#include "../buffer/Buffer.h"
+#include "io/buffer/Buffer.h"
 #include "unistd.h"
 
 /**

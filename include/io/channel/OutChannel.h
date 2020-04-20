@@ -15,7 +15,7 @@ namespace anarion {
     public:
 
         explicit OutChannel(bool is_valid) : Channel(), o_valid(is_valid) {}
-        OutChannel(OutChannel &&rhs) noexcept : Channel(forward<OutChannel>(rhs)) { rhs.o_valid = false; }
+        OutChannel(OutChannel &&rhs) noexcept : o_valid(rhs.o_valid) { rhs.o_valid = false; }
 
         virtual size_type out(char *p, size_type nbytes) = 0;
         virtual Buffer out(size_type nbytes) = 0;

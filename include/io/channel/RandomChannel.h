@@ -27,7 +27,6 @@ protected:
     RandomChannel(bool is_valid) : Channel(), InChannel(is_valid), OutChannel(is_valid) {}
     RandomChannel(RandomChannel &&) = default;
 
-    bool valid() const { return i_valid && o_valid; }
     void set_invalid() { i_valid = false; o_valid = false; }
     void set_valid() { i_valid = true; o_valid = true; }
 
@@ -35,6 +34,7 @@ protected:
     void closeo() override {}
 
 public:
+    bool valid() const { return i_valid && o_valid; }
 
     // position
     virtual void rewind() = 0;

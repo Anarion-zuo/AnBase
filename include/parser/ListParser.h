@@ -16,6 +16,7 @@ namespace anarion {
     public:
         explicit ListParser(char separator) : separator(separator) {}
         LinkedList<SString> parse(const SString &expression);
+        LinkedList<SString> parse(const char *cstr, size_type length);
     };
 }
 

@@ -14,6 +14,7 @@ add_library(anarionbase STATIC
         concurrent/base/Thread.cpp
 
         concurrent/pool/ThreadPool.cpp
+        concurrent/pool/AsyncInvoke.cpp
 
         container/String.cpp
         container/StringBuilder.cpp
@@ -23,7 +24,7 @@ add_library(anarionbase STATIC
         context/LocalContext.cpp
 
         io/buffer/Buffer.cpp
-        io/buffer/FixedBuffer.cpp
+        io/buffer/Buffer.cpp
         io/channel/Channel.cpp
         io/channel/InChannel.cpp
         io/channel/OutChannel.cpp
@@ -47,6 +48,8 @@ add_library(anarionbase STATIC
         parser/xml/XmlNode.cpp
 
         logger/Logger.cpp
+
+#        serialize/Serializable.cpp
 
         )
 #add_library(anarionbase SHARED ${DIR_SRCS})

@@ -8,6 +8,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <concurrent/base/Mutex.h>
 
 namespace anarion {
     class FixedLengthAllocator {
@@ -26,17 +27,24 @@ namespace anarion {
 
         chunk *allocSlot(size_t n) {
             chunk *ret = static_cast<chunk *>(malloc(n * length));
+            memset(ret, 0, n * length);
             makeList(ret, length, n);
             return ret;
         }
 
         static void makeList(chunk *begin, size_t step, size_t num);
 
+        Mutex lock;
+
     public:
         explicit FixedLengthAllocator(size_t length) : length(length) {
             if (length < ptr_len) { this->length = ptr_len; }
             head = static_cast<chunk *>(malloc(length));
             head->next = nullptr;
+        }
+
+        ~FixedLengthAllocator() {
+
         }
 
         void *allocate();

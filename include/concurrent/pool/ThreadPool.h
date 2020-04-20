@@ -60,6 +60,8 @@ namespace anarion {
         void joinAll();
         void schedule(const Callable &callee);
     };
+
+
 }
 
 #endif //MYCPPLIB_THREADPOOL_H

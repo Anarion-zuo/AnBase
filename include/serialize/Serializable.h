@@ -5,12 +5,17 @@
 #ifndef MYCPPBASE_SERIALIZABLE_H
 #define MYCPPBASE_SERIALIZABLE_H
 
+#include <container/SString.h>
 
+namespace anarion {
+    struct serialize_trait {
 
-class Serializable {
+    };
 
-};
-
-
+    class Serializable {
+    public:
+        virtual SString serialize();
+    };
+}
 
 #endif //MYCPPBASE_SERIALIZABLE_H

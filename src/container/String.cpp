@@ -50,16 +50,10 @@ SString SString::move(char *p, size_type len) {
 }
 
 SString SString::move(Buffer &&buffer) {
-    SString ret;
-    ret.begin = buffer.begin;
-    ret.cur = buffer.cur;
-    ret.end = buffer.end;
-    buffer.begin = nullptr;
-    buffer.cur = nullptr;
-    buffer.end = nullptr;
-    buffer.pos = nullptr;
-    ret.hash();
-    return anarion::move(ret);
+    size_type len = buffer.unread();
+    char *p = static_cast<char *>(operator new(len));
+    buffer.write_arr(p, len);
+    return SString::move(p, len);
 }
 
 void SString::append(char *p, size_type num) {
@@ -119,6 +113,9 @@ SString::SString(SString &&rhs) noexcept : Vector<char>(std::forward<SString>(rh
 }
 
 SString SString::suffix(char dot) const {
+    if (empty()) {
+        return SString();
+    }
     char *p = cur;
     --p;
     // search for dot
@@ -126,8 +123,16 @@ SString SString::suffix(char dot) const {
     while (*p != dot) {
         ++index;
         --p;
+        if (p == begin) {
+            if (*p != dot) {
+                return SString();
+            }
+        }
     }
     if (index == 0) {
+        return SString();
+    }
+    if (index >= size()) {
         return SString();
     }
     return SString(p + 1, index);
@@ -301,6 +306,12 @@ size_type SString::indexSkip(const char *str, size_type index) {
         }
     }
     return cur - begin;
+}
+
+SString SString::parseHex(unsigned long num) {
+    char str[18];
+    sprintf(str, "%x", num);
+    return SString(str);
 }
 
 

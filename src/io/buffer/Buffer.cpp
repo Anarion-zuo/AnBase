@@ -3,7 +3,7 @@
 //
 
 #include <exceptions/container/IndexOutOfRange.h>
-#include <io/buffer/TTBuffer.h>
+#include <io/buffer/Buffer.h>
 #include <sys/socket.h>
 #include "exceptions/io/FdWriteException.h"
 #include "exceptions/io/FdReadException.h"
@@ -61,21 +61,21 @@ namespace anarion {
     }
 }
 
-anarion::HashMap<anarion::size_type, anarion::FixedLengthAllocator*> anarion::TTBuffer::allocatorMap;
-anarion::Mutex anarion::TTBuffer::allocatorMapLock;
+anarion::HashMap<anarion::size_type, anarion::FixedLengthAllocator*> anarion::Buffer::allocatorMap;
+anarion::Mutex anarion::Buffer::allocatorMapLock;
 
-void anarion::TTBuffer::newFrame() {
+void anarion::Buffer::newFrame() {
     void *p = allocator->allocate();
     frames.push_back(p);
 }
 
-void anarion::TTBuffer::newFrames(anarion::size_type n) {
+void anarion::Buffer::newFrames(anarion::size_type n) {
     for (size_type i = 0; i < n; ++i) {
         newFrame();
     }
 }
 
-anarion::FixedLengthAllocator *anarion::TTBuffer::getAllocator(anarion::size_type frameLength) {
+anarion::FixedLengthAllocator *anarion::Buffer::getAllocator(anarion::size_type frameLength) {
     allocatorMapLock.lock();
     auto it = allocatorMap.find(frameLength);
     if (it == allocatorMap.end_iterator()) {
@@ -87,7 +87,7 @@ anarion::FixedLengthAllocator *anarion::TTBuffer::getAllocator(anarion::size_typ
     return ret;
 }
 
-anarion::TTBuffer::TTBuffer(const unsigned long frameLength) :
+anarion::Buffer::Buffer(const unsigned long frameLength) :
     frameLength(frameLength), allocator(getAllocator(frameLength))
 {
     newFrame();
@@ -95,13 +95,13 @@ anarion::TTBuffer::TTBuffer(const unsigned long frameLength) :
     writeIterator = readIterator;
 }
 
-void anarion::TTBuffer::clear() {
+void anarion::Buffer::clear() {
     for (auto it = frames.begin_iterator(); it != frames.end_iterator(); ++it) {
         allocator->deallocate(*it);
     }
 }
 
-anarion::TTBuffer::TTBuffer(const anarion::TTBuffer &rhs) :
+anarion::Buffer::Buffer(const anarion::Buffer &rhs) :
     frameLength(rhs.frameLength), allocator(rhs.allocator)
 {
     // copy each frame
@@ -121,22 +121,22 @@ anarion::TTBuffer::TTBuffer(const anarion::TTBuffer &rhs) :
     rewind();
 }
 
-void anarion::TTBuffer::rewind() {
+void anarion::Buffer::rewind() {
     readIterator.listIndex = 0;
     readIterator.listIt = frames.begin_iterator();
 }
 
-void anarion::TTBuffer::refresh() {
+void anarion::Buffer::refresh() {
     rewind();
     writeIterator = readIterator;
 }
 
-anarion::TTBuffer::TTBuffer(anarion::TTBuffer &&rhs) noexcept :
+anarion::Buffer::Buffer(anarion::Buffer &&rhs) noexcept :
     frameLength(rhs.frameLength), allocator(rhs.allocator), frames(move(rhs.frames)), readIterator(move(rhs.readIterator)), writeIterator(move(rhs.writeIterator)) {
 
 }
 
-void anarion::TTBuffer::allocateNew(anarion::size_type more_size) {
+void anarion::Buffer::allocateNew(anarion::size_type more_size) {
     size_type n = more_size / frameLength, m = more_size % frameLength;
     if (m != 0) {
         ++n;
@@ -144,7 +144,7 @@ void anarion::TTBuffer::allocateNew(anarion::size_type more_size) {
     newFrames(n);
 }
 
-void anarion::TTBuffer::setWriteIndex(anarion::size_type index) {
+void anarion::Buffer::setWriteIndex(anarion::size_type index) {
     if (index > size()) {
         throw IndexOutOfRange();
     }
@@ -159,7 +159,7 @@ void anarion::TTBuffer::setWriteIndex(anarion::size_type index) {
     writeIterator.listIndex = n;
 }
 
-void anarion::TTBuffer::append_arr(char *p, anarion::size_type len) {
+void anarion::Buffer::append_arr(char *p, anarion::size_type len) {
     if (p == nullptr || len == 0) { return; }
     // expand memory occupation
     if (len > unwritten()) {
@@ -183,11 +183,11 @@ void anarion::TTBuffer::append_arr(char *p, anarion::size_type len) {
     writeIterator.increaseOffset(n);
 }
 
-void anarion::TTBuffer::append_arr(const char *str) {
+void anarion::Buffer::append_arr(const char *str) {
     append_arr(const_cast<char*>(str), strlen(str));
 }
 
-void anarion::TTBuffer::write_arr(char *p, anarion::size_type len) {
+void anarion::Buffer::write_arr(char *p, anarion::size_type len) {
     if (p == nullptr || len == 0) {
         return;
     }
@@ -211,15 +211,15 @@ void anarion::TTBuffer::write_arr(char *p, anarion::size_type len) {
     readIterator.increaseOffset(n);
 }
 
-void anarion::TTBuffer::append_arr(anarion::TTBuffer &buffer, anarion::size_type len) {
+void anarion::Buffer::append_arr(anarion::Buffer &buffer, anarion::size_type len) {
 
 }
 
-void anarion::TTBuffer::write_arr(anarion::TTBuffer &buffer, anarion::size_type len) {
+void anarion::Buffer::write_arr(anarion::Buffer &buffer, anarion::size_type len) {
 
 }
 
-anarion::size_type anarion::TTBuffer::append_fd(int fd, anarion::size_type nbytes) {
+anarion::size_type anarion::Buffer::append_fd(int fd, anarion::size_type nbytes) {
     if (nbytes == 0) { return 0; }
     // expand memory occupation
     if (nbytes > unwritten()) {
@@ -248,7 +248,7 @@ anarion::size_type anarion::TTBuffer::append_fd(int fd, anarion::size_type nbyte
     return len;
 }
 
-anarion::size_type anarion::TTBuffer::append_fd(int fd) {
+anarion::size_type anarion::Buffer::append_fd(int fd) {
     // inject data
     size_type n = 0, len = 0;
     while (true) {
@@ -272,7 +272,7 @@ anarion::size_type anarion::TTBuffer::append_fd(int fd) {
     return len;
 }
 
-anarion::size_type anarion::TTBuffer::write_fd(int fd, anarion::size_type nbytes) {
+anarion::size_type anarion::Buffer::write_fd(int fd, anarion::size_type nbytes) {
     if (nbytes == 0) { return 0; }
     if (nbytes > unread()) {
         throw IndexOutOfRange();
@@ -299,7 +299,7 @@ anarion::size_type anarion::TTBuffer::write_fd(int fd, anarion::size_type nbytes
     return len;
 }
 
-anarion::size_type anarion::TTBuffer::send_fd(int cfd, anarion::size_type nbytes, int flags) {
+anarion::size_type anarion::Buffer::send_fd(int cfd, anarion::size_type nbytes, int flags) {
     if (nbytes == 0) { return 0; }
     if (nbytes > unread()) {
         throw IndexOutOfRange();
@@ -326,7 +326,7 @@ anarion::size_type anarion::TTBuffer::send_fd(int cfd, anarion::size_type nbytes
     return len;
 }
 
-anarion::size_type anarion::TTBuffer::recv_fd(int cfd, int flags) {
+anarion::size_type anarion::Buffer::recv_fd(int cfd, int flags) {
     // inject data
     size_type n = 0, len = 0;
     while (true) {
@@ -350,7 +350,7 @@ anarion::size_type anarion::TTBuffer::recv_fd(int cfd, int flags) {
     return len;
 }
 
-anarion::size_type anarion::TTBuffer::recv_fd(int cfd, anarion::size_type nbytes, int flags) {
+anarion::size_type anarion::Buffer::recv_fd(int cfd, anarion::size_type nbytes, int flags) {
     if (nbytes == 0) { return 0; }
     // expand memory occupation
     if (nbytes > unwritten()) {
@@ -379,7 +379,7 @@ anarion::size_type anarion::TTBuffer::recv_fd(int cfd, anarion::size_type nbytes
     return len;
 }
 
-void anarion::TTBuffer::print() {
+void anarion::Buffer::print() {
     char *str = static_cast<char *>(operator new(size() + 1));
     write_arr(str, size());
     str[size()] = 0;

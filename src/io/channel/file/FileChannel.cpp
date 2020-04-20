@@ -24,7 +24,7 @@ void anarion::FileChannel::close() {
 }
 
 void anarion::FileChannel::rewind() {
-    if (!valid()) { throw InvalidOperation(); }
+    if (!valid()) { perror(""); throw InvalidOperation(); }
     ::lseek(fd, 0, SEEK_SET);
 }
 
@@ -53,22 +53,29 @@ anarion::size_type anarion::FileChannel::size() const {
 
 anarion::size_type anarion::FileChannel::in(char *p, size_type nbytes) {
     if (!valid()) { throw InvalidOperation(); }
-    return writen(fd, p, nbytes);
+    size_type ret = writen(fd, p, nbytes);
+    updateSize();
+    return ret;
 }
 
 anarion::size_type anarion::FileChannel::in(Buffer &buffer) {
     if (!valid()) { throw InvalidOperation(); }
-    return buffer.write_fd(fd, buffer.unread());
+    size_type ret = buffer.write_fd(fd, buffer.unread());
+    updateSize();
+    return ret;
 }
 
 anarion::size_type anarion::FileChannel::in(Buffer &buffer, size_type nbytes) {
     if (!valid()) { throw InvalidOperation(); }
     if (nbytes > buffer.unread()) { throw IndexOutOfRange(); }
-    return buffer.write_fd(fd, nbytes);
+    size_type ret = buffer.write_fd(fd, nbytes);
+    updateSize();
+    return ret;
 }
 
 anarion::size_type anarion::FileChannel::out(char *p, size_type nbytes) {
     if (!valid()) { throw InvalidOperation(); }
+    updateSize();
     return readn(fd, p, nbytes);
 }
 
@@ -76,6 +83,7 @@ anarion::Buffer anarion::FileChannel::out(size_type nbytes) {
     if (!valid()) { throw InvalidOperation(); }
     Buffer buffer(nbytes);
     buffer.append_fd(fd, nbytes);
+    updateSize();
     return move(buffer);
 }
 
@@ -96,9 +104,14 @@ bool anarion::FileChannel::modifiedLaterThan(const timespec &time) {
         return false;
     }
     if (time.tv_sec < mod.tv_sec) {
+        updateSize();
         return true;
     }
-    return time.tv_nsec < mod.tv_nsec;
+    if (time.tv_nsec < mod.tv_nsec) {
+        updateSize();
+        return true;
+    }
+    return false;
 }
 
 void anarion::FileChannel::open() {
@@ -109,29 +122,29 @@ void anarion::FileChannel::release() {
     close();
 }
 
-anarion::size_type anarion::FileChannel::in(anarion::FixedBuffer &buffer) {
-    if (!valid()) { throw InvalidOperation(); }
-    return buffer.write_fd(fd, buffer.unread());
-}
-
-anarion::size_type anarion::FileChannel::in(anarion::FixedBuffer &buffer, anarion::size_type nbytes) {
-    if (!valid()) { throw InvalidOperation(); }
-    if (nbytes > buffer.unread()) { throw IndexOutOfRange(); }
-    return buffer.write_fd(fd, nbytes);
-}
-
-anarion::FixedBuffer anarion::FileChannel::outBuffer(anarion::size_type nbytes) {
-    if (!valid()) { throw InvalidOperation(); }
-    FixedBuffer buffer(nbytes);
-    buffer.append_fd(fd, nbytes);
-    return move(buffer);
-}
-
-anarion::FixedBuffer anarion::FileChannel::outBuffer() {
-    if (!o_valid) { throw InvalidOperation(); }
-    off_t cur = ::lseek(fd, 0, SEEK_CUR);
-    off_t size = ::lseek(fd, 0, SEEK_END);
-    ::lseek(fd, cur, SEEK_SET);
-    off_t unread = size - cur;
-    return outBuffer(unread);
-}
+//anarion::size_type anarion::FileChannel::in(anarion::Buffer &buffer) {
+//    if (!valid()) { throw InvalidOperation(); }
+//    return buffer.write_fd(fd, buffer.unread());
+//}
+//
+//anarion::size_type anarion::FileChannel::in(anarion::Buffer &buffer, anarion::size_type nbytes) {
+//    if (!valid()) { throw InvalidOperation(); }
+//    if (nbytes > buffer.unread()) { throw IndexOutOfRange(); }
+//    return buffer.write_fd(fd, nbytes);
+//}
+//
+//anarion::Buffer anarion::FileChannel::outBuffer(anarion::size_type nbytes) {
+//    if (!valid()) { throw InvalidOperation(); }
+//    Buffer buffer(nbytes);
+//    buffer.append_fd(fd, nbytes);
+//    return move(buffer);
+//}
+//
+//anarion::Buffer anarion::FileChannel::outBuffer() {
+//    if (!o_valid) { throw InvalidOperation(); }
+//    off_t cur = ::lseek(fd, 0, SEEK_CUR);
+//    off_t size = ::lseek(fd, 0, SEEK_END);
+//    ::lseek(fd, cur, SEEK_SET);
+//    off_t unread = size - cur;
+//    return outBuffer(unread);
+//}

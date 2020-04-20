@@ -5,7 +5,9 @@
 #include <parser/ListParser.h>
 #include "io/channel/file/FileEntry.h"
 
-anarion::FileEntry::FileEntry(SString &&name) : name(forward<SString>(name)) {}
+anarion::FileEntry::FileEntry(SString &&name) : name(forward<SString>(name)) {
+    nameSuffix = this->name.suffix('.');
+}
 
 anarion::FileEntry * anarion::FileEntry::getChild(const anarion::SString &name) {
     for (auto it = childs.begin_iterator(); it != childs.end_iterator(); ++it) {

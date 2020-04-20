@@ -16,6 +16,8 @@ namespace anarion {
         explicit Directory(SString &&name);
         Directory(Directory &&rhs) noexcept : FileEntry(forward<Directory>(rhs)), handle(rhs.handle) { rhs.handle = nullptr; }
 
+        ~Directory() override ;
+
         void release() override;
         void open() override;
     };

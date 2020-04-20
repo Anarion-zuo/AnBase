@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #include "io/channel/OutChannel.h"
 #include "io/channel/InChannel.h"
-#include <io/buffer/FixedBuffer.h>
+#include <io/buffer/Buffer.h>
 
 namespace anarion {
     class SocketChannel : virtual public OutChannel, virtual public InChannel {
@@ -32,10 +32,9 @@ namespace anarion {
         size_type out(char *p, size_type nbytes) override;
         Buffer out(size_type nbytes) override;
         Buffer out() override ;
-        Buffer outUntil(char *chars);
 
-        FixedBuffer outBuffer(size_type nbytes);
-        FixedBuffer outBuffer();
+        //        Buffer outBuffer(size_type nbytes);
+//        Buffer outBuffer();
     };
 }
 

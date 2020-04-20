@@ -1,7 +1,7 @@
 #ifndef FILECHANNEL_H
 #define FLIECHANNEL_H
 
-#include <io/buffer/FixedBuffer.h>
+#include <io/buffer/Buffer.h>
 #include "../RandomChannel.h"
 #include "container/SString.h"
 #include "FileEntry.h"
@@ -10,13 +10,23 @@ namespace anarion {
 class FileChannel : virtual public RandomChannel, public virtual FileEntry {
 protected:
     int fd;
+    size_type fileSize = 0;
 
-    explicit FileChannel(SString &&name, int fd) : FileEntry(forward<SString>(name)), Channel(), InChannel(true), OutChannel(true),
-                                                   RandomChannel(true), fd(fd) {}
+    void updateSize() {
+        if (!valid()) { throw InvalidOperation(); }
+        off_t off = ::lseek(fd, 0, SEEK_CUR);
+        size_type ret = ::lseek(fd, 0, SEEK_END);
+        ::lseek(fd, off, SEEK_SET);
+        fileSize = ret;
+    }
+
+    explicit FileChannel(SString &&name, int fd) : FileEntry(forward<SString>(name)), Channel(), InChannel(true), OutChannel(true), RandomChannel(true), fd(fd) { updateSize(); }
 
 public:
 
-    FileChannel(FileChannel &&rhs) noexcept : Channel(forward<FileChannel>(rhs)), InChannel(forward<FileChannel>(rhs)), OutChannel(forward<FileChannel>(rhs)), RandomChannel(forward<FileChannel>(rhs)), fd(rhs.fd), FileEntry(forward<FileChannel>(rhs)) {}
+    FileChannel(FileChannel &&rhs) noexcept : InChannel(forward<FileChannel>(rhs)), OutChannel(forward<FileChannel>(rhs)), RandomChannel(forward<FileChannel>(rhs)), fd(rhs.fd), FileEntry(forward<FileChannel>(rhs)) {
+        return;
+    }
     ~FileChannel() { if (valid()) { close(); } }
 
     static FileChannel open(const SString &dir);
@@ -29,11 +39,6 @@ public:
     size_type out(char *p, size_type nbytes) override;
     Buffer out(size_type nbytes) override;
     Buffer out() override ;
-
-    size_type in(FixedBuffer &buffer);
-    size_type in(FixedBuffer &buffer, size_type nbytes);
-    FixedBuffer outBuffer(size_type nbytes);
-    FixedBuffer outBuffer();
 
     void rewind() override;
     void set_append() override;
