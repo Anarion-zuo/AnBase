@@ -47,6 +47,14 @@ add_library(anarionbase STATIC
         parser/ListParser.cpp
         parser/xml/XmlNode.cpp
 
+        parser/json/JsonObject.cpp
+        parser/json/JsonArray.cpp
+        parser/json/JsonNumber.cpp
+        parser/json/JsonMap.cpp
+        parser/json/JsonString.cpp
+        parser/json/JsonBoolean.cpp
+        parser/json/parse-json.cpp
+
         logger/Logger.cpp
 
 #        serialize/Serializable.cpp

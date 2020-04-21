@@ -16,7 +16,7 @@
 #include <parser/MapParser.h>
 #include <parser/ListParser.h>
 #include <io/channel/file/Directory.h>
-
+#include <parser/json/JsonMap.h>
 using namespace std;
 using namespace anarion;
 
@@ -39,13 +39,13 @@ int main() {
 //        client.in(outbuf);
 //        client.close();
 //    }
-
-    Directory directory(SString("/home/anarion/Documents/CppProjects/MyMVC/static/"));
-    directory.open();
-    FileChannel * file = dynamic_cast<FileChannel *>(directory.getChild(SString("html"))->getChild(
-            SString("hello.html")));
-    file->rewind();
-    Buffer buffer = file->out();
-    buffer.print();
+    const char *json_str =
+            "{\"array\": [{"
+            "\"first_name\": \"anarion\", "
+            "\"family\": \"zuo\", "
+            "\"isMale\": true, \"age\": 99"
+            "}]}";
+    JsonObject *json = JsonObject::parse(json_str, strlen(json_str));
+    SString str = json->toString();
     return 0;
 }

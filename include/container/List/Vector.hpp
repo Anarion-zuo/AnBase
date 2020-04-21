@@ -213,9 +213,13 @@ namespace anarion {
         }
 
         Vector(Vector<T> &&rhs) noexcept : begin(rhs.begin), cur(rhs.cur), end(rhs.end) {
-            rhs.begin = nullptr;
-            rhs.end = nullptr;
-            rhs.cur = nullptr;
+            rhs.clearMove();
+        }
+
+        void clearMove() {
+            begin = nullptr;
+            end = nullptr;
+            cur = nullptr;
         }
 
         Vector(T *p, size_type len) : begin(p), cur(begin + len), end(cur) {}   // move

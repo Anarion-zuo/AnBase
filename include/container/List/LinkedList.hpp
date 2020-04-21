@@ -270,6 +270,16 @@ namespace anarion {
             ++count;
         }
 
+        void push_back(LinkedList<T> &&rhs) {
+            head.prev->next = rhs.head.next;
+            rhs.head.next->prev = head.prev;
+            rhs.head.prev->next = &head;
+            head.prev = rhs.head.prev;
+            rhs.head.prev = &rhs.head;
+            rhs.head.next = &rhs.head;
+            rhs.count = 0;
+        }
+
         void push_front(const T &o) {
 //            list_node *node = newObject<list_node>(o, head.next, &head);
             list_node *node = new list_node(o, head.next, &head);

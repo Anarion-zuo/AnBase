@@ -45,5 +45,17 @@ anarion::SString anarion::StringBuilder::build() {
     ret.begin = pp;
     ret.end = pp + total_len;
     ret.cur = ret.end;
+    ret.hash();
     return move(ret);
+}
+
+void anarion::StringBuilder::appendBuilder(anarion::StringBuilder &&rhs) {
+    list.push_back(move(rhs.list));
+}
+
+void anarion::StringBuilder::mappend(anarion::SString &&str) {
+    char *cstr = str.getArr();
+    size_type len = str.length();
+    str.clearMove();
+    mappend(cstr, len);
 }

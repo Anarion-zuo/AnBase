@@ -62,6 +62,7 @@ namespace anarion {
         long toDecSigned() const ;
         size_type toDecUnsigned() const ;
         static SString parseDec(size_type num);
+        static SString parseDec(long num);
         static SString parseHex(unsigned long num);
     };
 
