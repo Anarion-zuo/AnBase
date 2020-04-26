@@ -18,7 +18,16 @@ void anarion::TcpServerSocketChannel::listen(int backlog) {
 }
 
 int anarion::TcpServerSocketChannel::accept() {
-    int cfd = ::accept(sockfd, nullptr, nullptr);
+    int cfd;
+//    while (true) {
+//        cfd = ::accept(sockfd, nullptr, nullptr);
+//        if (cfd < 0) {
+//            if (errno == ECONNABORTED) {
+//
+//            }
+//        }
+//    }
+    cfd = ::accept(sockfd, nullptr, nullptr);
     if (cfd < 0) {
         throwSocket();
     }

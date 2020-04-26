@@ -13,6 +13,10 @@ void anarion::Logger::printAInfo(const LoggerInfo &info) {
     }
 }
 
+void anarion::Logger::printInfo(const SString &info) {
+
+}
+
 const char *anarion::LoggerNullOutputChannel::what() const noexcept {
     return "This logger instance has null channel pointer. Try setChannel() to specify a output channel for this logger.";
 }

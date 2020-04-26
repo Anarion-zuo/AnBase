@@ -17,9 +17,24 @@
 #include <parser/ListParser.h>
 #include <io/channel/file/Directory.h>
 #include <parser/json/JsonMap.h>
+#include <concurrent/pool/AsyncCaller.h>
+#include <parser/xml/XmlElement.h>
+
 using namespace std;
 using namespace anarion;
 
+
+struct fooo : public Callable {
+    Callable *forward() override {
+        return new fooo;
+    }
+
+    void run() override {
+        for (size_type i = 0; i < 1000000; ++i) {
+            printf("working on %ld\n", i);
+        }
+    }
+};
 
 int main() {
 //    MapParser parser('=', ';');
@@ -39,13 +54,7 @@ int main() {
 //        client.in(outbuf);
 //        client.close();
 //    }
-    const char *json_str =
-            "{\"array\": [{"
-            "\"first_name\": \"anarion\", "
-            "\"family\": \"zuo\", "
-            "\"isMale\": true, \"age\": 99"
-            "}]}";
-    JsonObject *json = JsonObject::parse(json_str, strlen(json_str));
-    SString str = json->toString();
+    const char *expr = "<root>ff<name color=\"red\">anarion</name></root>";
+    XmlElement *root = XmlElement::parse(expr, strlen(expr));
     return 0;
 }

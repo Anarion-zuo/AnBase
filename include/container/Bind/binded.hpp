@@ -40,7 +40,7 @@ namespace anarion {
         T *obj = nullptr;
 
     public:
-        binded(Fn &&func, T *obj, Args &&...args) : func(forward<Fn>(func)), obj(obj), tuple(forward<Args>(args)...) {}
+        binded(Fn &&func, T *obj, Args &&...args) : func(anarion::forward<Fn>(func)), obj(obj), tuple(anarion::forward<Args>(args)...) {}
         binded(const binded &) = default;
         binded(binded &&) noexcept = default;
 
@@ -77,7 +77,7 @@ namespace anarion {
         Fn func;  // function pointer
 
     public:
-        binded(Fn &&func, Args &&...args) : func(forward<Fn>(func)), tuple(forward<Args>(args)...) {}
+        binded(Fn &&func, Args &&...args) : func(anarion::forward<Fn>(func)), tuple(anarion::forward<Args>(args)...) {}
         binded(const binded &) = default;
         binded(binded &&) noexcept = default;
 

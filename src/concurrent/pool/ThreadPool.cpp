@@ -15,6 +15,9 @@ ThreadPool::pool_ins *ThreadPool::createThread() {
     pool_ins *ins = new pool_ins(this, pid);
     ::pthread_create(&pid, nullptr, pool_routine, ins);
     ++count;
+    setLock.lock();
+    insSet.insert(ins);
+    setLock.unlock();
     return ins;
 }
 
@@ -31,6 +34,7 @@ void *ThreadPool::pool_routine(void *p) {
         thread->mutex.lock();
         thread->cond.wait(thread->flag);
         if (thread->flag == 2) {
+            thread->cond.broadcast();
             return nullptr;
         }
 //        thread->pool->running.insert(thread);
@@ -40,6 +44,8 @@ void *ThreadPool::pool_routine(void *p) {
 //        thread->pool->running.remove(thread);
         thread->pool->idles.push(thread);
         thread->flag = false;
+        delete thread->func;
+        thread->cond.broadcast();
         thread->mutex.unlock();
     }
     return nullptr;
@@ -75,13 +81,13 @@ void ThreadPool::joinIdleThread(ThreadPool::pool_ins *ins) {
  * 2) load callable object to pool_ins
  * 3) signal
  */
-void ThreadPool::schedule(const Callable &callee) {
-    pool_ins *p = getIns();
-    delete p->func;
-    p->func = callee.clone();
-    p->flag = 1;
-    p->cond.signal();
-}
+//void ThreadPool::schedule(const Callable &callee) {
+//    pool_ins *p = getIns();
+//    delete p->func;
+//    p->func = callee.clone();
+//    p->flag = 1;
+//    p->cond.signal();
+//}
 
 ThreadPool::~ThreadPool() {
     joinAll();
@@ -91,6 +97,7 @@ ThreadPool::pool_ins *ThreadPool::getIns() {
     pool_ins *p;
     if (idles.empty()) {
         p = createThread();
+
     } else {
         p = idles.pop();
     }
@@ -102,7 +109,58 @@ void ThreadPool::joinAll() {
     for (size_type i = 0; i < count; ++i) {
         pool_ins *ins = idles.pop();
         joinIdleThread(ins);
+        setLock.lock();
+        insSet.remove(ins);
+        setLock.unlock();
         delete ins;
     }
     count = 0;
+}
+
+//void ThreadPool::schedule(func_type func_p, void *args) {
+//    pool_ins *p = getIns();
+//    p->func_p = func_p;
+//    p->args_p = args;
+//    p->flag = 1;
+//    p->cond.signal();
+//}
+
+ThreadPool::pool_ins * ThreadPool::schedule(Callable &callable) {
+    Callable *pcall = callable.forward();
+    return schedule(pcall);
+}
+
+ThreadPool::pool_ins * ThreadPool::schedule(Callable *callable) {
+    pool_ins *p = getIns();
+    p->func = callable;
+    p->flag = 1;
+    p->cond.signal();
+    return p;
+}
+
+bool ThreadPool::isRunning(ThreadPool::pool_ins *ins) {
+    if (ins == nullptr) { return false; }
+    setLock.lock();
+    auto it = insSet.find(ins);
+    if (it == insSet.end_iterator()) {
+        setLock.unlock();
+        return false;
+    }
+    setLock.unlock();
+    return ins->flag;
+}
+
+void ThreadPool::wait(ThreadPool::pool_ins *ins) {
+    if (!isRunning(ins)) {
+        return;
+    }
+    ins->wait();
+}
+
+void ThreadPool::pool_ins::wait() {
+    mutex.lock();
+    while (flag == 1) {
+        cond.wait();
+    }
+    mutex.unlock();
 }

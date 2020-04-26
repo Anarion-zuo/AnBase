@@ -18,8 +18,12 @@ namespace anarion {
         friend struct pool_ins;
     protected:
 
+        typedef void (*func_type)(void);
+
         struct pool_ins {
             Callable *func = nullptr;
+//            func_type func_p;
+//            void *args_p;
             Mutex mutex;
             CondVar cond;
             ThreadPool *pool;
@@ -36,11 +40,15 @@ namespace anarion {
             explicit pool_ins(ThreadPool *_this, pthread_t pid) : pool(_this), pid(pid), cond(mutex) {}
 
             ~pool_ins() {
-                delete func;
+//                delete func;
             }
+
+            void wait();
         };
 
         BlockStack<pool_ins*> idles;
+        HashSet<pool_ins*> insSet;
+        Mutex setLock;
 //        HashSet<pool_ins*> running;
         size_type count = 0;
 
@@ -58,7 +66,13 @@ namespace anarion {
         ~ThreadPool();
 
         void joinAll();
-        void schedule(const Callable &callee);
+//        void schedule(const Callable &callee);
+//        void schedule(func_type func_p, void *args);
+        pool_ins * schedule(Callable &callable);
+        pool_ins * schedule(Callable *callable);
+
+        bool isRunning(pool_ins *ins);
+        void wait(pool_ins *ins);
     };
 
 

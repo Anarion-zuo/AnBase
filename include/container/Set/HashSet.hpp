@@ -25,6 +25,9 @@ namespace anarion {
     template <typename T> struct hash_function<const T> { hash_type operator()(const T &o) { return hash_function<T>().operator()(o); } };
     template <typename T> struct hash_function<const T&> { hash_type operator()(const T &o) { return hash_function<T>().operator()(o); } };
 
+    template<typename T> struct hash_function<T*> { hash_type operator()(T *o) { return reinterpret_cast<hash_type>(o); } };
+    template<typename T> struct hash_function<const T*> { hash_type operator()(const T *o) { return reinterpret_cast<hash_type>(o); } };
+
     template <> struct hash_function<char> { hash_type operator()(unsigned long o) {return reinterpret_cast<hash_type>(o); } };
     template <> struct hash_function<short> { hash_type operator()(unsigned long o) {return reinterpret_cast<hash_type>(o); } };
     template <> struct hash_function<int> { hash_type operator()(unsigned long o) {return reinterpret_cast<hash_type>(o); } };

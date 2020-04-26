@@ -5,6 +5,7 @@
 #ifndef MYCPPLIB_LINKED_LIST_HPP
 #define MYCPPLIB_LINKED_LIST_HPP
 
+#include <exceptions/container/EmptyContainer.h>
 #include "../base/iterator_traits.hpp"
 #include "../base/container_utility.hpp"
 
@@ -314,6 +315,16 @@ namespace anarion {
             delete (node);
             --count;
             return move(obj);
+        }
+
+        T &back() {
+            if (empty()) { throw EmptyContainer(); }
+            return head.prev->obj;
+        }
+
+        T &front() {
+            if (empty()) { throw EmptyContainer(); }
+            return head.next->obj;
         }
 
         iterator remove(iterator it) {

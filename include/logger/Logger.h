@@ -6,6 +6,11 @@
 #define MYCPPBASE_LOGGER_H
 
 #include <io/channel/InChannel.h>
+#include <container/SString.h>
+
+/*
+ *
+ */
 
 namespace anarion {
     class LoggerInfo {
@@ -16,11 +21,12 @@ namespace anarion {
     class Logger {
     protected:
         InChannel *outputChannel = nullptr;
-
     public:
 
         virtual void printAInfo(const LoggerInfo &info);
         constexpr void setChannel(InChannel *outputChannel) { this->outputChannel = outputChannel; }
+
+        void printInfo(const SString &info);
     };
 
     struct LoggerNullOutputChannel : public std::exception {

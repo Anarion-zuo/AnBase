@@ -11,6 +11,7 @@ namespace anarion {
     public:
         virtual void run() {}
         virtual Callable *clone() const { return new Callable(); }
+        virtual Callable *forward() { return new Callable(); }
     };
 }
 

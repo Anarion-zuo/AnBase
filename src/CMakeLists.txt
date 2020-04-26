@@ -15,6 +15,7 @@ add_library(anarionbase STATIC
 
         concurrent/pool/ThreadPool.cpp
         concurrent/pool/AsyncInvoke.cpp
+        concurrent/pool/AsyncCaller.cpp
 
         container/String.cpp
         container/StringBuilder.cpp
@@ -45,6 +46,10 @@ add_library(anarionbase STATIC
 
         parser/MapParser.cpp
         parser/ListParser.cpp
+
+        parser/xml/XmlElement.cpp
+        parser/xml/xml-parse.cpp
+        parser/xml/XmlLeaf.cpp
         parser/xml/XmlNode.cpp
 
         parser/json/JsonObject.cpp

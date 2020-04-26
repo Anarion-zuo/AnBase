@@ -29,34 +29,34 @@ void anarion::SocketChannel::throwSocket() {
 }
 
 anarion::size_type anarion::SocketChannel::in(char *p, anarion::size_type nbytes) {
-    if (!i_valid) { InvalidOperation(); }
+    if (!i_valid) { throw InvalidOperation(); }
     return sendn(sockfd, p, nbytes, 0);
 }
 
 anarion::size_type anarion::SocketChannel::in(anarion::Buffer &buffer) {
-    if (!i_valid) { InvalidOperation(); }
+    if (!i_valid) { throw InvalidOperation(); }
     return buffer.send_fd(sockfd, buffer.unread(), 0);
 }
 
 anarion::size_type anarion::SocketChannel::in(anarion::Buffer &buffer, anarion::size_type nbytes) {
-    if (!i_valid) { InvalidOperation(); }
+    if (!i_valid) { throw InvalidOperation(); }
     return buffer.send_fd(sockfd, nbytes, 0);
 }
 
 anarion::size_type anarion::SocketChannel::out(char *p, anarion::size_type nbytes) {
-    if (!o_valid) { InvalidOperation(); }
+    if (!o_valid) { throw InvalidOperation(); }
     return recvn(sockfd, p, nbytes, 0);
 }
 
 anarion::Buffer anarion::SocketChannel::out() {
-    if (!o_valid) { InvalidOperation(); }
+    if (!o_valid) { throw InvalidOperation(); }
     Buffer buffer;
     buffer.recv_fd(sockfd, 0);
     return move(buffer);
 }
 
 anarion::Buffer anarion::SocketChannel::out(anarion::size_type nbytes) {
-    if (!o_valid) { InvalidOperation(); }
+    if (!o_valid) { throw InvalidOperation(); }
     Buffer buffer(nbytes);
     buffer.recv_fd(sockfd, 0);
     return move(buffer);
