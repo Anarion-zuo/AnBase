@@ -84,6 +84,16 @@ namespace anarion {
             }
             return typename parent::iterator(node, index, this);
         }
+
+        void remove(const typename parent::iterator &it) {
+            parent::remove(it);
+        }
+
+        void remove(const K &key) {
+            auto it = find(key);
+            if (it == this->end_iterator()) { return; }
+            parent::remove(it);
+        }
     };
 };
 

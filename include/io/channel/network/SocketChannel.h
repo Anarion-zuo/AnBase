@@ -29,9 +29,13 @@ namespace anarion {
         size_type in(Buffer &buffer) override;
         size_type in(Buffer &buffer, size_type nbytes) override;
 
+        bool checkClose();
+
         size_type out(char *p, size_type nbytes) override;
         Buffer out(size_type nbytes) override;
         Buffer out() override ;
+
+        size_type outUntil(char *buffer, size_type length, char c);
 
         //        Buffer outBuffer(size_type nbytes);
 //        Buffer outBuffer();

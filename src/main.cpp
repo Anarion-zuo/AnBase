@@ -19,6 +19,7 @@
 #include <parser/json/JsonMap.h>
 #include <concurrent/pool/AsyncCaller.h>
 #include <parser/xml/XmlElement.h>
+#include <time/Time.h>
 
 using namespace std;
 using namespace anarion;
@@ -54,7 +55,8 @@ int main() {
 //        client.in(outbuf);
 //        client.close();
 //    }
-    const char *expr = "<root>ff<name color=\"red\">anarion</name></root>";
-    XmlElement *root = XmlElement::parse(expr, strlen(expr));
+    Time time = Time::now();
+    SString dates = time.print();
+    SString num = SString::parseDec(111);
     return 0;
 }

@@ -18,6 +18,9 @@ namespace anarion {
         LinkedList<XmlNode *> childs;
 
     public:
+
+        ~XmlElement() override ;
+
         static XmlElement *parse(const char *expression, size_type length);
 
         void setName(SString name) { nodeName = move(name); }

@@ -62,6 +62,26 @@ anarion::Buffer anarion::SocketChannel::out(anarion::size_type nbytes) {
     return move(buffer);
 }
 
+anarion::size_type anarion::SocketChannel::outUntil(char *buffer, anarion::size_type length, char c) {
+    for (size_type i = 0; i < length; ++i) {
+        char cur;
+        int len = recv(sockfd, &cur, 1, MSG_PEEK);
+        if (len == 0) { return i; }
+        if (len < 0) { return i; }
+        recv(sockfd, &cur, 1, 0);
+        if (cur == c) { return i; }
+        buffer[i] = cur;
+    }
+    return length;
+}
+
+bool anarion::SocketChannel::checkClose() {
+    char oneC;
+    int len = recv(sockfd, &oneC, 1, MSG_PEEK);
+    if (len == 1) { return false; }
+    return true;
+}
+
 //anarion::Buffer anarion::SocketChannel::outBuffer(anarion::size_type nbytes) {
 //    if (!o_valid) { InvalidOperation(); }
 //    Buffer buffer(nbytes);

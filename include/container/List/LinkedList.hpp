@@ -77,9 +77,9 @@ namespace anarion {
 
         friend class iterator;
         class iterator {
-        protected:
-            list_node *node;
         public:
+            list_node *node;
+
             explicit iterator(list_node *node) : node(node) {}
             iterator(const iterator &rhs) : node(rhs.node) {}
 
@@ -255,20 +255,22 @@ namespace anarion {
 
         iterator end_iterator() const { return iterator(const_cast<list_node*>(&head)); }
 
-        void push_back(const T &o) {
+        iterator push_back(const T &o) {
 //            list_node *node = newObject<list_node>(o, &head, head.prev);
             list_node *node = new list_node(o, &head, head.prev);
             head.prev->next = node;
             head.prev = node;
             ++count;
+            return iterator(node);
         }
 
-        void push_back(T &&o) {
+        iterator push_back(T &&o) {
 //            list_node *node = newObject<list_node>(forward<T>(o), &head, head.prev);
             list_node *node = new list_node(forward<T>(o), &head, head.prev);
             head.prev->next = node;
             head.prev = node;
             ++count;
+            return iterator(node);
         }
 
         void push_back(LinkedList<T> &&rhs) {
@@ -281,20 +283,22 @@ namespace anarion {
             rhs.count = 0;
         }
 
-        void push_front(const T &o) {
+        iterator push_front(const T &o) {
 //            list_node *node = newObject<list_node>(o, head.next, &head);
             list_node *node = new list_node(o, head.next, &head);
             head.next->prev = node;
             head.next = node;
             ++count;
+            return iterator(node);
         }
 
-        void push_front(T &&o) {
+        iterator push_front(T &&o) {
 //            list_node *node = newObject<list_node>(forward<T>(o), head.next, &head);
             list_node *node = new list_node(forward<T>(o), head.next, &head);
             head.next->prev = node;
             head.next = node;
             ++count;
+            return iterator(node);
         }
 
         T pop_front() {
@@ -385,6 +389,22 @@ namespace anarion {
                 node = node->next;
             }
             return end_iterator();
+        }
+
+        void move_to_front(iterator it) {
+            list_node *node = it.node;
+
+            // connect prev next
+            list_node *prev = node->prev, *next = node->next;
+            prev->next = next;
+            next->prev = prev;
+
+            // insert to front
+            next = head.next;
+            head.next = node;
+            node->prev = &head;
+            node->next = next;
+            next->prev = node;
         }
     };
 

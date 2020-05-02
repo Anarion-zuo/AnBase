@@ -11,3 +11,9 @@ anarion::XmlElement *anarion::XmlElement::parse(const char *expression, anarion:
     return parseXml(expression, length);
 }
 
+anarion::XmlElement::~XmlElement() {
+    for (auto it = childs.begin_iterator(); it != childs.end_iterator(); ++it) {
+        delete *it;
+    }
+}
+

@@ -269,6 +269,17 @@ SString SString::parseDec(long num) {
     return ::move(ret);
 }
 
+SString SString::parseDec(int num) {
+    char *s = static_cast<char *>(operator new(21));
+    int len = sprintf(s, "%d", num);
+    SString ret;
+    ret.begin = s;
+    ret.cur = s + len;
+    ret.end = s + 21;
+    ret.hash();
+    return ::move(ret);
+}
+
 size_type SString::indexOf(char c) const {
     for (char *p = begin; p < cur; ++p) {
         if (*p == c) { return p - begin; }
@@ -324,5 +335,6 @@ SString SString::parseHex(unsigned long num) {
     sprintf(str, "%x", num);
     return SString(str);
 }
+
 
 

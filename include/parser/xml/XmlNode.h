@@ -11,6 +11,9 @@
 namespace anarion {
     class XmlNode {
     public:
+
+        virtual ~XmlNode() = default;
+
         virtual XmlNode *getChildByTagName(const SString &name) { return nullptr; }
         virtual XmlNode *getChildById(const SString &id) { return nullptr; }
         virtual size_type getChildCount() const { return 0; }

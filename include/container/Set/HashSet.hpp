@@ -313,6 +313,13 @@ namespace anarion {
             return iterator(node, index, this);
         }
 
+        void remove(const iterator &it) {
+            if (it.set != this) { return; }
+            if (it == end_iterator()) { return; }
+            remove_node(*it, it.cur_node->hash_val);
+        }
+
+
     protected:
         iterator get_iterator_next(iterator &it) const {
             hash_node *node = it.cur_node->next;

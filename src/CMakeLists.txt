@@ -64,6 +64,8 @@ add_library(anarionbase STATIC
 
 #        serialize/Serializable.cpp
 
+        time/Time.cpp
+
         )
 #add_library(anarionbase SHARED ${DIR_SRCS})
 

@@ -11,8 +11,6 @@
 
 namespace anarion {
     class JsonMap;
-
-
     class JsonObject {
     protected:
     public:
