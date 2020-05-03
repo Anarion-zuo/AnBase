@@ -7,6 +7,7 @@
 
 
 #include <pthread.h>
+#include <time/Time.h>
 #include "../../context/Callable.h"
 #include "../../feature/UnCopyable.h"
 
@@ -27,7 +28,15 @@ namespace anarion {
         void start();
         void join();   // dont join yourself
 
+        static void sleep(const Time &sleepTime);
+
     };
+
+struct SleepError : public std::exception {
+    const char *what() const noexcept override {
+        return "Error when the thread is entering sleep.";
+    }
+};
 }
 
 #endif //MYCPPLIB_THREAD_H

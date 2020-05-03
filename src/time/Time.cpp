@@ -8,32 +8,12 @@
 
 void anarion::Time::setCurrent() {
     clock_gettime(clockid, &this->kernelTime);
-    setCalender();
 }
 
 anarion::Time anarion::Time::now() {
     Time time;
     time.setCurrent();
     return time;
-}
-
-void anarion::Time::setCalender() {
-    if (isNull()) { return; }
-    sec_type s = kernelTime.tv_sec;
-    sec_type ns = kernelTime.tv_nsec;
-    if (ns > 1e9 - 1e6) {
-        ++s;
-    }
-    time_t timet = s;
-    tm *tp = nullptr;
-    if (timezone == GMT) {
-        tp = localtime(&timet);
-    } else if (timeZone == LocalDependent) {
-        tp = gmtime(&timet);
-    } else {
-
-    }
-    memcpy(&calenderTime, tp, sizeof(tm));
 }
 
 bool anarion::Time::operator<(const anarion::Time &rhs) const {
@@ -70,15 +50,12 @@ timespec anarion::Time::difference(const anarion::Time &left, const anarion::Tim
     return ret;
 }
 
-anarion::SString anarion::Time::print(const char *format) {
-    char *ret = static_cast<char *>(operator new(256));
-    size_type len = strftime(ret, 256, format, &calenderTime);
-    return SString::move(ret, len);
-}
 
-anarion::SString anarion::Time::print() {
-    // Fir, 01 May 2020 08:55:11 GMT
-    return print("%a, %d %b %Y %T %Z");
+
+anarion::Time::Time(anarion::size_type sec, anarion::size_type nsec)  : kernelTime({static_cast<__time_t>(sec), static_cast<__syscall_slong_t>(nsec)}) {
+    if (nsec > 999999999) {
+        throw NanoSecondRangeError();
+    }
 }
 
 

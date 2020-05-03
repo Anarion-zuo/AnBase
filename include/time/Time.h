@@ -28,31 +28,19 @@ namespace anarion {
          *  CLOCK_THREAD_CPUTIME_ID
          */
 
-        /*
-         * Calender time
-         * translate time to real-life calender format from precise kernel time
-         * any change in kernel time must reflect on calender time
-         */
-        struct tm calenderTime{};
-
-        void setNull() {
-            memset(&kernelTime, 0, sizeof(timespec));
-            memset(&calenderTime, 0, sizeof(tm));
-        }
-
-        void setCalender();  // initialize calenderTime according to kernelTime
-        enum TimeZone { LocalDependent, GMT } timeZone = LocalDependent;
+        void setNull() { memset(&kernelTime, 0, sizeof(timespec)); }
 
     public:
 
         constexpr const timespec &getSpecHandle() const { return kernelTime; }
-        constexpr const tm &getCalenderHandle() const { return calenderTime; }
+
         constexpr bool isNull() const { return kernelTime.tv_nsec == 0 && kernelTime.tv_sec == 0; }
 
         // constructors
         Time() { setNull(); }  // initialize a null object
-        explicit Time(timespec timespec) : kernelTime(timespec) { setCalender(); }
-        explicit Time(time_t timet) : kernelTime({timet, 0}) { setCalender(); }
+        Time(size_type sec, size_type nsec);
+        explicit Time(timespec timespec) : kernelTime(timespec) {}
+        explicit Time(time_t timet) : kernelTime({timet, 0}) {}
         Time(const Time &) = default;
         Time(Time &&) noexcept = default;
 
@@ -61,27 +49,11 @@ namespace anarion {
         // setters
         void setCurrent();
         constexpr void setClockType(clockid_t id) { clockid = id; }
-        constexpr void setTimeZone(enum TimeZone zone) { timeZone = zone; }
 
         // time field
         constexpr sec_type getSecField() const { return kernelTime.tv_sec; }
         constexpr sec_type getNsecField() const { return kernelTime.tv_nsec; }
         constexpr double getDouble() const { return getSecField() + getNsecField() / 1e9; }
-
-        // calender
-        constexpr int getDateSec() const { return calenderTime.tm_sec; }
-        constexpr int getMinute() const { return calenderTime.tm_min; }
-        constexpr int getHour() const { return calenderTime.tm_hour; }
-        constexpr int getDayInMonth() const { return calenderTime.tm_mday; }
-        constexpr int getMonth() const { return calenderTime.tm_mon; }
-        constexpr int getYear() const { return calenderTime.tm_year; }
-        constexpr int getDayInWeek() const { return calenderTime.tm_wday; }
-        constexpr int getDayInYear() const { return calenderTime.tm_yday; }
-
-        // format
-        // man strftime for detailed format instructions
-        SString print(const char *format);
-        SString print();
 
         /*
          * Operators
@@ -95,6 +67,12 @@ namespace anarion {
 
         static timespec difference(const Time &left, const Time &right);
     };
+
+struct NanoSecondRangeError : public virtual std::exception {
+    const char *what() const noexcept override {
+        return "Overflowing nano-second field when setting time. Nano second should be set lower than 999999999.";
+    }
+};
 }
 
 #endif //ANBASE_TIME_H

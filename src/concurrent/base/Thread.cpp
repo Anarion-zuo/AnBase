@@ -39,3 +39,22 @@ Thread &Thread::operator=(Thread &&rhs) noexcept {
     rhs.pid = pthread_t{0};
     return *this;
 }
+
+void Thread::sleep(const Time &sleepTime) {
+    timespec remainedTime, beginTime = sleepTime.getSpecHandle();
+    int ret;
+    while (true) {
+        ret = nanosleep(&beginTime, &remainedTime);
+        if (ret < -1) {
+            switch (errno) {
+                case EINTR:
+                    beginTime = remainedTime;
+                    break;
+                default:
+                    throw SleepError();
+            }
+        } else {
+            break;
+        }
+    }
+}

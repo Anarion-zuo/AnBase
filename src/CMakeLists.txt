@@ -12,6 +12,7 @@ add_library(anarionbase STATIC
         concurrent/base/Mutex.cpp
         concurrent/base/RwMutex.cpp
         concurrent/base/Thread.cpp
+        concurrent/base/BackgroundTask.cpp
 
         concurrent/pool/ThreadPool.cpp
         concurrent/pool/AsyncInvoke.cpp
@@ -65,6 +66,7 @@ add_library(anarionbase STATIC
 #        serialize/Serializable.cpp
 
         time/Time.cpp
+        time/Date.cpp
 
         )
 #add_library(anarionbase SHARED ${DIR_SRCS})

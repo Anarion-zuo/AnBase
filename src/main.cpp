@@ -55,8 +55,6 @@ int main() {
 //        client.in(outbuf);
 //        client.close();
 //    }
-    Time time = Time::now();
-    SString dates = time.print();
     SString num = SString::parseDec(111);
     return 0;
 }
