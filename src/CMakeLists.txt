@@ -68,6 +68,8 @@ add_library(anarionbase STATIC
         time/Time.cpp
         time/Date.cpp
 
+        bean/Bean.cpp
+
         )
 #add_library(anarionbase SHARED ${DIR_SRCS})
 

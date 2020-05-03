@@ -336,5 +336,13 @@ SString SString::parseHex(unsigned long num) {
     return SString(str);
 }
 
+SString SString::serialize() {
+    return *this;
+}
+
+SString SString::forwardSerialize() {
+    return anarion::move(*this);
+}
+
 
 

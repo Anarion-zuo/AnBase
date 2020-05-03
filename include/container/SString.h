@@ -10,15 +10,33 @@
 #include "base/container_utility.hpp"
 
 namespace anarion {
+
+    class SString;
+    /*
+     * Interface for mappable classes
+     * For classes to be serialized to and parsed from strings conveniently
+     */
+    class MapperInterface {
+    public:
+        MapperInterface() = default;
+        explicit MapperInterface(const SString &str) {}
+        virtual SString serialize() = 0;
+        virtual SString forwardSerialize() = 0;
+    };
+
     class Buffer;
-    class SString : public Vector<char> {
+    class SString : public Vector<char>, public virtual MapperInterface {
         friend class StringBuilder;
         friend class Buffer;
 
         hash_type hashVal = 1;
     public:
+
         SString();
         explicit SString(const char *str);
+
+        SString serialize() override;
+        SString forwardSerialize() override;
 
         ~SString();
 
