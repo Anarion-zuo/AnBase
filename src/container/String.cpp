@@ -5,7 +5,6 @@
 #include <cstring>
 #include <container/SString.h>
 #include <io/buffer/Buffer.h>
-#include "exceptions/container/IndexOutOfRange.h"
 
 using namespace anarion;
 

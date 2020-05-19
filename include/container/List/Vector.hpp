@@ -5,10 +5,8 @@
 #ifndef MYCPPLIB_VECTOR_HPP
 #define MYCPPLIB_VECTOR_HPP
 
-#include "../../exceptions/container/IndexOutOfRange.h"
 #include "../base/type_trait.hpp"
 #include "../base/container_utility.hpp"
-#include "../../exceptions/container/EmptyContainer.h"
 #include <iostream>
 
 namespace anarion {
@@ -17,7 +15,6 @@ namespace anarion {
     protected:
 
         T *begin = nullptr, *cur = nullptr, *end = nullptr;
-
 
         void expand_push() { resize(size() << 1u); }
 

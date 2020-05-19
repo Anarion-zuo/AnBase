@@ -3,9 +3,6 @@
 //
 
 #include <concurrent/base/Mutex.h>
-#include "exceptions/concurrent/MutexCreateException.h"
-#include "exceptions/concurrent/MutexLockException.h"
-#include "exceptions/concurrent/MutexUnlockException.h"
 
 using namespace anarion;
 

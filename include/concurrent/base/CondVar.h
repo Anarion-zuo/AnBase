@@ -10,7 +10,6 @@
 #include "../../context/functors/Functor.h"
 #include <pthread.h>
 #include <container/Bind/binded.hpp>
-#include "../../exceptions/concurrent/CondVarCreateException.h"
 
 /*
  * The condition variable type is arranged in a most convenient way that I can ever think of.
@@ -26,6 +25,8 @@ class CondVar : virtual public UnCopyable {
 protected:
     pthread_cond_t cond;
     Mutex &mutex;
+
+    void throwByReturn(int retVal);
 public:
     explicit CondVar(Mutex &mutex);
     ~CondVar() { ::pthread_cond_destroy(&cond); }
@@ -41,14 +42,17 @@ public:
      */
     template <typename binded_t>
     void wait(binded_t event) {
+        int ret;
         while (!event()) {
-            ::pthread_cond_wait(&cond, &mutex.getHandle());
+            ret = ::pthread_cond_wait(&cond, &mutex.getHandle());
+            throwByReturn(ret);
         }
     }
 
     void wait(const int &flag) {
         while (!flag) {
-            ::pthread_cond_wait(&cond, &mutex.getHandle());
+            int ret = ::pthread_cond_wait(&cond, &mutex.getHandle());
+            throwByReturn(ret);
         }
     }
 
@@ -56,16 +60,23 @@ public:
      * bare wait without any binding
      */
     void wait() {
-        ::pthread_cond_wait(&cond, &mutex.getHandle());
+        int ret = ::pthread_cond_wait(&cond, &mutex.getHandle());
+        throwByReturn(ret);
     }
 
     void waitTime(const timespec &timespec) {
-        ::pthread_cond_timedwait(&cond, &mutex.getHandle(), &timespec);
+        int ret = ::pthread_cond_timedwait(&cond, &mutex.getHandle(), &timespec);
+        throwByReturn(ret);
     }
 
     void signal();
     void broadcast();
 };
+
+    class CondVarException : public SystemException {};
+    struct CondVarCreateException : public CondVarException {};
+    struct CondVarInvalid : public CondVarException {};
+
 }
 
 #endif //MYCPPLIB_CONDVAR_H

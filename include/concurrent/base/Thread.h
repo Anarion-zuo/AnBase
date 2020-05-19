@@ -8,6 +8,7 @@
 
 #include <pthread.h>
 #include <time/Time.h>
+#include <SystemException.h>
 #include "../../context/Callable.h"
 #include "../../feature/UnCopyable.h"
 
@@ -32,7 +33,11 @@ namespace anarion {
 
     };
 
-struct SleepError : public std::exception {
+    class ThreadException : public SystemException {};
+    class ThreadStartException : public ThreadException {};
+    struct ThreadJoinException : public SystemException {};
+
+struct SleepError : public SystemException {
     const char *what() const noexcept override {
         return "Error when the thread is entering sleep.";
     }

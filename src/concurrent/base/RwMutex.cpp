@@ -6,29 +6,35 @@
 
 using namespace anarion;
 
+static void throwWithReturn(int retVal) {
+    switch (retVal) {
+
+    }
+}
+
 RwMutex::RwMutex() {
     int ret;
     ret = ::pthread_rwlock_init(&rwm, nullptr);
+    if (ret) { throw RwMutexCreateException(); }
 }
 
 void RwMutex::rlock() {
-    ::pthread_rwlock_rdlock(&rwm);
+    int ret = ::pthread_rwlock_rdlock(&rwm);
+    if (ret) { throw RwMutexReadLockFailed(); }
 }
 
 void RwMutex::unlock() {
-    ::pthread_rwlock_unlock(&rwm);
-}
-
-bool RwMutex::trylock() {
-    
+    int ret = ::pthread_rwlock_unlock(&rwm);
+    if (ret) { throw RwMutexUnlockFailed(); }
 }
 
 void RwMutex::wlock() {
-    pthread_rwlock_wrlock(&rwm);
+    int ret = ::pthread_rwlock_wrlock(&rwm);
+    if (ret) { throw RwMutexWriteLockFailed(); }
 }
 
 RwMutex::~RwMutex() {
-    pthread_rwlock_destroy(&rwm);
+    ::pthread_rwlock_destroy(&rwm);
 }
 
 RwMutex::RwMutex(RwMutex &&rhs) noexcept : rwm(rhs.rwm) {
@@ -41,6 +47,3 @@ RwMutex &RwMutex::operator=(RwMutex &&rhs) noexcept {
     return *this;
 }
 
-bool RwMutex::check() {
-    return false;
-}

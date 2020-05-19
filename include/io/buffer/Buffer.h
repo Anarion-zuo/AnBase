@@ -16,6 +16,7 @@ namespace anarion {
     size_type sendn(int cfd, void *buf, size_type nbytes, int flags);
     size_type recvn(int cfd, void *buf, size_type nbytes, int flags);
 
+    class SString;
     class Buffer {
 
         /*
@@ -122,8 +123,10 @@ namespace anarion {
         void setWriteIndex(size_type index);
 
         // arr
+        void append_c(char c);
         void append_arr(char *p, size_type len);
         void append_arr(const char *str);
+        void append_string(const SString &str);
         void write_arr(char *p, size_type len);
         void append_arr(Buffer &buffer, size_type len);
         void write_arr(Buffer &buffer, size_type len);

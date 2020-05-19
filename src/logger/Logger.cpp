@@ -2,21 +2,33 @@
 // Created by anarion on 4/11/20.
 //
 
+#include <concurrent/base/Thread.h>
 #include "logger/Logger.h"
 
-void anarion::Logger::printAInfo(const LoggerInfo &info) {
-    if (outputChannel) {
-        Buffer buffer = info.serialize();
-        outputChannel->in(buffer);
-    } else {
-        throw LoggerNullOutputChannel();
+
+void anarion::Logger::processOne(anarion::LoggerInfo *info) {
+    for (auto it = outputs.begin_iterator(); it != outputs.end_iterator(); ++it) {
+        info->toChannel(**it);
     }
+    delete info;
 }
 
-void anarion::Logger::printInfo(const SString &info) {
+void anarion::Logger::roll() {
 
 }
 
-const char *anarion::LoggerNullOutputChannel::what() const noexcept {
-    return "This logger instance has null channel pointer. Try setChannel() to specify a output channel for this logger.";
+void anarion::Logger::setRefreshTime(anarion::size_type msec) {
+    refreshTime.setMSec(msec);
+}
+
+void anarion::Logger::run() {
+    while (true) {
+        infoLock.lock();
+        while (!infoQueue.empty()) {
+            LoggerInfo *info = infoQueue.pop();
+            processOne(info);
+        }
+        infoLock.unlock();
+        Thread::sleep(refreshTime);
+    }
 }

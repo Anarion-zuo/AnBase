@@ -6,10 +6,11 @@
 #define MYCPPLIB_THREADPOOL_H
 
 
+#include <concurrent/base/CondVar.h>
 #include "../base/Thread.h"
 #include "../base/Mutex.h"
 #include "../../context/Callable.h"
-#include "concurrent/container/Stack/BlockStack.hpp"
+#include "container/Stack/Stack.hpp"
 #include "container/Set/HashSet.hpp"
 
 namespace anarion {
@@ -46,9 +47,10 @@ namespace anarion {
             void wait();
         };
 
-        BlockStack<pool_ins*> idles;
+        Stack<pool_ins*> idles;
         HashSet<pool_ins*> insSet;
-        Mutex setLock;
+        Mutex setLock, idleLock;
+        CondVar idleCond;
 //        HashSet<pool_ins*> running;
         size_type count = 0;
 

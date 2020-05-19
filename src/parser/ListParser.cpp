@@ -35,7 +35,7 @@ LinkedList<SString> ListParser::parse(const char *cstr, size_type length) {
     size_type segLen;
     size_type unParsedLen = length;
     LinkedList<SString> ret;
-    size_type headSpacesNum = skipChar(cstr + leftIndex, unParsedLen, separator);
+    size_type headSpacesNum = skipChar(cstr + leftIndex, unParsedLen, ' ');
     unParsedLen -= headSpacesNum;
     leftIndex += headSpacesNum;
 

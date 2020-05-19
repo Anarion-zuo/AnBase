@@ -16,6 +16,7 @@ namespace anarion {
         void bind(in_port_t port_num) override;
         void listen(int backlog) override;
         int accept() override;
+        HostInfo acceptWithInfo() override;
     };
 }
 

@@ -17,9 +17,11 @@ add_library(anarionbase STATIC
         concurrent/pool/ThreadPool.cpp
         concurrent/pool/AsyncInvoke.cpp
         concurrent/pool/AsyncCaller.cpp
+        concurrent/pool/DynamicThreadPool.cpp
 
         container/String.cpp
         container/StringBuilder.cpp
+        container/Trie.cpp
 
         context/Callable.cpp
         context/Context.cpp
@@ -68,7 +70,7 @@ add_library(anarionbase STATIC
         time/Time.cpp
         time/Date.cpp
 
-        bean/Bean.cpp
+        pointers/PointerManager.cpp
 
         )
 #add_library(anarionbase SHARED ${DIR_SRCS})

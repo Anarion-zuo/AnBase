@@ -40,7 +40,7 @@ namespace anarion {
         Time() { setNull(); }  // initialize a null object
         Time(size_type sec, size_type nsec);
         explicit Time(timespec timespec) : kernelTime(timespec) {}
-        explicit Time(time_t timet) : kernelTime({timet, 0}) {}
+        explicit Time(time_t msec) : kernelTime({0, msec * 1000000}) {}
         Time(const Time &) = default;
         Time(Time &&) noexcept = default;
 
@@ -49,6 +49,18 @@ namespace anarion {
         // setters
         void setCurrent();
         constexpr void setClockType(clockid_t id) { clockid = id; }
+        constexpr void setTimeSpec(const timespec &newTime) { kernelTime = newTime; }
+        constexpr void setSecondField(size_type seconds) { kernelTime.tv_sec = seconds; }
+        constexpr void setNanoSecondField(size_type nanosec) { kernelTime.tv_nsec = nanosec; }
+        constexpr void setTime(size_type seconds, size_type nanosec) {
+            setSecondField(seconds);
+            setNanoSecondField(nanosec);
+        }
+        constexpr void setMSec(size_type msec) {
+            size_type sec = msec / 1000;
+            size_type nsec = msec % 1000 * 1000000;
+            setTime(sec, nsec);
+        }
 
         // time field
         constexpr sec_type getSecField() const { return kernelTime.tv_sec; }

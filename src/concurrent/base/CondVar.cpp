@@ -24,9 +24,27 @@ anarion::CondVar &anarion::CondVar::operator=(anarion::CondVar &&rhs) noexcept {
 }
 
 void anarion::CondVar::signal() {
-    ::pthread_cond_signal(&cond);
+    int ret;
+    ret = ::pthread_cond_signal(&cond);
+    if (ret) {
+        throw CondVarInvalid();
+    }
 }
 
 void anarion::CondVar::broadcast() {
-    ::pthread_cond_broadcast(&cond);
+    int ret = ::pthread_cond_broadcast(&cond);
+    if (ret) {
+        throw CondVarInvalid();
+    }
+}
+
+void anarion::CondVar::throwByReturn(int retVal) {
+    switch (retVal) {
+        case EINVAL:
+            throw CondVarInvalid();
+        case EPERM:
+            throw CondVarInvalid();
+        default:
+            return;
+    }
 }

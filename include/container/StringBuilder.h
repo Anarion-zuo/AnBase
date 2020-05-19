@@ -42,6 +42,7 @@ namespace anarion {
         void mappend(char *p, size_type len);
         void mappend(SString &&str);
         void appendBuilder(StringBuilder &&rhs);
+        void appendNumber(size_type num);
 
         SString build() ;
     };

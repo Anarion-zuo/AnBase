@@ -7,6 +7,7 @@
 
 
 #include <pthread.h>
+#include <SystemException.h>
 #include "../../feature/UnCopyable.h"
 
 namespace anarion {
@@ -30,6 +31,22 @@ public:
 
     bool check() ;
 };
+
+    class MutexException : public SystemException {
+
+    };
+
+    class MutexCreateException : public MutexException {
+
+    };
+
+    class MutexLockException : public MutexException {
+
+    };
+
+    class MutexUnlockException : public MutexException {
+
+    };
 }
 
 #endif //MYCPPLIB_MUTEX_H

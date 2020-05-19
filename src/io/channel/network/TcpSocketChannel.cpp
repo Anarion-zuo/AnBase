@@ -5,7 +5,7 @@
 #include <exceptions/InvalidOperation.h>
 #include <arpa/inet.h>
 #include "io/channel/network/TcpSocketChannel.h"
-#include "exceptions/io/socket/ConnectException.h"
+#include <io/base/io-exceptions.h>
 
 void anarion::TcpSocketChannel::connect(const char *host_ip, in_port_t host_port) {
     if (!(i_valid && o_valid)) { throw InvalidOperation(); }

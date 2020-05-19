@@ -12,6 +12,22 @@
 namespace anarion {
     typedef unsigned long size_type;
 
+    struct ContainerException : public std::exception {
+        const char * what() const noexcept override { return "Container failed"; }
+    };
+
+    struct EmptyContainer : public ContainerException {
+        const char *what() const noexcept override {
+            return "The container has no element";
+        }
+    };
+
+    struct IndexOutOfRange : public ContainerException {
+        const char *what() const noexcept {
+            return "Index out of range...";
+        }
+    };
+
 /*
  * type hacks
  */

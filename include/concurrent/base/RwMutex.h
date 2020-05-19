@@ -22,10 +22,14 @@ public:
     void rlock();
     void wlock();
     void unlock();
-    bool trylock();
-
-    bool check();
 };
+
+struct RwMutexException : public SystemException {};
+struct RwMutexInvalid : public RwMutexException {};
+struct RwMutexCreateException : public RwMutexException {};
+struct RwMutexReadLockFailed : public RwMutexException {};
+struct RwMutexUnlockFailed : public RwMutexException {};
+struct RwMutexWriteLockFailed : public RwMutexException {};
 }
 
 #endif //MYCPPLIB_RWMUTEX_H

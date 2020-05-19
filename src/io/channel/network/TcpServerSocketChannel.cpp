@@ -2,6 +2,7 @@
 // Created by anarion on 2020/2/22.
 //
 
+#include <arpa/inet.h>
 #include "io/channel/network/TcpServerSocketChannel.h"
 
 void anarion::TcpServerSocketChannel::bind(in_port_t port_num) {
@@ -42,3 +43,17 @@ anarion::TcpServerSocketChannel::TcpServerSocketChannel(in_port_t port_num) : In
     int ret = ::bind(sockfd, reinterpret_cast<const sockaddr *>(&local_addr), sizeof(sockaddr_in));
     if (ret < 0) { throwSocket(); }
 }
+
+anarion::HostInfo anarion::TcpServerSocketChannel::acceptWithInfo() {
+    socklen_t len = sizeof(sockaddr_in);
+    sockaddr_in client_addr;
+    int cfd = ::accept(sockfd, reinterpret_cast<sockaddr *>(&client_addr), &len);
+    if (cfd < 0) {
+        throwSocket();
+    }
+    HostInfo info;
+    inet_ntop(AF_INET, &client_addr.sin_addr, info.ip_str, INET_ADDRSTRLEN);
+    info.portNum = ntohs(client_addr.sin_port);
+    return info;
+}
+

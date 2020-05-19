@@ -5,11 +5,12 @@
 #ifndef MYCPPLIB_LINKED_LIST_HPP
 #define MYCPPLIB_LINKED_LIST_HPP
 
-#include <exceptions/container/EmptyContainer.h>
 #include "../base/iterator_traits.hpp"
 #include "../base/container_utility.hpp"
 
 namespace anarion {
+
+
     template<typename T>
     class LinkedList {
     protected:

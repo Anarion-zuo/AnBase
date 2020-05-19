@@ -2,16 +2,15 @@
 // Created by anarion on 4/14/20.
 //
 
-#include <exceptions/container/IndexOutOfRange.h>
 #include <io/buffer/Buffer.h>
 #include <sys/socket.h>
-#include "exceptions/io/FdWriteException.h"
-#include "exceptions/io/FdReadException.h"
-#include "exceptions/io/socket/SocketSendException.h"
+#include <io/base/io-exceptions.h>
 #include <unistd.h>
 #include <cstdio>
+#include <container/SString.h>
 
 namespace anarion {
+
     anarion::size_type writen(int fd, void *buf, anarion::size_type nbytes) {
         int len;
         anarion::size_type oldlen = nbytes;
@@ -123,6 +122,7 @@ anarion::Buffer::Buffer(const anarion::Buffer &rhs) :
 
 void anarion::Buffer::rewind() {
     readIterator.listIndex = 0;
+    readIterator.offset = 0;
     readIterator.listIt = frames.begin_iterator();
 }
 
@@ -385,6 +385,14 @@ void anarion::Buffer::print() {
     str[size()] = 0;
     printf("%s\n", str);
     operator delete (str, size() + 1);
+}
+
+void anarion::Buffer::append_c(char c) {
+    append_arr(&c, 1);
+}
+
+void anarion::Buffer::append_string(const SString &str) {
+    append_arr(str.getArr(), str.length());
 }
 
 

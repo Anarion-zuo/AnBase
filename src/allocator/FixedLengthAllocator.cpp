@@ -3,6 +3,7 @@
 //
 
 #include "allocator/FixedLengthAllocator.h"
+#include <allocator/allocator-exceptions.h>
 
 anarion::FixedLengthAllocator::chunk::chunk(anarion::FixedLengthAllocator::chunk *next) : next(next) {}
 

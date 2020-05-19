@@ -18,6 +18,7 @@ namespace anarion {
         LinkedList<T> list;
         Mutex lock;
         CondVar cond;
+        bool isLocked = false;
 
         constexpr bool __private_empty() const { return list.empty(); }
 
@@ -76,6 +77,16 @@ namespace anarion {
             T o = list.pop_back();
             lock.unlock();
             return move(o);
+        }
+
+        constexpr void lockThis() {
+            lock.lock();
+            isLocked = true;
+        }
+
+        constexpr void unlockThis() {
+            isLocked = false;
+            lock.unlock();
         }
     };
 }

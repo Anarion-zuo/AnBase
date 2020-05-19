@@ -6,7 +6,6 @@
 
 
 void anarion::Date::setCalender(const timespec &kernelTime) {
-    if (isNull()) { return; }
     sec_type s = kernelTime.tv_sec;
     sec_type ns = kernelTime.tv_nsec;
     if (ns > 1e9 - 1e6) {

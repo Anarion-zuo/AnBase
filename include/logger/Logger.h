@@ -7,6 +7,9 @@
 
 #include <io/channel/InChannel.h>
 #include <container/SString.h>
+#include <concurrent/container/Queue/BlockQueue.hpp>
+#include <time/Time.h>
+#include <concurrent/base/Thread.h>
 
 /*
  *
@@ -15,24 +18,44 @@
 namespace anarion {
     class LoggerInfo {
     public:
-        virtual Buffer serialize() const = 0;
+        virtual void toChannel(InChannel &inChannel) = 0;
+
+        virtual ~LoggerInfo() = default;
     };
 
-    class Logger {
+    class Logger : public Thread {
     protected:
-        InChannel *outputChannel = nullptr;
+        LinkedList<InChannel*> outputs;
+        Mutex infoLock;
+        ListQueue<LoggerInfo*> infoQueue;
+        Time refreshTime{100};
+
+        void processOne(LoggerInfo *info);
+        void roll();
+
     public:
 
-        virtual void printAInfo(const LoggerInfo &info);
-        constexpr void setChannel(InChannel *outputChannel) { this->outputChannel = outputChannel; }
+        Logger() { start(); }
 
-        void printInfo(const SString &info);
+        virtual ~Logger() {
+            for (auto it = outputs.begin_iterator(); it != outputs.end_iterator(); ++it) {
+                delete *it;
+            }
+        }
+
+        /*
+         * Must setup channels in constructor of the derived class
+         */
+
+        void setRefreshTime(size_type msec);
+        void addInfo(LoggerInfo *info) {
+            infoLock.lock();
+            infoQueue.push(info);
+            infoLock.unlock();
+        }
+
+        void run() override ;
     };
-
-    struct LoggerNullOutputChannel : public std::exception {
-        const char *what() const noexcept override;
-    };
-
 
 }
 

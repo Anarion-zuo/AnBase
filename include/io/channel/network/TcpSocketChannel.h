@@ -5,16 +5,16 @@
 #ifndef MYCPPBASE_TCPSOCKETCHANNEL_H
 #define MYCPPBASE_TCPSOCKETCHANNEL_H
 
-#include "SocketChannel.h"
-#include "exceptions/io/socket/SocketCreateException.h"
+#include "ServerSocketChannel.h"
 
 namespace anarion {
     class TcpSocketChannel : virtual public SocketChannel {
     protected:
+        HostInfo info;
     public:
         TcpSocketChannel();
         explicit TcpSocketChannel(int cfd);
-        TcpSocketChannel(TcpSocketChannel &&rhs) noexcept : Channel(forward<TcpSocketChannel>(rhs)), InChannel(forward<TcpSocketChannel>(rhs)), OutChannel(forward<TcpSocketChannel>(rhs)), SocketChannel(forward<TcpSocketChannel>(rhs)) {}
+        TcpSocketChannel(TcpSocketChannel &&rhs) noexcept : Channel(forward<TcpSocketChannel>(rhs)), InChannel(forward<TcpSocketChannel>(rhs)), OutChannel(forward<TcpSocketChannel>(rhs)), SocketChannel(forward<TcpSocketChannel>(rhs)), info(rhs.info) {}
 
         /*
          * connect encapsulates connect system call
@@ -34,6 +34,9 @@ namespace anarion {
         void close() override;
         void closei() override ;
         void closeo() override ;
+
+        void setInfo(const HostInfo &info) { this->info = info; }
+        HostInfo &getInfo() { return info; }
     };
 }
 

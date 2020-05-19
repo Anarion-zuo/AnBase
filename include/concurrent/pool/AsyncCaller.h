@@ -6,7 +6,6 @@
 #define MYCPPBASE_ASYNCCALLER_H
 
 #include "ThreadPool.h"
-#include <container/pointer/SharedPointer.hpp>
 
 namespace anarion {
     class AsyncCaller : protected ThreadPool {

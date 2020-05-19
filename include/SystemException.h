@@ -8,7 +8,7 @@
 
 #include <cerrno>
 #include <cstring>
-#include "MyException.h"
+#include "exceptions/MyException.h"
 
 struct SystemException : public MyException {
     const char *what() const noexcept {

@@ -5,7 +5,6 @@
 #ifndef MYCPPBASE_TUPLE_HPP
 #define MYCPPBASE_TUPLE_HPP
 
-#include <exceptions/container/IndexOutOfRange.h>
 #include "../base/container_utility.hpp"
 #include "../base/type_trait.hpp"
 

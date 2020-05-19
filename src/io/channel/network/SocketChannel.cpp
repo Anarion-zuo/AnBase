@@ -5,7 +5,7 @@
 #include <fcntl.h>
 #include <exceptions/InvalidOperation.h>
 #include <io/channel/network/SocketChannel.h>
-#include "exceptions/io/socket/FcntlException.h"
+#include <io/base/io-exceptions.h>
 
 void anarion::SocketChannel::setNonBlock() const {
     if (!o_valid) { InvalidOperation(); }

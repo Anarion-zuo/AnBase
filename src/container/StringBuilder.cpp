@@ -59,3 +59,7 @@ void anarion::StringBuilder::mappend(anarion::SString &&str) {
     str.clearMove();
     mappend(cstr, len);
 }
+
+void anarion::StringBuilder::appendNumber(anarion::size_type num) {
+    mappend(SString::parseDec(num));
+}

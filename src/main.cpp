@@ -3,14 +3,12 @@
 #include <functional>
 #include <concurrent/pool/ThreadPool.h>
 #include <io/channel/file/FileChannel.h>
-#include <concurrent/concurrent.h>
 #include <io/channel/network/TcpServerSocketChannel.h>
 #include "container/SString.h"
 #include "reflection/static_reflector.hpp"
 #include "container/Bind/binded.hpp"
 #include "concurrent/base/Barrier.h"
 #include "io/buffer/Buffer.h"
-#include <container/Pointer.h>
 #include <allocator/ListConcurrentAllocator.h>
 #include <container/Map/HashMap.hpp>
 #include <parser/MapParser.h>
@@ -20,20 +18,25 @@
 #include <concurrent/pool/AsyncCaller.h>
 #include <parser/xml/XmlElement.h>
 #include <time/Time.h>
+#include <logger/Logger.h>
+#include <pointers/UniquePointer.h>
+#include <pointers/SharedPointer.hpp>
+#include <container/Trie.h>
+#include <io/channel/terminal/TerminalPrintChannel.h>
+#include <time/Date.h>
 
 using namespace std;
 using namespace anarion;
 
+struct AA {
+    void *pthis;
+    AA() : pthis(this) {}
+};
 
-struct fooo : public Callable {
-    Callable *forward() override {
-        return new fooo;
-    }
+class MyInfo : public LoggerInfo {
+public:
+    void toChannel(InChannel &inChannel) override {
 
-    void run() override {
-        for (size_type i = 0; i < 1000000; ++i) {
-            printf("working on %ld\n", i);
-        }
     }
 };
 
@@ -55,6 +58,10 @@ int main() {
 //        client.in(outbuf);
 //        client.close();
 //    }
-    SString num = SString::parseDec(111);
+
+    Time time;
+    time.setCurrent();
+    Date date(time);
+    SString str = date.print();
     return 0;
 }

@@ -29,8 +29,8 @@ namespace anarion {
             return *this;
         }
 
-        void put(const T &o) { list.push_back(o); }
-        void put(T &&o) { list.push_back(forward(o)); }
+        void push(const T &o) { list.push_back(o); }
+        void push(T &&o) { list.push_back(forward(o)); }
         T pop() { return list.pop_front(); }
 
         bool empty() const { return list.empty(); }

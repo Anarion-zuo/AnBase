@@ -6,14 +6,15 @@
 
 using namespace anarion;
 
-ThreadPool::ThreadPool(size_type num) {
+ThreadPool::ThreadPool(size_type num) : idleLock(), idleCond(idleLock) {
     addIdle(num);
 }
 
 ThreadPool::pool_ins *ThreadPool::createThread() {
     ::pthread_t pid;
     pool_ins *ins = new pool_ins(this, pid);
-    ::pthread_create(&pid, nullptr, pool_routine, ins);
+    int ret = ::pthread_create(&pid, nullptr, pool_routine, ins);
+    if (ret) { throw ThreadStartException(); }
     ++count;
     setLock.lock();
     insSet.insert(ins);
@@ -41,8 +42,11 @@ void *ThreadPool::pool_routine(void *p) {
 
         thread->func->run();
 
-//        thread->pool->running.remove(thread);
+        thread->pool->idleLock.lock();
         thread->pool->idles.push(thread);
+        thread->pool->idleCond.signal();
+        thread->pool->idleLock.unlock();
+
         thread->flag = false;
         delete thread->func;
         thread->cond.broadcast();
@@ -54,12 +58,19 @@ void *ThreadPool::pool_routine(void *p) {
 void ThreadPool::addIdle(size_type num) {
     for (size_type i = 0; i < num; ++i) {
         pool_ins *p = createThread();
+
+        idleLock.lock();
         idles.push(p);
+        idleCond.signal();
+        idleLock.unlock();
     }
 }
 
 void ThreadPool::putBack(ThreadPool::pool_ins *ins) {
+    idleLock.lock();
     idles.push(ins);
+    idleCond.signal();
+    idleLock.unlock();
 }
 
 /*
@@ -70,7 +81,6 @@ void ThreadPool::putBack(ThreadPool::pool_ins *ins) {
 void ThreadPool::joinIdleThread(ThreadPool::pool_ins *ins) {
     ins->flag = 2;
     ins->cond.broadcast();
-//    ::pthread_join(ins->pid, nullptr);
 }
 
 /*
@@ -95,23 +105,33 @@ ThreadPool::~ThreadPool() {
 
 ThreadPool::pool_ins *ThreadPool::getIns() {
     pool_ins *p;
+    idleLock.lock();
     if (idles.empty()) {
         p = createThread();
-
     } else {
+        // dont have to wait with fore-hand check
         p = idles.pop();
     }
+    idleLock.unlock();
     return p;
 }
 
 void ThreadPool::joinAll() {
 
     for (size_type i = 0; i < count; ++i) {
+        idleLock.lock();
+        while (idles.empty()) {
+            idleCond.wait();
+        }
         pool_ins *ins = idles.pop();
+        idleLock.unlock();
+
         joinIdleThread(ins);
+
         setLock.lock();
         insSet.remove(ins);
         setLock.unlock();
+
         delete ins;
     }
     count = 0;
