@@ -11,7 +11,7 @@
 #include "exceptions/MyException.h"
 
 struct SystemException : public MyException {
-    const char *what() const noexcept {
+    const char *what() const noexcept override {
         return strerror(errno);
     }
 };

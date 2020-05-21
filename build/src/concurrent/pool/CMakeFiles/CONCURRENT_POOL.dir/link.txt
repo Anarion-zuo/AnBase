@@ -1,2 +1,0 @@
-/usr/bin/ar qc libCONCURRENT_POOL.a  CMakeFiles/CONCURRENT_POOL.dir/ThreadPool.cpp.o
-/usr/bin/ranlib libCONCURRENT_POOL.a

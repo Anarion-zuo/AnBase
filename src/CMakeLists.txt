@@ -36,8 +36,6 @@ add_library(anarionbase STATIC
         io/channel/file/MemoryMappedFileChannel.cpp
         io/channel/file/FileEntry.cpp
         io/channel/file/Directory.cpp
-        io/channel/listener/Listener.cpp
-        io/channel/listener/EpollListener.cpp
         io/channel/network/ServerSocketChannel.cpp
         io/channel/network/SocketChannel.cpp
         io/channel/network/TcpServerSocketChannel.cpp
@@ -85,4 +83,4 @@ add_library(anarionbase STATIC
 #target_link_libraries(anarionbase )#ALLOCATOR CONCURRENT CONTAINER REFLECTOR IO CONTEXT)
 
 target_link_libraries(anarionbase pthread)
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(../include)

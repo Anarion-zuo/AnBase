@@ -52,7 +52,13 @@ timespec anarion::Time::difference(const anarion::Time &left, const anarion::Tim
 
 
 
-anarion::Time::Time(anarion::size_type sec, anarion::size_type nsec)  : kernelTime({static_cast<__time_t>(sec), static_cast<__syscall_slong_t>(nsec)}) {
+anarion::Time::Time(anarion::size_type sec, anarion::size_type nsec)
+#ifdef __APPLE__
+    : kernelTime({static_cast<__darwin_time_t>((sec)), static_cast<long>((nsec))})
+#elif __linux__
+    : kernelTime({static_cast<__time_t>(sec), static_cast<__syscall_slong_t>(nsec)})
+#endif
+    {
     if (nsec > 999999999) {
         throw NanoSecondRangeError();
     }

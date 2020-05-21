@@ -98,7 +98,11 @@ anarion::Buffer anarion::FileChannel::out() {
 bool anarion::FileChannel::modifiedLaterThan(const timespec &time) {
     struct ::stat buf;
     ::fstat(fd, &buf);
+#ifdef __APPLE__
+    timespec mod = buf.st_mtimespec;
+#elif __linux__
     timespec mod = buf.st_mtim;
+#endif
     if (time.tv_sec > mod.tv_sec) {
         return false;
     }

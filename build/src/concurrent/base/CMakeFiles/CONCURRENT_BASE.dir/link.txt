@@ -1,2 +1,0 @@
-/usr/bin/ar qc libCONCURRENT_BASE.a  CMakeFiles/CONCURRENT_BASE.dir/Mutex.cpp.o CMakeFiles/CONCURRENT_BASE.dir/RwMutex.cpp.o CMakeFiles/CONCURRENT_BASE.dir/Thread.cpp.o
-/usr/bin/ranlib libCONCURRENT_BASE.a

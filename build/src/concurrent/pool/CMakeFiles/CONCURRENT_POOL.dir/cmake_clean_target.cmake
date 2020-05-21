@@ -1,3 +1,0 @@
-file(REMOVE_RECURSE
-  "libCONCURRENT_POOL.a"
-)

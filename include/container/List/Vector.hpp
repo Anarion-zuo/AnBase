@@ -213,6 +213,19 @@ namespace anarion {
             rhs.clearMove();
         }
 
+        Vector(std::initializer_list<T> &&initList) {
+            size_type length = initList.size();
+            if (length == 0) { return; }
+            begin = new_space(length);
+            end = begin + length;
+            cur = begin + length;
+            size_type index = 0;
+            for (auto &item : initList) {
+                new (&begin[index]) T(move(item));
+                ++index;
+            }
+        }
+
         void clearMove() {
             begin = nullptr;
             end = nullptr;
@@ -341,7 +354,16 @@ namespace anarion {
             return begin[index];
         }
 
+        const T &get(size_type index) const {
+            if (index > size()) { throw IndexOutOfRange(); }
+            return begin[index];
+        }
+
         T &operator[](size_type index) {
+            return get(index);
+        }
+
+        const T &operator[](size_type index) const {
             return get(index);
         }
 

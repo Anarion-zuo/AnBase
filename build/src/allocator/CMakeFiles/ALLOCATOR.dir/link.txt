@@ -1,2 +1,0 @@
-/usr/bin/ar qc libALLOCATOR.a  CMakeFiles/ALLOCATOR.dir/Allocator.cpp.o CMakeFiles/ALLOCATOR.dir/DynamicListAllocator.cpp.o CMakeFiles/ALLOCATOR.dir/ListAllocator.cpp.o CMakeFiles/ALLOCATOR.dir/PoolAllocator.cpp.o
-/usr/bin/ranlib libALLOCATOR.a
