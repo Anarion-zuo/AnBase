@@ -234,7 +234,7 @@ namespace anarion {
 
         Vector(T *p, size_type len) : begin(p), cur(begin + len), end(cur) {}   // move
 
-        ~Vector() {
+        virtual ~Vector() {
             clear();
         }
 
@@ -274,15 +274,15 @@ namespace anarion {
         #pragma endregion
 
         #pragma region sizes
-        bool empty() const {
+        constexpr bool empty() const {
             return !size();
         }
 
-        size_type size() const {
+        constexpr size_type size() const {
             return cur - begin;
         }
 
-        size_type capacity() const {
+        constexpr size_type capacity() const {
             return end - begin;
         }
         
@@ -447,6 +447,10 @@ namespace anarion {
                 push_back(*begin);
                 ++begin;
             }
+        }
+
+        void remove(size_type index) {
+            remove(begin + index);
         }
 
         void remove(iterator it) {
