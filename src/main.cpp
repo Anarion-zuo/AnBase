@@ -24,6 +24,9 @@
 #include <container/Trie.h>
 #include <io/channel/terminal/TerminalPrintChannel.h>
 #include <time/Date.h>
+#include <container/Set/ExtHashSet.hpp>
+#include <container/base/BplusTree.hpp>
+#include <container/base/BTree.hpp>
 
 using namespace std;
 using namespace anarion;
@@ -58,10 +61,21 @@ int main() {
 //        client.in(outbuf);
 //        client.close();
 //    }
+    BTree<int> tree;
 
-    Time time;
-    time.setCurrent();
-    Date date(time);
-    SString str = date.print();
+    tree.insert(1);
+    tree.insert(2);
+    tree.insert(3);
+    tree.insert(4);
+    tree.insert(5);
+    tree.insert(6);
+
+    bool flag;
+    flag = tree.hasMember(1);
+    flag = tree.hasMember(3);
+    flag = tree.hasMember(5);
+    flag = tree.hasMember(4);
+    flag = tree.hasMember(6);
+
     return 0;
 }

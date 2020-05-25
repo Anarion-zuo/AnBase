@@ -370,6 +370,7 @@ namespace anarion {
         #pragma region insert
         iterator insert(iterator it, const T &o) {
             if (it > cur) { throw IndexOutOfRange(); }
+            if (it == cur) { push_back(o); return cur - 1; }
             size_type index = it - begin;
             copy_back_expand(index, 1);
             new(begin + index) T(o);
@@ -378,6 +379,7 @@ namespace anarion {
 
         iterator insert(iterator it, T &&o) {
             if (it > cur) { throw IndexOutOfRange(); }
+            if (it == cur) { push_back(forward<T>(o)); return cur - 1; }
             size_type index = it - begin;
             copy_back_expand(index, 1);
             new(begin + index) T(forward<T>(o));
@@ -385,14 +387,16 @@ namespace anarion {
         }
 
         iterator insert(size_type index, const T &o) {
-            if (index >= size()) { throw IndexOutOfRange(); }
+            if (index > size()) { throw IndexOutOfRange(); }
+            if (index == size()) { push_back(o); return cur - 1; }
             copy_back_expand(index, 1);
             new(begin + index) T(o);
             return begin + index;
         }
 
         iterator insert(size_type index, T &&o) {
-            if (index >= size()) { throw IndexOutOfRange(); }
+            if (index > size()) { throw IndexOutOfRange(); }
+            if (index == size()) { push_back(forward<T>(o)); return cur - 1; }
             copy_back_expand(index, 1);
             new(begin + index) T(forward<T>(o));
             return begin + index;
@@ -470,6 +474,10 @@ namespace anarion {
                 return;
             }
             copy_forward_expand(b - begin + num, num);
+        }
+
+        void remove(size_type index, size_type length) {
+            remove(begin + index, length);
         }
         #pragma endregion
 
