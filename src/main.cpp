@@ -69,6 +69,25 @@ int main() {
     tree.insert(4);
     tree.insert(5);
     tree.insert(6);
+    tree.insert(7);
+    tree.insert(8);
+    tree.insert(9);
+    tree.insert(10);
+    tree.insert(11);
+    tree.insert(12);
+    tree.insert(12);
+    tree.insert(12);
+    tree.insert(12);
+    tree.insert(12);
+    tree.insert(12);
+    tree.insert(12);
+    tree.insert(12);
+    tree.insert(12);
+    tree.insert(12);
+    tree.insert(12);
+    tree.insert(12);
+    tree.insert(12);
+    tree.insert(12);
 
     bool flag;
     flag = tree.hasMember(1);
@@ -76,6 +95,10 @@ int main() {
     flag = tree.hasMember(5);
     flag = tree.hasMember(4);
     flag = tree.hasMember(6);
+    flag = tree.hasMember(10);
+    flag = tree.hasMember(11);
+    flag = tree.hasMember(12);
+    flag = tree.hasMember(8);
 
     return 0;
 }
