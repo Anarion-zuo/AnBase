@@ -202,67 +202,85 @@ namespace anarion {
             }
         }
 
-        void removeCaseDirectRemove(Node *node, size_type index) {
+        void removeCaseDirectRemove(Node *node, size_type index, Node *parent, size_type parentIndex) {
             node->elements.remove(index);
+            node->childs.remove(index);
         }
-        void removeCaseTryBorrow(Node *node, size_type index) {
-            // check neighbors for balancing
-            size_type parentIndex = node->parentIndex;
-            Node *parent = node->parent;
+        void removeRotateLeft(Node *node, Node *parent, Node *sibling, size_type parentIndex) {
+            node->elements.push_back(move(parent->elements[parentIndex]));
+            parent->elements[parentIndex] = sibling->elements.pop_front();
+            sibling->childs.pop_back();
+        }
+        void removeRotateRight(Node *node, Node *parent, Node *sibling, size_type parentIndex) {
+            node->elements.push_back(move(parent->elements[parentIndex - 1]));
+            parent->elements[parentIndex] = sibling->elements.pop_back();
+            sibling->childs.pop_back();
+        }
+        void removeMergeLeaf(Node *left, Node *right, Node *parent) {
+            size_type parentIndex = left->parentIndex;
+            // change left to new node
+            left->elements.push_back(move(parent->elements[parentIndex]));   // add middle element of parent to left
+            parent->elements.remove(parentIndex);
+            parent->childs.remove(parentIndex + 1);  // right removed from parent childs
+            // update parent childs' index
+            for (size_type index = parentIndex + 1; index < parent->childs.size(); ++index) {
+                --(parent->childs[index]->parentIndex);
+            }
+            // elements move from right to left
+            left->elements.insert(left->elements.end_iterator(), right->elements.begin_iterator(), right->elements.size());
+            // update new moved childs
+            for (size_type index = 0; index < right->childs.size(); ++index) {
+                Node *child = right->childs[index];
+                if (child) {
+                    child->parentIndex += left->childs.size();
+                    child->parent = left;
+                }
+            }
+            // childs move from right to left
+            left->childs.insert(left->childs.end_iterator(), right->childs.begin_iterator(), right->childs.size());
+            delete right;
+            // check if must fill in the parent
+            if (parent->elements.empty()) {
+                removeFillEmpty(parent, parent->parent, parent->parentIndex);
+            }
+        }
+        void removeFillEmpty(Node *node, Node *parent, size_type parentIndex) {
+            if (parent == nullptr) {  // root case
 
-            size_type borrowingIndex;
-            Node *borrowingNode;
-            bool lr;  // left/right true/false
-            // small case first
-            if (parentIndex == 0) {  // can only look to the right
-                borrowingNode = parent->childs[1];
-                if (borrowingNode->elementSize() > 1) {
-                    lr = true;
-                    borrowingIndex = 0;
-                } else {
-                    // give up
-                    removeCaseCannotBorrow(node, index);
+            }
+            if (parent->childs.size() - 1 > parentIndex) {  // has right sibling
+                Node *sibling = parent->childs[parentIndex + 1];
+                if (sibling->elements.size() > 1) {  // can borrow from right sibling
+                    removeRotateLeft(node, parent, sibling, parentIndex);
                     return;
                 }
-            } else {
-                borrowingNode = parent->childs[parentIndex - 1];  // look left first
-                if (borrowingNode->elementSize() > 1) {
-                    // viable
-                    lr = false;
-                    borrowingIndex = borrowingNode->elementSize() - 1;
-                } else if (parentIndex + 1 < parent->childSize()) {  // check if can look right
-                    borrowingNode = parent->childs[parentIndex + 1];
-                    if (borrowingNode->elementSize() > 1) {
-                        // viable
-                        lr = true;
-                        borrowingIndex = 0;
-                    } else {
-                        // give up
-                        removeCaseCannotBorrow(node, index);
+                // check left sibling
+                if (parentIndex > 0) {
+                    sibling = parent->childs[parentIndex - 1];
+                    if (sibling->elements.size() > 1) {
+                        removeRotateRight(node, parent, sibling, parentIndex);
                         return;
                     }
-                } else {
-                    // give up
-                    removeCaseCannotBorrow(node, index);
+                    // must merge
+                    removeMergeLeaf(sibling, node, parent);
                     return;
                 }
+                // must merge
+                removeMergeLeaf(node, sibling, parent);
+                return;
             }
-            // can borrow node from neighbor
-            T borrowedObj = move(borrowingNode->elements[borrowingIndex]);
-            borrowingNode->elements.remove(borrowingIndex);
-            if (lr) {
-                // is from right
-                node->elements.push_back(move(borrowedObj));
-            } else {
-                // is from left
-                node->elements.insert(0, move(borrowedObj));
+            // no right sibling
+            Node *sibling = parent->childs[parentIndex - 1];;
+            if (sibling->elements.size() > 1) {
+                removeRotateRight(node, parent, sibling, parentIndex);
+                return;
             }
-            node->childs.push_back(nullptr);
+            removeMergeLeaf(sibling, node, parent);
         }
-        void removeCaseCannotBorrow(Node *node, size_type index) {
+        void removeCaseCannotBorrow(Node *node, size_type index, Node *parent, size_type parentIndex) {
 
         }
-        void removeCaseNotLeaf(Node *node, size_type index) {
+        void removeCaseNotLeaf(Node *node, size_type index, Node *parent, size_type parentIndex) {
 
         }
 
@@ -308,19 +326,19 @@ namespace anarion {
                 }
                 node = node->getChild(insertIndex);
             }
-
+            size_type parentIndex = node->parentIndex;
+            Node *parent = node->parent;
             if (node->childs.empty()) {  // leaf node
-                if (node->elements.size() > 1) {
-                    // case 1
-                    removeCaseDirectRemove(node, insertIndex);
-                    return;
+                // perfect leaf, remove directly
+                removeCaseDirectRemove(node, insertIndex, parent, parentIndex);
+                if (node->childs->empty()) {
+                    removeFillEmpty(node, parent, parentIndex);
                 }
                 // case 2 & 3
-                removeCaseTryBorrow(node, insertIndex);
                 return;
             }
             // case 3
-            removeCaseCannotBorrow(node, insertIndex);
+            removeCaseCannotBorrow(node, insertIndex, parent, parentIndex);
         }
     };
 }
