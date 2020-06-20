@@ -88,6 +88,9 @@ namespace anarion {
     template <> struct hash_function<SString> {
         hash_type operator()(const SString &str) { return str.getHashVal(); }
     };
+    template <> struct hash_function<SString*> {
+        hash_type operator()(const SString *str) { return str->getHashVal(); }
+    };
 };
 
 #endif //MYCPPLIB_SSTRING_H

@@ -21,9 +21,9 @@ namespace anarion {
 
             Node() = default;
             ~Node() {
-                for (size_type index = 0; index < childs.size(); ++index) {
-                    delete childs[index];
-                }
+//                for (size_type index = 0; index < childs.size(); ++index) {
+//                    delete childs[index];
+//                }
             }
 
             constexpr size_type elementSize() const { return elements.size(); }
@@ -47,7 +47,7 @@ namespace anarion {
             size_type findInsertingIndex(const T &obj) {
                 // must find the place where the element is larger than obj
                 // and the previous one is less than obj
-                size_type left = 0, right = elementSize();
+                size_type left = 0, right = elements.size();
                 if (right == 0) {
                     return 0;
                 }
@@ -241,12 +241,18 @@ namespace anarion {
             delete right;
             // check if must fill in the parent
             if (parent->elements.empty()) {
-                removeFillEmpty(parent, parent->parent, parent->parentIndex);
+                removeFillEmpty(parent, parent->parent, parentIndex);
             }
         }
         void removeFillEmpty(Node *node, Node *parent, size_type parentIndex) {
             if (parent == nullptr) {  // root case
-
+                // set root's child to be root
+                Node *child = node->childs[parentIndex];
+                child->parentIndex = 0;
+                child->parent = nullptr;
+                root = child;
+                delete node;
+                return;
             }
             if (parent->childs.size() - 1 > parentIndex) {  // has right sibling
                 Node *sibling = parent->childs[parentIndex + 1];
@@ -277,11 +283,19 @@ namespace anarion {
             }
             removeMergeLeaf(sibling, node, parent);
         }
-        void removeCaseCannotBorrow(Node *node, size_type index, Node *parent, size_type parentIndex) {
-
-        }
-        void removeCaseNotLeaf(Node *node, size_type index, Node *parent, size_type parentIndex) {
-
+        void removeCaseNotLeaf(Node *node, size_type index) {
+            T removingElement = move(node->elements[index]);
+            Node *leaf = node;
+            while (leaf->childs[index] != nullptr) {
+                Node *next = leaf->childs[index];
+                next->parent->elements[index] = next->elements.pop_back();
+                leaf = next;
+                index = next->elements.size();
+            }
+            leaf->childs.pop_back();
+            if (leaf->elements.empty()) {
+                removeFillEmpty(leaf, leaf->parent, leaf->parentIndex);
+            }
         }
 
     public:
@@ -301,44 +315,56 @@ namespace anarion {
             size_type insertIndex;
             while (true) {
                 insertIndex = node->findInsertingIndex(obj);
-                if (node->getElement(insertIndex) == obj) {
-                    return true;
+                if (node->elements.size() > insertIndex) {
+                    if (node->elements.get(insertIndex) == obj) {
+                        return true;
+                    }
                 }
+
                 if (!node->hasChild(insertIndex)) {
                     break;
                 }
                 node = node->getChild(insertIndex);
             }
-            return obj == node->getElement(insertIndex);
+            if (node->elements.size() > insertIndex) {
+                if (node->elements.get(insertIndex) == obj) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         void remove(const T &obj) {
             Node *node = root;
             // find the node
-            size_type insertIndex;
+            size_type removeIndex;
+            bool foundNode = false;
             while (true) {
-                insertIndex = node->findInsertingIndex(obj);
-                if (node->getElement(insertIndex) == obj) {
+                removeIndex = node->findInsertingIndex(obj);
+                if (node->elements.size() > removeIndex) {
+                    if (node->elements.get(removeIndex) == obj) {
+                        foundNode = true;
+                        break;
+                    }
+                }
+                if (!node->hasChild(removeIndex)) {
                     break;
                 }
-                if (!node->hasChild(insertIndex)) {
-                    break;
-                }
-                node = node->getChild(insertIndex);
+                node = node->getChild(removeIndex);
             }
+            if (!foundNode) { return; }
             size_type parentIndex = node->parentIndex;
             Node *parent = node->parent;
-            if (node->childs.empty()) {  // leaf node
+            if (!node->hasChild(removeIndex)) {  // leaf node
                 // perfect leaf, remove directly
-                removeCaseDirectRemove(node, insertIndex, parent, parentIndex);
-                if (node->childs->empty()) {
+                removeCaseDirectRemove(node, removeIndex, parent, parentIndex);
+                if (node->elements.empty()) {
                     removeFillEmpty(node, parent, parentIndex);
                 }
-                // case 2 & 3
                 return;
             }
-            // case 3
-            removeCaseCannotBorrow(node, insertIndex, parent, parentIndex);
+            // internal node
+            removeCaseNotLeaf(node, removeIndex);
         }
     };
 }

@@ -10,6 +10,126 @@
 #include <iostream>
 
 namespace anarion {
+
+
+#pragma region memory
+    template<typename T>
+    void clear_space_impl(T *first, size_type num, true_type) {
+        // nothing here
+    }
+
+    template<typename T>
+    void clear_space_impl(T *first, size_type num, false_type) {
+        for (size_type i = 0; i < num; ++i) {
+            first[i].~T();
+        }
+    }
+
+    // call destructors
+    template<typename T>
+    void clear_space(T *first, size_type num) {
+        clear_space_impl(first, num, typename type_trait<T>::is_pod());
+    }
+
+    template<typename T>
+    T *new_space(size_type num) {
+        if (num == 0) { return nullptr; }
+        return (T*)operator new(num * sizeof(T));
+    }
+#pragma endregion
+
+    // optimized copy
+#pragma region optimized_copy
+    /*
+        The reverse functions follow the convention of [) regardless of its copying order
+        The input dst and src would not be copied
+    */
+    template<typename T>
+    void reverse_copy(T *dst, T *src, size_type num) {
+        reverse_copy_impl(dst, src, num, typename type_trait<T>::is_pod());
+    }
+
+    template<typename T>
+    void reverse_copy_impl(T *dst, T *src, size_type num, true_type) {
+        dst -= num;
+        src -= num;
+        memcpy(dst, src, num * sizeof(T));
+    }
+
+    template<typename T>
+    void reverse_copy_impl(T *dst, T *src, size_type num, false_type) {
+        for (size_type i = 0; i < num; ++i) {
+            --dst;
+            --src;
+            new(dst) T(*src);
+            src->~T();
+        }
+    }
+
+    template<typename T>
+    void reverse_move(T *dst, T *src, size_type num) {
+        reverse_move_impl(dst, src, typename type_trait<T>::has_move_ctor());
+    }
+
+    template<typename T>
+    void reverse_move_impl(T *dst, T *src, size_type num, true_type) {
+        for (size_type i = 0; i < num; ++i) {
+            --dst;
+            --src;
+            new(dst) T(move(*src));
+            src->~T();
+        }
+    }
+
+    template<typename T>
+    void reverse_move_impl(T *dst, T *src, size_type num, false_type) {
+        reverse_copy(dst, src, num);
+    }
+
+
+    template<typename T>
+    void seq_move(T *dst, T *src, size_type num) {
+        seq_move_impl(dst, src, num, typename type_trait<T>::has_move_ctor());
+    }
+
+    template<typename T>
+    void seq_move_impl(T *dst, T *src, size_type num, true_type) {
+        for (size_type i = 0; i < num; ++i) {
+            new (dst) T(move(*src));
+            src->~T();
+            ++dst;
+            ++src;
+        }
+    }
+
+    template<typename T>
+    void seq_copy(T *dst, T *src, size_type num);
+    template<typename T>
+    void seq_move_impl(T *dst, T *src, size_type num, false_type) {
+        seq_copy(dst, src, num);
+    }
+
+    template<typename T>
+    void seq_copy(T *dst, T *src, size_type num) {
+        seq_copy_impl(dst, src, num, typename type_trait<T>::is_pod());
+    }
+
+    template<typename T>
+    void seq_copy_impl(T *dst, T *src, size_type num, true_type) {
+        memcpy(dst, src, sizeof(T) * num);
+    }
+
+    template<typename T>
+    void seq_copy_impl(T *dst, T *src, size_type num, false_type) {
+        for (size_type i = 0; i < num; ++i) {
+            new (dst) T(*src);
+            src->~T();
+            ++dst;
+            ++src;
+        }
+    }
+#pragma endregion
+
     template<typename T>
     class Vector {
     protected:
@@ -18,77 +138,13 @@ namespace anarion {
 
         void expand_push() { resize(size() << 1u); }
 
-        #pragma region memory
-        void clear_space_impl(T *first, size_type num, true_type) {
-            // nothing here
-        }
-
-        void clear_space_impl(T *first, size_type num, false_type) {
-            for (size_type i = 0; i < num; ++i) {
-                first[i].~T();
-            }
-        }
-
-        // call destructors
-        void clear_space(T *first, size_type num) {
-            clear_space_impl(first, num, typename type_trait<T>::is_pod());
-        }
-
-        T *new_space(size_type num) {
-            if (num == 0) { return nullptr; }
-            return (T*)operator new(num * sizeof(T));
-        }
-        #pragma endregion
-
-        // optimized copy
-        #pragma region optimized_copy
-        /*
-            The reverse functions follow the convention of [) regardless of its copying order
-            The input dst and src would not be copied
-        */
-        void reverse_copy(T *dst, T *src, size_type num) {
-            reverse_copy_impl(dst, src, num, typename type_trait<T>::is_pod());
-        }
-
-        void reverse_copy_impl(T *dst, T *src, size_type num, true_type) {
-            dst -= num;
-            src -= num;
-            memcpy(dst, src, num * sizeof(T));
-        }
-
-        void reverse_copy_impl(T *dst, T *src, size_type num, false_type) {
-            for (size_type i = 0; i < num; ++i) {
-                --dst;
-                --src;
-                new(dst) T(*src);
-                src->~T();
-            }
-        }
-
-        void reverse_move(T *dst, T *src, size_type num) {
-            reverse_move_impl(dst, src, typename type_trait<T>::has_move_ctor());
-        }
-
-        void reverse_move_impl(T *dst, T *src, size_type num, true_type) {
-            for (size_type i = 0; i < num; ++i) {
-                --dst;
-                --src;
-                new(dst) T(move(*src));
-                src->~T();
-            }
-        }
-
-        void reverse_move_impl(T *dst, T *src, size_type num, false_type) {
-            reverse_copy(dst, src, num);
-        }
-
         void copy_back_expand(size_type index, size_type steps) {
             size_type oldsize = size(), oldcap = capacity(), newcap;
             if (index > oldsize) { throw IndexOutOfRange(); }
             T *new_cur = cur + steps;
             if (new_cur > end) {   // require expand
                 newcap = (steps + oldsize) << 1u;
-                T *n_space = new_space(newcap);
+                T *n_space = new_space<T>(newcap);
                 // copy head
                 seq_move(n_space, begin, index);
                 // copy tail
@@ -106,50 +162,21 @@ namespace anarion {
             }
         }
 
-        void seq_move(T *dst, T *src, size_type num) {
-            seq_move_impl(dst, src, num, typename type_trait<T>::has_move_ctor());
-        }
-
-        void seq_move_impl(T *dst, T *src, size_type num, true_type) {
-            for (size_type i = 0; i < num; ++i) {
-                new (dst) T(move(*src));
-                src->~T();
-                ++dst;
-                ++src;
-            }
-        }
-
-        void seq_move_impl(T *dst, T *src, size_type num, false_type) {
-            seq_copy(dst, src, num);
-        }
-
-        void seq_copy(T *dst, T *src, size_type num) {
-            seq_copy_impl(dst, src, num, typename type_trait<T>::is_pod());
-        }
-
-        void seq_copy_impl(T *dst, T *src, size_type num, true_type) {
-            memcpy(dst, src, sizeof(T) * num);
-        }
-
-        void seq_copy_impl(T *dst, T *src, size_type num, false_type) {
-            for (size_type i = 0; i < num; ++i) {
-                new (dst) T(*src);
-                src->~T();
-                ++dst;
-                ++src;
-            }
-        }
-
         void copy_forward_expand(size_type index, size_type steps) {
             size_type oldsize = size();
             T *new_cur = cur - steps;
             if (new_cur < begin || index > oldsize) { throw IndexOutOfRange(); }
             size_type oldcap = capacity(),  newsize = oldsize - steps;
+            if (newsize == 0) {
+                clear();
+                return;
+            }
+            /*
             if (newsize * 3 <= oldcap) {
                 size_type newcap = newsize << 1;
                 T *n_space = new_space(newcap);
                 // copy head
-                seq_move(n_space, begin, index - steps);
+                seq_move(n_space, begin, index - steps + 1);
                 // copy tail
                 seq_move(n_space + index - steps, begin + index, oldsize - index);
                 // clean up
@@ -161,7 +188,8 @@ namespace anarion {
                 end = n_space + newcap;
                 return;
             }
-            size_type new_index = index - steps;
+             */
+            size_type new_index = index + 1ul - steps;
             clear_space(begin + new_index, steps);
             seq_move(begin + new_index, begin + index, oldsize - index);
             cur -= steps;
@@ -183,7 +211,7 @@ namespace anarion {
             if (initialSize == 0) {
                 return;
             }
-            begin = new_space(initialSize);
+            begin = new_space<T>(initialSize);
             end = (begin + initialSize);
             cur = begin;
         }
@@ -192,7 +220,7 @@ namespace anarion {
             if (initialSize == 0) {
                 return;
             }
-            begin = new_space(initialSize);
+            begin = new_space<T>(initialSize);
             end = (begin + initialSize);
             cur = begin + initialSize;
             for (size_type i = 0; i < initialSize; ++i) {
@@ -200,7 +228,7 @@ namespace anarion {
             }
         }
 
-        Vector(const Vector<T> &rhs) : begin(new_space(rhs.size())), cur(begin + rhs.size()), end(cur) {
+        Vector(const Vector<T> &rhs) : begin(new_space<T>(rhs.size())), cur(begin + rhs.size()), end(cur) {
             if (rhs.empty()) {
                 return;
             }
@@ -216,7 +244,7 @@ namespace anarion {
         Vector(std::initializer_list<T> &&initList) {
             size_type length = initList.size();
             if (length == 0) { return; }
-            begin = new_space(length);
+            begin = new_space<T>(length);
             end = begin + length;
             cur = begin + length;
             size_type index = 0;
@@ -244,7 +272,7 @@ namespace anarion {
             }
             clear();
             // reset members
-            begin = new_space(rhs.size());
+            begin = new_space<T>(rhs.size());
             cur = begin + rhs.size();
             end = cur;
             // make copy
@@ -293,7 +321,7 @@ namespace anarion {
             }
             size_type oldsize = size(), oldcap = capacity(), newcap, newsize;
             if (oldcap == 0) {
-                begin = new_space(new_size);
+                begin = new_space<T>(new_size);
                 cur = begin;
                 end = begin + new_size;
                 return;
@@ -308,7 +336,7 @@ namespace anarion {
                 newsize = oldsize;
             }
             // create new space
-            T *newp = new_space(newcap);
+            T *newp = new_space<T>(newcap);
             // move to new space
             seq_move(newp, begin, newsize);
             // release old space
@@ -347,15 +375,22 @@ namespace anarion {
             T &last = *cur;
             return move(last);
         }
+
+        T pop_front() {
+            if (empty()) { throw EmptyContainer(); }
+            T ret = move(begin[0]);
+            remove(0ul);
+            return move(ret);
+        }
         #pragma endregion
 
         T &get(size_type index) {
-            if (index > size()) { throw IndexOutOfRange(); }
+            if (index >= size()) { throw IndexOutOfRange(); }
             return begin[index];
         }
 
         const T &get(size_type index) const {
-            if (index > size()) { throw IndexOutOfRange(); }
+            if (index >= size()) { throw IndexOutOfRange(); }
             return begin[index];
         }
 
@@ -369,6 +404,11 @@ namespace anarion {
 
         #pragma region insert
         iterator insert(iterator it, const T &o) {
+            if (empty()) {
+                size_type oldIndex = it - begin;
+                resize(1);
+                it = begin + oldIndex;
+            }
             if (it > cur) { throw IndexOutOfRange(); }
             if (it == cur) { push_back(o); return cur - 1; }
             size_type index = it - begin;
@@ -378,6 +418,11 @@ namespace anarion {
         }
 
         iterator insert(iterator it, T &&o) {
+            if (empty()) {
+                size_type oldIndex = it - begin;
+                resize(1);
+                it = begin + oldIndex;
+            }
             if (it > cur) { throw IndexOutOfRange(); }
             if (it == cur) { push_back(forward<T>(o)); return cur - 1; }
             size_type index = it - begin;
@@ -387,6 +432,9 @@ namespace anarion {
         }
 
         iterator insert(size_type index, const T &o) {
+            if (empty()) {
+                resize(1);
+            }
             if (index > size()) { throw IndexOutOfRange(); }
             if (index == size()) { push_back(o); return cur - 1; }
             copy_back_expand(index, 1);
@@ -395,6 +443,9 @@ namespace anarion {
         }
 
         iterator insert(size_type index, T &&o) {
+            if (empty()) {
+                resize(1);
+            }
             if (index > size()) { throw IndexOutOfRange(); }
             if (index == size()) { push_back(forward<T>(o)); return cur - 1; }
             copy_back_expand(index, 1);
@@ -403,6 +454,11 @@ namespace anarion {
         }
 
         iterator insert(iterator it, iterator b, iterator e) {
+            if (empty()) {
+                size_type oldIndex = it - begin;
+                resize(e - b + 1);
+                it = begin + oldIndex;
+            }
             if (it > cur) { throw IndexOutOfRange(); }
             size_type index = it - begin;
             while (b != e) {
@@ -415,6 +471,11 @@ namespace anarion {
 
         template <typename It>
         iterator insert(iterator it, It b, size_type num) {
+            if (empty()) {
+                size_type oldIndex = it - begin;
+                resize(num + 1);
+                it = begin + oldIndex;
+            }
             if (it > cur) { throw IndexOutOfRange(); }
             size_type index = it - begin;
             copy_back_expand(index, num);
@@ -426,6 +487,11 @@ namespace anarion {
         }
 
         iterator insert(iterator it, T *p, size_type num) {
+            if (empty()) {
+                size_type oldIndex = it - begin;
+                resize(num + 1);
+                it = begin + oldIndex;
+            }
             if (it > cur) { throw IndexOutOfRange(); }
             size_type index = it - begin;
             copy_back_expand(index, num);
@@ -459,7 +525,7 @@ namespace anarion {
 
         void remove(iterator it) {
             if (it > cur) { throw IndexOutOfRange(); }
-            copy_forward_expand(it, 1);
+            copy_forward_expand(it - begin, 1);
         }
 
         void remove(iterator b, iterator e) {

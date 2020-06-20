@@ -11,7 +11,7 @@
 
 /*
  * underlying allocator needs only provide interface with:
- * input as number of bytes
+ * input as numbers of bytes
  * output as pointer to the first byte
  */
 

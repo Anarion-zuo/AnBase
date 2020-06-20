@@ -33,9 +33,9 @@ add_library(anarionbase STATIC
         io/channel/InChannel.cpp
         io/channel/OutChannel.cpp
         io/channel/file/FileChannel.cpp
-        io/channel/file/MemoryMappedFileChannel.cpp
         io/channel/file/FileEntry.cpp
         io/channel/file/Directory.cpp
+        io/channel/file/MemoryMappedFile.cpp
         io/channel/network/ServerSocketChannel.cpp
         io/channel/network/SocketChannel.cpp
         io/channel/network/TcpServerSocketChannel.cpp

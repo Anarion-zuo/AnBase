@@ -33,6 +33,8 @@ public:
     void release() override;
     void close() override;
 
+    int getFd() const { return fd; }
+
     size_type in(char *p, size_type nbytes) override;
     size_type in(Buffer &buffer) override;
     size_type in(Buffer &buffer, size_type nbytes) override;
