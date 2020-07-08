@@ -73,7 +73,7 @@ namespace anarion {
             curVectorOffset = 0;
         }
 
-        void push_back
+//        void push_back
     };
 }
 

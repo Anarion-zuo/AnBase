@@ -7,7 +7,7 @@
 #include "FileEntry.h"
 
 namespace anarion {
-class FileChannel : virtual public RandomChannel, public virtual FileEntry {
+class FileChannel : virtual public RandomChannel, public FileEntry {
 protected:
     int fd;
     size_type fileSize = 0;
@@ -32,6 +32,7 @@ public:
     static FileChannel open(const SString &dir);
     void release() override;
     void close() override;
+    void remove() override ;
 
     int getFd() const { return fd; }
 

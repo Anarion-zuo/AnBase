@@ -341,6 +341,17 @@ namespace anarion {
             return iterator(next);  // the next one
         }
 
+        void remove(const T &obj) {
+            list_node *node = head.next;
+            while (node != &head) {
+                if (node->obj == obj) {
+                    break;
+                }
+            }
+            if (node == &head) { return; }
+            remove(iterator(node));
+        }
+
         iterator insert(iterator pos, const T &o) {
             insert_before(pos, o);
             return pos;
@@ -406,6 +417,14 @@ namespace anarion {
             node->prev = &head;
             node->next = next;
             next->prev = node;
+        }
+
+        void reverseOrder() {
+            list_node *oldNext = head.next, *oldPrev = head.prev;
+            head.next = oldPrev;
+            head.prev = oldNext;
+            oldPrev->next = &head;
+            oldNext->prev = &head;
         }
     };
 

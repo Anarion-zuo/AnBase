@@ -14,24 +14,39 @@ namespace anarion {
     class FileEntry {
     protected:
         SString name, nameSuffix;
+        FileEntry *parent = nullptr;
         LinkedList<FileEntry*> childs;
-//        FileEntry *parent;
+        HashMap<SString, FileEntry*> name2childs;
 
+        // paths
+        SString relativePath, absolutePath;
+        void computePaths();
     public:
+        void removeChildFromMembers(FileEntry *entry);
+
         explicit FileEntry(SString &&name);
+        FileEntry(SString &&name, FileEntry *parent);
         FileEntry(FileEntry &&rhs) noexcept : name(move(rhs.name)), nameSuffix(move(rhs.nameSuffix)), childs(move(rhs.childs)) {}
         virtual ~FileEntry() = default;
 
         constexpr const SString &getName() const { return name; }
         bool isFile() const { return childs.empty(); }
         constexpr const SString &getSuffix() const { return nameSuffix; }
+        constexpr FileEntry *getParent() const { return parent; }
+        constexpr void setParent(FileEntry *p) { parent = p; }
+        constexpr const SString &getRelativePath() const { return relativePath; }
+        constexpr const SString &getAbsolutePath() const { return absolutePath; }
 
         FileEntry * getChild(const SString &name);
         constexpr LinkedList<FileEntry*> &getChilds() { return childs; }
+        constexpr const HashMap<SString, FileEntry*> &getMap() const { return name2childs; }
+        HashMap<SString, FileEntry*> &getMap() { return name2childs; }
 //        constexpr FileEntry *getParent() const { return parent; }
 
         virtual void open() = 0;
         virtual void release() = 0;
+        virtual void remove() = 0;
+        virtual void close() = 0;
 
         FileEntry *findByDir(const SString &dir);
     };

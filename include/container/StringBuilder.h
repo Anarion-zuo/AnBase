@@ -36,6 +36,8 @@ namespace anarion {
         StringBuilder(StringBuilder &&rhs) noexcept : list(move(rhs.list)) {}
         ~StringBuilder() = default;
 
+        void reverseOrder();
+
         void cappend(char *p, size_type len);
         void cappend(const SString &str) { cappend(str.getArr(), str.length()); }
         void cappend(const char *p) { cappend(const_cast<char*>(p), strlen(p)); }

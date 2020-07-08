@@ -33,10 +33,13 @@ using namespace std;
 using namespace anarion;
 
 int main() {
-    MemoryMappedFile mappedFile(SString("/Users/anarion/Downloads/test.txt"));
-    void *p = mappedFile.getPointer();
-    mappedFile.getChannel().in("abcdefgh", 8);
-    memcpy(p, "123456", 6);
-
+    Directory directory(SString("/home/anarion/Downloads/testdir/"));
+    directory.open();
+    directory.createChildDirectory(SString("subtestdir"));
+    FileEntry *entry = directory.createChildFile(SString("testfile.txt"));
+    FileChannel *file = dynamic_cast<FileChannel *>(entry);
+    file->rewind();
+    file->in("12345", 5);
+    directory.close();
     return 0;
 }

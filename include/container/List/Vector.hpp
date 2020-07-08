@@ -384,12 +384,12 @@ namespace anarion {
         }
         #pragma endregion
 
-        T &get(size_type index) {
+        constexpr T &get(size_type index) {
             if (index >= size()) { throw IndexOutOfRange(); }
             return begin[index];
         }
 
-        const T &get(size_type index) const {
+        constexpr const T &get(size_type index) const {
             if (index >= size()) { throw IndexOutOfRange(); }
             return begin[index];
         }
@@ -404,7 +404,7 @@ namespace anarion {
 
         #pragma region insert
         iterator insert(iterator it, const T &o) {
-            if (empty()) {
+            if (capacity() == 0) {
                 size_type oldIndex = it - begin;
                 resize(1);
                 it = begin + oldIndex;
@@ -418,7 +418,7 @@ namespace anarion {
         }
 
         iterator insert(iterator it, T &&o) {
-            if (empty()) {
+            if (capacity() == 0) {
                 size_type oldIndex = it - begin;
                 resize(1);
                 it = begin + oldIndex;
@@ -432,7 +432,7 @@ namespace anarion {
         }
 
         iterator insert(size_type index, const T &o) {
-            if (empty()) {
+            if (capacity() == 0) {
                 resize(1);
             }
             if (index > size()) { throw IndexOutOfRange(); }
@@ -443,7 +443,7 @@ namespace anarion {
         }
 
         iterator insert(size_type index, T &&o) {
-            if (empty()) {
+            if (capacity() == 0) {
                 resize(1);
             }
             if (index > size()) { throw IndexOutOfRange(); }
@@ -454,7 +454,7 @@ namespace anarion {
         }
 
         iterator insert(iterator it, iterator b, iterator e) {
-            if (empty()) {
+            if (capacity() == 0) {
                 size_type oldIndex = it - begin;
                 resize(e - b + 1);
                 it = begin + oldIndex;
@@ -471,7 +471,7 @@ namespace anarion {
 
         template <typename It>
         iterator insert(iterator it, It b, size_type num) {
-            if (empty()) {
+            if (capacity() == 0) {
                 size_type oldIndex = it - begin;
                 resize(num + 1);
                 it = begin + oldIndex;
@@ -487,7 +487,7 @@ namespace anarion {
         }
 
         iterator insert(iterator it, T *p, size_type num) {
-            if (empty()) {
+            if (capacity() == 0) {
                 size_type oldIndex = it - begin;
                 resize(num + 1);
                 it = begin + oldIndex;

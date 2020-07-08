@@ -125,6 +125,17 @@ void anarion::FileChannel::release() {
     close();
 }
 
+void anarion::FileChannel::remove() {
+    close();
+    char *p = absolutePath.copy_cstr();
+    ::remove(p);
+    absolutePath.release_copied(p);
+
+    if (parent) {
+        parent->removeChildFromMembers(this);
+    }
+}
+
 //anarion::size_type anarion::FileChannel::in(anarion::Buffer &buffer) {
 //    if (!valid()) { throw InvalidOperation(); }
 //    return buffer.write_fd(fd, buffer.unread());

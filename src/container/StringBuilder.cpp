@@ -32,6 +32,7 @@ anarion::SString anarion::StringBuilder::build() {
         ret.end = ret.cur;
         n.len = 0;
         n.p = nullptr;
+        ret.hash();
         return move(ret);
     }
     // copy
@@ -62,4 +63,8 @@ void anarion::StringBuilder::mappend(anarion::SString &&str) {
 
 void anarion::StringBuilder::appendNumber(anarion::size_type num) {
     mappend(SString::parseDec(num));
+}
+
+void anarion::StringBuilder::reverseOrder() {
+    list.reverseOrder();
 }

@@ -5,6 +5,7 @@
 #include "exceptions/Context/ContextCreateException.h"
 #include <unistd.h>
 #include <context/LocalContext.h>
+#include <wait.h>
 
 using namespace anarion;
 
