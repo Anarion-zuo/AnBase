@@ -27,10 +27,10 @@ namespace anarion {
         explicit FileEntry(SString &&name);
         FileEntry(SString &&name, FileEntry *parent);
         FileEntry(FileEntry &&rhs) noexcept : name(move(rhs.name)), nameSuffix(move(rhs.nameSuffix)), childs(move(rhs.childs)) {}
-        virtual ~FileEntry() = default;
+        virtual ~FileEntry() {}
 
         constexpr const SString &getName() const { return name; }
-        bool isFile() const { return childs.empty(); }
+        virtual bool isFile() const { return false; }
         constexpr const SString &getSuffix() const { return nameSuffix; }
         constexpr FileEntry *getParent() const { return parent; }
         constexpr void setParent(FileEntry *p) { parent = p; }

@@ -1,11 +1,7 @@
 #include "container/SString.h"
-#include <sys/file.h>
 #include <exceptions/InvalidOperation.h>
 #include <io/channel/file/FileChannel.h>
-#include <io/base/io-exceptions.h>
 #include <sys/stat.h>
-
-//using namespace anarion;
 
 anarion::FileChannel anarion::FileChannel::open(const SString &dir) {
     char *cdir = dir.copy_cstr();
@@ -134,6 +130,10 @@ void anarion::FileChannel::remove() {
     if (parent) {
         parent->removeChildFromMembers(this);
     }
+}
+
+bool anarion::FileChannel::isFile() const {
+    return true;
 }
 
 //anarion::size_type anarion::FileChannel::in(anarion::Buffer &buffer) {

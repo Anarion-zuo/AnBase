@@ -50,14 +50,17 @@ anarion::FileEntry *anarion::FileEntry::findByDir(const anarion::SString &dir) {
 }
 
 void anarion::FileEntry::computePaths() {
-    FileEntry *entry = parent;
+    FileEntry *entry = this;
     StringBuilder builder;
-    builder.cappend(name);
     while (entry) {
         builder.cappend(entry->getName());
+        entry = entry->getParent();
     }
     builder.reverseOrder();
     relativePath = builder.build();
+    if (!isFile()) {
+        relativePath.push_back('/');
+    }
     builder.reverseOrder();
     if (relativePath[0] == '/') {
         absolutePath = relativePath;
@@ -67,6 +70,9 @@ void anarion::FileEntry::computePaths() {
         ::free((void *) cwd);
         builder.reverseOrder();
         absolutePath = builder.build();
+        if (!isFile()) {
+            absolutePath.push_back('/');
+        }
     }
 }
 

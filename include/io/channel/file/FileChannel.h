@@ -2,12 +2,14 @@
 #define FLIECHANNEL_H
 
 #include <io/buffer/Buffer.h>
+#include <sys/file.h>
+#include <io/base/io-exceptions.h>
 #include "../RandomChannel.h"
 #include "container/SString.h"
 #include "FileEntry.h"
 
 namespace anarion {
-class FileChannel : virtual public RandomChannel, public FileEntry {
+class FileChannel : public RandomChannel, public FileEntry {
 protected:
     int fd;
     size_type fileSize = 0;
@@ -24,10 +26,21 @@ protected:
 
 public:
 
-    FileChannel(FileChannel &&rhs) noexcept : InChannel(forward<FileChannel>(rhs)), OutChannel(forward<FileChannel>(rhs)), RandomChannel(forward<FileChannel>(rhs)), fd(rhs.fd), FileEntry(forward<FileChannel>(rhs)) {
-        return;
+    FileChannel(FileChannel &&rhs) noexcept : InChannel(forward<FileChannel>(rhs)), OutChannel(forward<FileChannel>(rhs)), RandomChannel(forward<FileChannel>(rhs)), FileEntry(forward<FileChannel>(rhs)) , fd(rhs.fd) {
+        rhs.fd = -1;
     }
-    ~FileChannel() { if (valid()) { close(); } }
+    FileChannel(const SString &dir) : InChannel(true), OutChannel(true), RandomChannel(true), fd(0), FileEntry(SString(dir)) {
+        char *cdir = dir.copy_cstr();
+        fd = ::open(cdir, O_RDWR | O_CREAT, 0666);
+        dir.release_copied(cdir);
+        if (fd < 0) { set_invalid(); throw OpenFdException(); }
+    }
+    ~FileChannel() override {
+        if (valid()) {
+            set_invalid();
+            ::close(fd);
+        }
+    }
 
     static FileChannel open(const SString &dir);
     void release() override;
@@ -50,6 +63,8 @@ public:
     size_type size() const override;
 
     bool modifiedLaterThan(const timespec &time);
+
+    bool isFile() const override;
 
     void open() override;
 };

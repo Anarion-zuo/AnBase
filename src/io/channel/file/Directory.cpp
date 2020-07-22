@@ -49,12 +49,13 @@ void anarion::Directory::open() {
             Directory *directory = new Directory(SString(const_cast<const char*>(info->d_name)), this);
             directory->open();
             childs.push_back(directory);
+            name2childs.insert({SString(info->d_name), directory});
         } else if (info->d_type == DT_REG) {
             // is regular file
-            FileChannel ob = FileChannel::open(SString(const_cast<const char*>(info->d_name)));
-            FileChannel *file = new FileChannel(move(ob));
+            FileChannel *file = new FileChannel(SString(const_cast<const char*>(info->d_name)));
             file->setParent(this);
             childs.push_back(file);
+            name2childs.insert({SString(info->d_name), file});
         }
     }
     // change back
@@ -79,7 +80,14 @@ void anarion::Directory::release() {
 }
 
 anarion::Directory::~Directory() {
-//    release();
+    if (handle == nullptr) {
+        return;
+    }
+    for (LinkedList<FileEntry*>::iterator it = childs.begin_iterator(); it != childs.end_iterator(); ++it) {
+        delete &(**it);
+    }
+    closedir(handle);
+    handle = nullptr;
 }
 
 anarion::FileEntry *anarion::Directory::createChildFile(const SString &fileName) {
@@ -97,9 +105,10 @@ anarion::FileEntry *anarion::Directory::createChildDirectory(anarion::SString &&
     StringBuilder absoluteName;
     absoluteName.cappend(relativePath);
     absoluteName.cappend(dirName);
+    absoluteName.cappend("/", 1);
     SString absoluteNewName = absoluteName.build();
     char *p = absoluteNewName.copy_cstr();
-    int ret = mkdir(p, 777);
+    int ret = mkdir(p, 0777);
     absoluteNewName.release_copied(p);
     if (ret < 0) {
         throw DirectoryCreateException();
@@ -124,8 +133,10 @@ void anarion::Directory::remove() {
 }
 
 void anarion::Directory::close() {
+    if (handle == nullptr) { return; }
     for (auto it = childs.begin_iterator(); it != childs.end_iterator(); ++it) {
-        (**it).close();
+        delete &**it;
     }
     closedir(handle);
+    handle = nullptr;
 }

@@ -27,19 +27,21 @@
 #include <container/base/BplusTree.hpp>
 #include <container/base/BTree.hpp>
 #include <container/List/PagedVector.hpp>
+#include <container/List/BitArray.hpp>
 #include <io/channel/file/MemoryMappedFile.h>
 
 using namespace std;
 using namespace anarion;
 
 int main() {
-    Directory directory(SString("/home/anarion/Downloads/testdir/"));
+    SString dirName("/home/anarion/Downloads/testdir/");
+    Directory directory((SString(dirName)));
     directory.open();
-    directory.createChildDirectory(SString("subtestdir"));
-    FileEntry *entry = directory.createChildFile(SString("testfile.txt"));
-    FileChannel *file = dynamic_cast<FileChannel *>(entry);
-    file->rewind();
-    file->in("12345", 5);
-    directory.close();
+    SString fileName ("testObj");
+    Directory *subtest = dynamic_cast<Directory *>(directory.getChild(fileName));
+    if (subtest == nullptr) {
+        subtest = dynamic_cast<Directory *>(directory.createChildDirectory(SString(fileName)));
+    }
+    subtest->createChildFile(SString("1"));
     return 0;
 }

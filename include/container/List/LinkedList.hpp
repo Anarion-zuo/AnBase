@@ -420,11 +420,13 @@ namespace anarion {
         }
 
         void reverseOrder() {
-            list_node *oldNext = head.next, *oldPrev = head.prev;
-            head.next = oldPrev;
-            head.prev = oldNext;
-            oldPrev->next = &head;
-            oldNext->prev = &head;
+            list_node *node = &head;
+            do {
+                list_node *next = node->next;
+                node->next = node->prev;
+                node->prev = next;
+                node = next;
+            } while (node != &head);
         }
     };
 
