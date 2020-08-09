@@ -27,14 +27,14 @@
 #include <container/base/BplusTree.hpp>
 #include <container/base/BTree.hpp>
 #include <container/List/PagedVector.hpp>
-#include <container/List/BitArray.hpp>
+#include <container/List/BitArray.h>
 #include <io/channel/file/MemoryMappedFile.h>
 
 using namespace std;
 using namespace anarion;
 
 int main() {
-    SString dirName("/home/anarion/Downloads/testdir/");
+    SString dirName("/home/anarion/Downloads/testdir/testopen/");
     Directory directory((SString(dirName)));
     directory.open();
     SString fileName ("testObj");

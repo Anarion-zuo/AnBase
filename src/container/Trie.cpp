@@ -99,19 +99,19 @@ void anarion::Trie::removeWord(const char *str, anarion::size_type length, anari
 }
 
 void anarion::Trie::addWord(const anarion::SString &word, anarion::size_type offset) {
-    addWord(word.getArr() + offset, word.length() - offset);
+    addWord(word.cstr() + offset, word.length() - offset);
 }
 
 anarion::size_type anarion::Trie::wordCount(const anarion::SString &word, anarion::size_type offset) const {
-    wordCount(word.getArr() + offset, word.length() - offset);
+    wordCount(word.cstr() + offset, word.length() - offset);
 }
 
 void anarion::Trie::removeWord(const anarion::SString &word, anarion::size_type offset, anarion::size_type count) {
-    removeWord(word.getArr() + offset, word.length() - offset, count);
+    removeWord(word.cstr() + offset, word.length() - offset, count);
 }
 
 anarion::size_type anarion::Trie::longestPrefix(const anarion::SString &str, anarion::size_type offset) const {
-    return longestPrefix(str.getArr() + offset, str.length() - offset);
+    return longestPrefix(str.cstr() + offset, str.length() - offset);
 }
 
 anarion::size_type anarion::Trie::longestPrefix(const char *str, anarion::size_type length) const {

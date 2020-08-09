@@ -26,7 +26,7 @@ static size_type skipChar(const char *str, size_type length, char c) {
 
 anarion::LinkedList<anarion::SString> anarion::ListParser::parse(const anarion::SString &expression) {
     const char *cstr = expression.cstr();
-    size_type length = expression.size();
+    size_type length = expression.length();
     return parse(cstr, length);
 }
 

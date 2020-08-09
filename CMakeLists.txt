@@ -8,3 +8,8 @@ add_subdirectory(src)
 add_executable(AnBase src/main.cpp)
 target_link_libraries(AnBase anarionbase)
 include_directories(include)
+
+# tests
+add_custom_target(test COMMAND
+        
+        )

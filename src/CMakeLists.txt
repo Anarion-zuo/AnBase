@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project (MyCppBase)
+project (AnBase)
 
 #aux_source_directory(. DIR_SRCS)
 add_library(anarionbase STATIC
@@ -22,6 +22,7 @@ add_library(anarionbase STATIC
         container/String.cpp
         container/StringBuilder.cpp
         container/Trie.cpp
+        container/BitArray.cpp
 
         context/Callable.cpp
         context/Context.cpp
@@ -84,3 +85,6 @@ add_library(anarionbase STATIC
 
 target_link_libraries(anarionbase pthread)
 include_directories(../include)
+
+# tests
+add_subdirectory(test)

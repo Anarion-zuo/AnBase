@@ -95,40 +95,6 @@ namespace anarion {
  * copy and moves
  */
 
-    template<typename T>
-    void copyCtorObjectsImpl(T *dst, T *src, size_type num, true_type) {
-        memcpy(dst, src, num * sizeof(T));
-    }
-
-    template<typename T>
-    void copyCtorObjectsImpl(T *dst, T *src, size_type num, false_type) {
-        for (size_type i = 0; i < num; ++i) {
-            new(&dst[i]) T(src[i]);
-        }
-    }
-
-    template<typename T>
-    void copyCtorObjects(T *dst, T *src, size_type num) {
-        copyCtorObjectsImpl(dst, src, num, typename type_trait<T>::is_pod());
-    }
-
-    template<typename T>
-    void moveCtorObjectsImpl(T *dst, T *src, size_type num, true_type) {
-        for (size_type i = 0; i < num; ++i) {
-            new(&dst[i]) T(move(src[i]));
-        }
-    }
-
-    template<typename T>
-    void moveCtorObjectsImpl(T *dst, T *src, size_type num, false_type) {
-        copyCtorObjects(dst, src, num);
-    }
-
-    template<typename T>
-    void moveCtorObjects(T *dst, T *src, size_type num) {
-        moveCtorObjectsImpl(dst, src, num, typename type_trait<T>::has_move_ctor());
-    }
-
 };
 
 #endif //MYCPPLIB_CONTAINER_UTILITY_HPP

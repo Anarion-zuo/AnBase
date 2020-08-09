@@ -24,8 +24,10 @@ void anarion::Directory::open() {
     char *name_cstr = name.copy_cstr();
     handle = opendir(name_cstr);
     if (handle == nullptr) {
-        name.release_copied(name_cstr);
-        return;
+        mkdir(name_cstr, 0777);
+        handle = opendir(name_cstr);
+//        name.release_copied(name_cstr);
+//        return;
     }
 
     // current working directory
@@ -95,7 +97,7 @@ anarion::FileEntry *anarion::Directory::createChildFile(const SString &fileName)
     builder.cappend(relativePath);
     builder.cappend(fileName);
     SString createName = builder.build();
-    FileEntry *entry = new FileChannel(FileChannel::open(createName));
+    FileEntry *entry = new FileChannel(createName);
     childs.push_back(entry);
     name2childs.insert({fileName, entry});
     return entry;

@@ -25,11 +25,12 @@ namespace anarion {
     };
 
     class Buffer;
-    class SString : public Vector<char>, public virtual MapperInterface {
+    class SString : protected Vector<char>, public virtual MapperInterface {
         friend class StringBuilder;
         friend class Buffer;
 
-        hash_type hashVal = 1;
+        mutable hash_type hashVal = 1;
+        mutable bool needsHash = true;
     public:
 
         SString();
@@ -38,7 +39,7 @@ namespace anarion {
         SString serialize() override;
         SString forwardSerialize() override;
 
-        ~SString();
+        ~SString() override ;
 
         SString(char *p, size_type num);
         SString(SString &&rhs) noexcept;
@@ -50,15 +51,25 @@ namespace anarion {
         bool operator==(const SString &rhs) const ;
         bool operator!=(const SString &rhs) const ;
 
-        static SString move(const char *str);
+//        static SString move(const char *str);
         static SString move(char *p, size_type len);
-        static SString move(Buffer &&buffer);
+//        static SString move(Buffer &&buffer);
+
+        bool empty() const ;
+        size_type capacity() const ;
+        size_type length() const;
+        char *getArr() const;
+
+        char &get(size_type index);
+        const char &get(size_type index) const ;
+        char &operator[](size_type index);
+        const char &operator[](size_type index) const ;
 
         bool equals(SString *rhs) const ;
         bool equals(const char *c) const ;
-        size_type hash() ;
+        size_type hash() const ;
+        size_type hash(size_type index, size_type len) const ;
         hash_type getHashVal() const ;
-        size_type length() const;
         char *cstr() const;
         void copy_cstr(char *p) const;
         char *copy_cstr() const;
@@ -67,12 +78,16 @@ namespace anarion {
         void append(const SString &rhs);
         SString suffix(char dot) const ;   // appointed separator
 
-        size_type indexOf(char c) const ;
-        size_type indexOf(char *p, size_type len);
-        size_type indexOf(const char *str) const ;  // KMP
-        size_type indexOf(const SString &rhs) const ;
-        size_type indexOfSince(char c, size_type index);
-        size_type indexSkip(const char *str, size_type index);
+//        size_type indexOf(char c) const ;
+//        size_type indexOf(char *p, size_type len);
+//        size_type indexOf(const char *str) const ;  // KMP
+//        size_type indexOf(const SString &rhs) const ;
+//        size_type indexOfSince(char c, size_type index);
+//        size_type indexSkip(const char *str, size_type index);
+
+        void insert(size_type index, char c);
+        void insert(size_type index, const char *p, size_type num);
+        void push_back(char c);
 
         void upperCase();
         void lowerCase();

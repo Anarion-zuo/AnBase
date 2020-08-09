@@ -68,14 +68,14 @@ anarion::MapParser::parse(const anarion::SString &inputExpression) {
     HashMap<SString, SString> ret;
     // initialize variables
     const char *cstr = inputExpression.cstr();
-    size_type unParsedLength = inputExpression.size();
+    size_type unParsedLength = inputExpression.length();
     size_type leftIndex = 0;
     // not indices, but offset with respect to present leftIndex
     size_type equalOffset;
     size_type separatorOffset;
 
     // iterate for each line
-    while (unParsedLength <= inputExpression.size()) {
+    while (unParsedLength <= inputExpression.length()) {
         equalOffset = indexOfCStr(cstr + leftIndex, unParsedLength, equal);
         separatorOffset = indexOfCStr(cstr + leftIndex, unParsedLength, separator);
         unParsedLength -= equalOffset + 1;
