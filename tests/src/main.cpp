@@ -4,8 +4,10 @@
 
 #include "../classes/TestVector.h"
 #include "../classes/TestString.h"
+#include "../classes/TestHashSet.h"
 
 int main() {
-    anarion::TestVector().runTest();
-    anarion::TestString().runTest();
+//    anarion::TestVector().run();
+//    anarion::TestString().run();
+    anarion::TestHashSet().run();
 }

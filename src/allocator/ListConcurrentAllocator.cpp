@@ -20,17 +20,17 @@ struct chunk {
 static chunk *pool_heads[16];
 static size_type pool_counts[16];
 
-static constexpr size_type index2size(size_type index) {
+static size_type index2size(size_type index) {
     return CHUNK_SIZE * (index + 1);
 }
 
-static constexpr size_type size2index(size_type size) {
+static size_type size2index(size_type size) {
     size_type m = size / CHUNK_SIZE, n = size % CHUNK_SIZE;
     if (n == 0) { --m; }
     return m;
 }
 
-static constexpr chunk *makelist(chunk *begin, size_type step, size_type num) {
+static chunk *makelist(chunk *begin, size_type step, size_type num) {
     for (size_type index = 0; index < num; ++index) {
         chunk * next = (chunk*)((char*)begin + step);
         begin->next = next;
