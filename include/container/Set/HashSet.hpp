@@ -73,6 +73,28 @@ namespace anarion {
             }
         }
 
+        // All nodes from old hash rehashed to new_heads array
+        void rehash(hash_node **new_heads, size_type new_heads_count) {
+            size_type old_count = heads_count;
+            hash_node **old_heads = heads;
+
+            for (size_type i = 0; i < old_count; ++i) {
+                // fetch old head node
+                hash_node *node = old_heads[i];
+                // rehash each node from this head into new_heads
+                while (node) {
+                    // node->next would be chnaged later
+                    hash_node *next = node->next;
+                    // determine which slot to hash
+                    size_type new_index = node->hash_val % new_heads_count;
+                    // insert simply to head for efficiency
+                    node->next = new_heads[new_index];
+                    new_heads[new_index] = node;
+                    node = next;
+                }
+            }
+        }
+
         void expand_heads() {
             if (heads_count == 0) {
                 heads_count = 8;
@@ -80,21 +102,45 @@ namespace anarion {
                 memset(heads, 0, sizeof(hash_node*) * heads_count);
                 return;
             }
-            obj_count = 0;  // compatible with insert_node
-            size_type old_count = heads_count, new_count = old_count << 1u;
-            heads_count = new_count;  // update heads count
-            hash_node **old_heads = heads;   // record old heads
-            heads = (hash_node**)operator new(new_count * sizeof(hash_node*));  // update new heads
-            memset(heads, 0, sizeof(hash_node*) * new_count);
-            for (size_type i = 0; i < old_count; ++i) {
-                hash_node *node = old_heads[i];
-                while (node) {
-                    hash_node *next = node->next;
-                    insert_node(node);
-                    node = next;
-                }
+            // initialize
+            size_type new_heads_count = heads_count << 1ul;
+            hash_node **new_heads = (hash_node**)operator new(new_heads_count * sizeof(hash_node*));
+            memset(new_heads, 0, new_heads_count * sizeof(hash_node*));
+            // do rehash
+            rehash(new_heads, new_heads_count);
+            // release old resources
+            operator delete (heads, heads_count * sizeof(hash_node*));
+            // update new heads
+            heads_count = new_heads_count;
+            heads = new_heads;
+        }
+
+        void compute_obj_hashinfo(const T &obj, hash_type &hash_val, size_type &head_index, hash_node *&head_node) const {
+            hash_func func;
+            hash_val = func(obj);
+            head_index = hash_val % heads_count;
+            head_node = heads[head_index];
+        }
+
+        bool probe_hashlist(const T &obj, hash_node *head_node, hash_node *&prev) const {
+            if (head_node == nullptr) {
+                prev = nullptr;
+                return false;
             }
-            operator delete (old_heads, old_count * sizeof(hash_node*));  // release old resource
+            if (obj == head_node->obj) {
+                prev = nullptr;
+                return true;
+            }
+            hash_node *node = head_node;
+            while (node->next) {
+                if (obj == node->next->obj) {
+                    prev = node;
+                    return true;
+                }
+                node = node->next;
+            }
+            prev = nullptr;
+            return false;
         }
 
         void insert_node(hash_node *node) {
@@ -112,45 +158,6 @@ namespace anarion {
             node->next = next;
             heads[index] = node;
             ++obj_count;
-        }
-
-        hash_node *find_node(const T &o, hash_type hash_val) const {
-            hash_func func;
-            size_type index = hash_val % heads_count;
-            hash_node *node = heads[index];
-            while (node) {
-                if (node->obj == o) {
-                    break;
-                }
-                node = node->next;
-            }
-            return node;
-        }
-
-        // ugly for efficiency
-        void remove_node(const T &o, hash_type hash_val) {
-            size_type index = hash_val % heads_count;
-            hash_node *head = heads[index];
-            if (head == nullptr) {
-                // no node
-                return;
-            }
-            // special check
-            if (head->obj == o) {
-                --obj_count;
-                delete (head);
-                heads[index] = heads[index]->next;
-            }
-            while (head->next) {
-                if (head->next->obj == o) {
-                    --obj_count;
-                    hash_node *next = head->next->next;
-                    delete (head->next);
-                    head->next = next;
-                    return;
-                }
-                head = head->next;
-            }
         }
 
         hash_node *duplicate_list(hash_node *node) {
@@ -222,36 +229,89 @@ namespace anarion {
 
         virtual ~HashSet() { clear(); }
 
-        void insert(const T &o) {
+    protected:
+        void check_if_expand() {
             if (heads_count <= obj_count) {
                 expand_heads();
             }
-            hash_func func;
-            hash_type hash_val = func(o);
-//            hash_node *node = newObject<hash_node>(o, hash_val);
-            hash_node *node = new hash_node(o, hash_val);
-            insert_node(node);
+        }
+
+        void insert_node_to_head(size_type head_index, hash_node *node) {
+            node->next = heads[head_index];
+            heads[head_index] = node;
+        }
+
+
+    public:
+
+        void insert(const T &o) {
+            check_if_expand();
+            hash_type hash_val;
+            size_type head_index;
+            hash_node *head_node;
+            compute_obj_hashinfo(o, hash_val, head_index, head_node);
+            insert_node_to_head(head_index, new hash_node(o, hash_val));
+            ++obj_count;
         }
 
         void insert(T &&o) {
-            if (heads_count <= obj_count) {
-                expand_heads();
-            }
-            hash_func func;
-            hash_type hash_val = func(o);
-//            hash_node *node = newObject<hash_node>(forward(o), hash_val);
-            hash_node *node = new hash_node(forward<T>(o), hash_val);
-            insert_node(node);
+            check_if_expand();
+            hash_type hash_val;
+            size_type head_index;
+            hash_node *head_node;
+            compute_obj_hashinfo(o, hash_val, head_index, head_node);
+            insert_node_to_head(head_index, new hash_node(forward<T>(o), hash_val));
+            ++obj_count;
         }
 
-        bool has(const T &o) const { return find_node(o, hash_func().operator()(o)); }
-        size_type size() const { return obj_count; }
-        bool empty() const { return obj_count == 0; }
+        bool has(const T &o) const {
+            hash_type hash_val;
+            size_type head_index;
+            hash_node *head_node;
+            compute_obj_hashinfo(o, hash_val, head_index, head_node);
+            hash_node *prev;
+            return probe_hashlist(o, head_node, prev);
+        }
+
+        constexpr size_type size() const { return obj_count; }
+        constexpr bool empty() const { return obj_count == 0; }
+
+    protected:
+
+        void remove_nonhead_node_from_list(hash_node *prev) {
+            hash_node *next = prev->next->next;
+            delete prev->next;
+            prev->next = next;
+        }
+
+        void remove_head_node_from_list(hash_node *&head_node) {
+            hash_node *next = head_node->next;
+            delete head_node;
+            head_node = next;
+        }
+
+        void remove_node_from_list(hash_node *prev, size_type head_index) {
+            hash_node *&head_node = heads[head_index];
+            if (prev == nullptr) {
+                remove_head_node_from_list(head_node);
+            } else {
+                remove_nonhead_node_from_list(prev);
+            }
+        }
+
+    public:
 
         void remove(const T &o) {
-            hash_func func;
-            hash_type hash_val = func(o);
-            remove_node(o, hash_val);
+            hash_type hash_val;
+            size_type head_index;
+            hash_node *head_node, *prev;
+            compute_obj_hashinfo(o, hash_val, head_index, head_node);
+            if (!probe_hashlist(o, head_node, prev)) {
+                // node not found
+                return;
+            }
+            remove_node_from_list(prev, head_index);
+            --obj_count;
         }
 
         struct iterator {
@@ -316,7 +376,11 @@ namespace anarion {
         void remove(const iterator &it) {
             if (it.set != this) { return; }
             if (it == end_iterator()) { return; }
-            remove_node(*it, it.cur_node->hash_val);
+            hash_node *node = it.cur_node, *prev;
+            if (it.index >= heads_count) { return; }
+            probe_hashlist(node->obj, heads[it.index], prev);
+            remove_node_from_list(prev, it.index);
+            --obj_count;
         }
 
 
@@ -340,14 +404,17 @@ namespace anarion {
         }
 
         iterator find(const T &o) const {
-            hash_func func;
-            hash_type hash_val = func(o);
-            size_type index = hash_val % heads_count;
-            hash_node *node = find_node(o, hash_val);
-            if (node == nullptr) {
+            hash_type hash_val;
+            hash_node *head_node, *prev;
+            size_type head_index;
+            compute_obj_hashinfo(o, hash_val, head_index, head_node);
+            if (!probe_hashlist(o, head_node, prev)) {
                 return end_iterator();
             }
-            return iterator(node, index, this);
+            if (prev) {
+                return iterator(prev->next, head_index, this);
+            }
+            return iterator(heads[head_index], head_index, this);
         }
     };
 
