@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.18)
 project(AnBase)
+set (CMAKE_CXX_STANDARD 14)
 
 include_directories(../include)
 include_directories(../include/test)

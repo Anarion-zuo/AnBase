@@ -64,4 +64,14 @@ anarion::Time::Time(anarion::size_type sec, anarion::size_type nsec)
     }
 }
 
+anarion::Time &anarion::Time::operator=(const anarion::Time &rhs) {
+    if (this == &rhs) { return *this; }
+    Copier<Time>().copy(this, &rhs, 1);
+    return *this;
+}
+
+anarion::Time &anarion::Time::operator=(anarion::Time &&rhs) noexcept {
+    return operator=(rhs);
+}
+
 

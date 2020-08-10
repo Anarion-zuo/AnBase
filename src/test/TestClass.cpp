@@ -4,8 +4,9 @@
 
 #include "test/TestClass.h"
 
-anarion::TestClass::TestClass() {
-
+anarion::TestClass::TestClass()
+    : rootBenchMarker(this) {
+    rootBenchMarker.testClass = this;
 }
 
 void anarion::TestClass::runTest() {
@@ -15,15 +16,11 @@ void anarion::TestClass::runTest() {
 }
 
 void anarion::TestClass::callRunner() {
-    beginTime.setCurrent();
     runner();
-    endTime.setCurrent();
-    durationSeconds = Time {Time::difference(endTime, beginTime)}.getDouble();
 }
 
 void anarion::TestClass::postPrint() const {
     printf("=====Test Ends=====\n");
-    printf("Duration time: %lf\n", durationSeconds);
 }
 
 void anarion::TestClass::prePrint() {
@@ -34,7 +31,15 @@ void anarion::TestClass::throwTestFailed() {
     throw TestFailed();
 }
 
+void anarion::TestClass::run() {
+    rootBenchMarker.runBenchMark();
+}
+
 const char *anarion::TestClass::TestFailed::what() const noexcept {
     printf("====Test Failed====\n");
     return "Test Failed...";
+}
+
+void anarion::TestClass::RootBenchMarker::testee() {
+    testClass->runTest();
 }

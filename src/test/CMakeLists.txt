@@ -4,6 +4,7 @@ project (AnBase)
 add_library(
         antest STATIC
         TestClass.cpp
+        BenchMarker.cpp
 )
 
 target_link_libraries(antest anarionbase)

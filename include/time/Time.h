@@ -44,6 +44,9 @@ namespace anarion {
         Time(const Time &) = default;
         Time(Time &&) noexcept = default;
 
+        Time &operator=(const Time &rhs);
+        Time &operator=(Time &&rhs) noexcept ;
+
         static Time now();
 
         // setters
@@ -78,6 +81,16 @@ namespace anarion {
         bool operator>=(const Time &rhs) const;
 
         static timespec difference(const Time &left, const Time &right);
+    };
+
+    template <>
+    struct pod_traits<Time> {
+        using is_pod = true_type;
+    };
+
+    template <>
+    struct move_traits<Time> {
+        using has_move_ctor = false_type;
     };
 
 struct NanoSecondRangeError : public virtual std::exception {

@@ -6,7 +6,7 @@
 #define ANBASE_TESTCLASS_H
 
 #include <time/Time.h>
-#include <io/channel/terminal/TerminalPrintChannel.h>
+#include "BenchMarker.h"
 
 namespace anarion {
     class TestClass {
@@ -18,7 +18,8 @@ namespace anarion {
 
         TestClass();
 
-        void runTest();
+        void run();
+
 
         virtual ~TestClass() = default;
 
@@ -28,12 +29,45 @@ namespace anarion {
         void callRunner();
         static void prePrint();
         void postPrint() const;
+        void runTest();
 
         static void throwTestFailed();
 
-        Time beginTime, endTime;
-        double durationSeconds = 0;
+        class RootBenchMarker : public BenchMarker {
+            friend class TestClass;
+        protected:
+            TestClass *testClass;
+            void testee() override;
+            const char *testName() override { return "RootBenchMarker"; }
+        public:
+            explicit RootBenchMarker(TestClass *testClass) : BenchMarker(testClass) {}
+        } rootBenchMarker;
     };
+
+#define Test(testName, testFunc, ...) \
+    namespace anarion {\
+        class testName : public TestClass {\
+        protected:\
+            void runner() override {  \
+                printf("Test Name: "#testName"\n");                      \
+                {testFunc};\
+            } \
+            __VA_ARGS__\
+        };\
+    }
+
+#define TestMemberFunction(funcName, funcArgs, funcReturn, funcBody) \
+    funcReturn funcName funcArgs {                      \
+        funcBody                                                            \
+    }
+
+#define TimeMethod(method) (\
+        Time beginMethodTime, endMethodTime;                       \
+        beginMethodTime.setCurrent();\
+        { method }\
+        endMethodTime.setCurrent();                                \
+        Time {Time::difference(endMethodTime, beginMethodTime)}.getDouble();\
+    )
 }
 
 #endif //ANBASE_TESTCLASS_H
