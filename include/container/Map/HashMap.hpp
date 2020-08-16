@@ -71,18 +71,49 @@ namespace anarion {
             return find_node(key, func(key));
         }
 
-        typename parent::iterator find(const K &key) const {
-            if (this->heads_count == 0 || this->obj_count == 0) {
-                return this->end_iterator();
-            }
+    protected:
+        void compute_obj_hashinfo(const K &obj, hash_type &hash_val, size_type &head_index, typename parent::hash_node *&head_node) const {
             hash_func func;
-            hash_type hash_val = func(key);
-            size_type index = hash_val % this->heads_count;
-            entry_node *node = find_node(key, hash_val);
-            if (node == nullptr) {
+            hash_val = func(obj);
+            head_index = hash_val % this->heads_count;
+            head_node = this->heads[head_index];
+        }
+
+        bool probe_hashlist(const K &obj, typename parent::hash_node *head_node, typename parent::hash_node *&prev) const {
+            if (head_node == nullptr) {
+                prev = nullptr;
+                return false;
+            }
+            if (head_node->obj == obj) {
+                prev = nullptr;
+                return true;
+            }
+            typename parent::hash_node *node = head_node;
+            while (node->next) {
+                if (node->next->obj == obj) {
+                    prev = node;
+                    return true;
+                }
+                node = node->next;
+            }
+            prev = nullptr;
+            return false;
+        }
+    public:
+
+
+        typename parent::iterator find(const K &key) const {
+            hash_type hash_val;
+            typename parent::hash_node *head_node, *prev;
+            size_type head_index;
+            compute_obj_hashinfo(key, hash_val, head_index, head_node);
+            if (!probe_hashlist(key, head_node, prev)) {
                 return this->end_iterator();
             }
-            return typename parent::iterator(node, index, this);
+            if (prev) {
+                return typename parent::iterator(prev->next, head_index, this);
+            }
+            return typename parent::iterator(this->heads[head_index], head_index, this);
         }
 
         void remove(const typename parent::iterator &it) {

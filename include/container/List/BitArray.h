@@ -40,6 +40,9 @@ namespace anarion {
         void clearAll();
         void setAll();
 
+        bool andAll() const ;
+        bool orAll() const ;
+
     };
 }
 

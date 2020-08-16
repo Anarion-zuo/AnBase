@@ -162,7 +162,7 @@ namespace anarion {
 
         void moveImpl(copiedType *dst, copiedType *src, size_type num, true_type) {
             for (size_type index = 0; index < num; ++index) {
-                new (&dst[index]) copiedType(move(src[index]));
+                new (&dst[index]) copiedType(anarion::move(src[index]));
             }
         }
         void moveImpl(copiedType *dst, copiedType *src, size_type num, false_type) {

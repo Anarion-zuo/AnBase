@@ -42,11 +42,22 @@ timespec anarion::Time::difference(const anarion::Time &left, const anarion::Tim
     timespec ret;
     if (left > right) {
         ret.tv_sec = left.kernelTime.tv_sec - right.kernelTime.tv_sec;
-        ret.tv_nsec = left.kernelTime.tv_nsec - right.kernelTime.tv_nsec;
+        if (left.kernelTime.tv_nsec > right.kernelTime.tv_nsec) {
+            ret.tv_nsec = left.kernelTime.tv_nsec - right.kernelTime.tv_nsec;
+        } else {
+            --ret.tv_sec;
+            ret.tv_nsec = (long)1e9 - (right.kernelTime.tv_nsec - left.kernelTime.tv_nsec);
+        }
         return ret;
     }
     ret.tv_sec = right.kernelTime.tv_sec - left.kernelTime.tv_sec;
-    ret.tv_nsec = right.kernelTime.tv_nsec - left.kernelTime.tv_nsec;
+    if (right.kernelTime.tv_nsec > left.kernelTime.tv_nsec) {
+        ret.tv_nsec = right.kernelTime.tv_nsec - left.kernelTime.tv_nsec;
+    } else {
+        --ret.tv_sec;
+        --ret.tv_sec;
+        ret.tv_nsec = (long)1e9 - (left.kernelTime.tv_nsec - right.kernelTime.tv_nsec);
+    }
     return ret;
 }
 

@@ -17,7 +17,7 @@ namespace anarion {
             HashMap<char, Node*> childs;
 
             Node() = default;
-            explicit Node(size_type passedCount) : passedCount(passedCount) {}  // for root initialization
+            explicit Node(size_type passedCount) : passedCount(passedCount) {}  // for rootNode initialization
 
             Node *getChild(char c);
             void removeChilds();

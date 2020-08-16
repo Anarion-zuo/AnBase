@@ -6,6 +6,8 @@
 #ifndef MYCPPLIB_MAP_ENTRY_HPP
 #define MYCPPLIB_MAP_ENTRY_HPP
 
+#include "../base/Copier.hpp"
+
 namespace anarion {
 template<typename K, typename V>
 class MapEntry {
@@ -21,6 +23,7 @@ public:
 
     const K &get_key() const { return key; }
     V &get_val() { return val; }
+    const V &get_val() const { return val; }
 
     bool operator==(const MapEntry &rhs) const {
         return key == rhs.key;
@@ -43,6 +46,12 @@ template <typename K, typename V>
 struct hash_function<MapEntry<K, V>> {
     hash_type operator()(const MapEntry<K, V> &o) const { return hash_function().operator()(o.get_key()); }
     hash_type operator()(const K &o) const { return hash_function<K>().operator()(o); }
+};
+
+
+template <typename K, typename V>
+struct move_traits<MapEntry<K, V>> {
+    using has_move_ctor = true_type;
 };
 }
 

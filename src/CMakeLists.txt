@@ -7,6 +7,10 @@ add_library(anarionbase STATIC
         allocator/ListConcurrentAllocator.cpp
         allocator/FixedLengthAllocator.cpp
 
+        allocator/page_alloc/SlotPage.cpp
+        allocator/page_alloc/FreeSlotInfo.cpp
+        allocator/page_alloc/PageAllocator.cpp
+
         concurrent/base/Barrier.cpp
         concurrent/base/CondVar.cpp
         concurrent/base/Mutex.cpp

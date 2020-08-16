@@ -15,10 +15,36 @@ namespace anarion {
             Vector<size_type> vector;
             std::vector<size_type> stdVector;
             Time begin, end;
+            begin.setClockType(CLOCK_THREAD_CPUTIME_ID);
+            end.setClockType(CLOCK_THREAD_CPUTIME_ID);
             double mydiff, stdDiff;
 
+            // test push_back
+            size_type pushSize = 1000000ul;
+            begin.setCurrent();
+            for (size_type i = 0; i < pushSize; ++i) {
+                vector.push_back(i);
+            }
+            if (vector.size() != pushSize) {
+                throw TestFailed();
+            }
+            end.setCurrent();
+            mydiff = Time(Time::difference(end, begin)).getDouble();
+            begin.setCurrent();
+            for (size_type i = 0; i < pushSize; ++i) {
+                stdVector.push_back(i);
+            }
+            if (stdVector.size() != pushSize) {
+                throw TestFailed();
+            }
+            end.setCurrent();
+            stdDiff = Time(Time::difference(end, begin)).getDouble();
+            printf("push_back: my vector %lf, std vector %lf\n", mydiff, stdDiff);
+            vector.clear();
+            stdVector.clear();
+
             // test insert
-            size_type insertSize = 1e5;
+            size_type insertSize = 200000ul;
             begin.setCurrent();
             for (size_type i = 0; i < insertSize; ++i) {
                 vector.insert(0ul, i);
@@ -37,7 +63,7 @@ namespace anarion {
             }
             end.setCurrent();
             stdDiff = Time(Time::difference(end, begin)).getDouble();
-            printf("inserting at 0: mydiff %lf, stdDiff %lf\n", mydiff, stdDiff);
+            printf("inserting at 0: my vector %lf, std vector %lf\n", mydiff, stdDiff);
 
             // test insert at half
             begin.setCurrent();
@@ -58,7 +84,7 @@ namespace anarion {
             }
             end.setCurrent();
             stdDiff = Time(Time::difference(end, begin)).getDouble();
-            printf("inserting at insertSize / 2: mydiff %lf, stdDiff %lf\n", mydiff, stdDiff);
+            printf("inserting at insertSize / 2: my vector %lf, std vector %lf\n", mydiff, stdDiff);
 
             // test remove at half
             begin.setCurrent();
@@ -79,7 +105,7 @@ namespace anarion {
             }
             end.setCurrent();
             stdDiff = Time(Time::difference(end, begin)).getDouble();
-            printf("removing at insertSize / 2: mydiff %lf, stdDiff %lf\n", mydiff, stdDiff);
+            printf("removing at insertSize / 2: my vector %lf, std vector %lf\n", mydiff, stdDiff);
         }
 
     };

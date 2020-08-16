@@ -102,13 +102,14 @@ namespace anarion {
             Copier<T> copier;
             size_type oldsize = size(), oldcap = capacity(), newsize = oldsize + steps;
             if (newsize > oldcap) {
-                T *newbegin = new_space<T>(newsize);
+                size_type newcap = newsize << 1ul;
+                T *newbegin = new_space<T>(newcap);
                 copier.move(newbegin, begin, index);
                 copier.move(newbegin + index + steps, begin + index, oldsize - index);
                 operator delete (begin, oldcap);
                 begin = newbegin;
                 cur = begin + newsize;
-                end = cur;
+                end = begin + newcap;
                 return;
             }
             copier.moveOverLap(begin + index + steps, begin + index, oldsize - index);
@@ -375,6 +376,7 @@ namespace anarion {
             if (capacity() == 0) {
                 if (index != 0) { throw IndexOutOfRange(); }
                 resize(num + 1);
+                cur += num;
                 return;
             }
             if (index > size()) { throw IndexOutOfRange(); }
@@ -454,8 +456,8 @@ namespace anarion {
                 throw IndexOutOfRange();
             }
             copy_forward_expand(index + length, length);
-            if (size() / 2 * 3 < oldsize) {
-                resize(oldsize / 3 * 2);
+            if (size() < oldsize / 3) {
+                resize(oldsize / 3);
             }
         }
         #pragma endregion

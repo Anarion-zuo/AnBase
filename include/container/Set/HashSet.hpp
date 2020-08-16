@@ -19,6 +19,15 @@ namespace anarion {
     typedef size_type hash_type;
     typedef hash_type (*hash_func_impl_type)(void *p, size_type len);
 
+    static unsigned long MySQLHash(const char *ptr, unsigned long len) {
+        unsigned long nr = 1, nr2 = 4;
+        for (unsigned long i = 0; i < len; ++i) {
+            nr ^= (((nr & 63) + nr2) * ((unsigned int)ptr[i])) + (nr << 8);
+            nr2 += 3;
+        }
+        return nr;
+    }
+
     template <typename T> struct hash_function {
         hash_type operator()(const T &o) { return static_cast<hash_type>(&o); }
     };

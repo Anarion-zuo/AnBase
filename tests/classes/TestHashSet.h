@@ -12,7 +12,7 @@ namespace anarion {
     class TestHashSet : public TestClass {
     protected:
         static size_type getRandom() {
-            return rand() % 100000;
+            return rand();
         }
 
         struct StdSStringHash {
@@ -24,6 +24,8 @@ namespace anarion {
 
         void runner() override {
             Time begin, end;
+            begin.setClockType(CLOCK_THREAD_CPUTIME_ID);
+            end.setClockType(CLOCK_THREAD_CPUTIME_ID);
             HashSet<size_type> hashSet;
             std::unordered_set <size_type> stdSet;
 
@@ -113,14 +115,15 @@ namespace anarion {
             printf("clearing: my duration: %lf, std duration: %lf\n", mydiff, stdDiff);
 
             // test insert random
+            size_type randomTimes = 5e6;
             begin.setCurrent();
-            for (size_type i = 0; i < 100000; ++i) {
+            for (size_type i = 0; i < randomTimes; ++i) {
                 hashSet.insert(getRandom());
             }
             end.setCurrent();
             mydiff = Time(Time::difference(end, begin)).getDouble();
             begin.setCurrent();
-            for (size_type i = 0; i < 100000; ++i) {
+            for (size_type i = 0; i < randomTimes; ++i) {
                 stdSet.insert(getRandom());
             }
             end.setCurrent();
@@ -129,7 +132,7 @@ namespace anarion {
 
             size_type valSum = 0;
             begin.setCurrent();
-            for (size_type i = 0; i < 100000; ++i) {
+            for (size_type i = 0; i < randomTimes; ++i) {
                 auto it = hashSet.find(getRandom());
                 if (it != hashSet.end_iterator()) {
                     size_type val = *it;
@@ -139,7 +142,7 @@ namespace anarion {
             end.setCurrent();
             mydiff = Time(Time::difference(end, begin)).getDouble();
             begin.setCurrent();
-            for (size_type i = 0; i < 100000; ++i) {
+            for (size_type i = 0; i < randomTimes; ++i) {
                 auto it = stdSet.find(getRandom());
                 if (it != stdSet.end()) {
                     size_type val = *it;
@@ -153,14 +156,15 @@ namespace anarion {
             // insert string
             HashSet<SString> hashSetString;
             std::unordered_set<SString, StdSStringHash> stdSetString;
+            size_type stringCount = 5e6;
             begin.setCurrent();
-            for (size_type i = 0; i < 100000; ++i) {
+            for (size_type i = 0; i < stringCount; ++i) {
                 hashSetString.insert(SString::parseDec(i));
             }
             end.setCurrent();
             mydiff = Time(Time::difference(end, begin)).getDouble();
             begin.setCurrent();
-            for (size_type i = 0; i < 100000; ++i) {
+            for (size_type i = 0; i < stringCount; ++i) {
                 stdSetString.insert(SString::parseDec(i));
             }
             end.setCurrent();
@@ -169,7 +173,7 @@ namespace anarion {
 
             // finding string
             begin.setCurrent();
-            for (size_type i = 0; i < 100000; ++i) {
+            for (size_type i = 0; i < stringCount; ++i) {
                 auto it = hashSetString.find(SString::parseDec(i));
                 if (it == hashSetString.end_iterator()) {
                     throwTestFailed();
@@ -178,7 +182,7 @@ namespace anarion {
             end.setCurrent();
             mydiff = Time(Time::difference(end, begin)).getDouble();
             begin.setCurrent();
-            for (size_type i = 0; i < 100000; ++i) {
+            for (size_type i = 0; i < stringCount; ++i) {
                 auto it = stdSetString.find(SString::parseDec(i));
                 if (it == stdSetString.end()) {
                     throwTestFailed();
