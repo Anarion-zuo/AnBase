@@ -25,7 +25,7 @@ namespace anarion {
 
         ~Directory() override ;
 
-        void release() override;
+        void release() override ;
         void open() override;
         void remove() override ;
         void close() override ;
