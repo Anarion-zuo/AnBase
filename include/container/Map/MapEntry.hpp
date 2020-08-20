@@ -9,6 +9,7 @@
 #include "../base/Copier.hpp"
 
 namespace anarion {
+    using hash_type = unsigned long;
 template<typename K, typename V>
 class MapEntry {
     K key;
@@ -41,6 +42,9 @@ public:
         return !(rhs == *this);
     }
 };
+
+template <typename T>
+struct hash_function;
 
 template <typename K, typename V>
 struct hash_function<MapEntry<K, V>> {
