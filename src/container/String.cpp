@@ -13,6 +13,9 @@ char *SString::cstr() const {
 }
 
 size_type SString::length() const {
+    if (Vector<char>::empty()) {
+        return 0;
+    }
     return size() - 1;
 }
 
@@ -91,7 +94,9 @@ bool SString::equals(SString *rhs) const {
 }
 
 
-SString::SString(SString &&rhs) noexcept : Vector<char>(anarion::forward<SString>(rhs)), hashVal(rhs.hashVal), needsHash(rhs.needsHash) {
+SString::SString(SString &&rhs) noexcept
+    : Vector<char>(anarion::forward<SString>(rhs)), hashVal(rhs.hashVal), needsHash(rhs.needsHash) {
+    rhs.Vector<char>::push_back(0);
     rhs.hash();
     rhs.needsHash = false;
 }
