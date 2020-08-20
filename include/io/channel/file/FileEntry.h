@@ -48,7 +48,7 @@ namespace anarion {
 
     class FileEntry {
     protected:
-        SString name, nameSuffix;
+        SString name;
         FileEntry *parent = nullptr;
         LinkedList<FileEntry*> childs;
         HashMap<SString, FileEntry*> name2childs;
@@ -99,36 +99,40 @@ namespace anarion {
         virtual void getTimeInfo() = 0;
 
         // permissions
-        virtual void changePermit(int perm) = 0;
+        virtual void changePermission(int perm) = 0;
+        virtual bool hasPermission() = 0;
 
         // sizes
         virtual size_type size() const = 0;
 
-        explicit FileEntry(SString &&name);
-        FileEntry(SString &&name, FileEntry *parent);
-        FileEntry(FileEntry &&rhs) noexcept : name(move(rhs.name)), nameSuffix(move(rhs.nameSuffix)), childs(move(rhs.childs)) {}
-        virtual ~FileEntry() {}
-
-        constexpr const SString &getName() const { return name; }
+        // entry type
         virtual bool isFile() const { return false; }
+
+        // names
+        constexpr const SString &getName() const { return name; }
         constexpr const SString &getSuffix() const { return nameSuffix; }
+
+        // hierarchy
         constexpr FileEntry *getParent() const { return parent; }
         constexpr void setParent(FileEntry *p) { parent = p; }
-        SString getRelativePath() const { return computeRelativePath(); }
-        SString getAbsolutePath() const { return computeAbsolutePath(); }
-
         FileEntry * getChild(const SString &name);
         constexpr LinkedList<FileEntry*> &getChilds() { return childs; }
         constexpr const HashMap<SString, FileEntry*> &getMap() const { return name2childs; }
         HashMap<SString, FileEntry*> &getMap() { return name2childs; }
+
+        // path
+        SString getRelativePath() const { return computeRelativePath(); }
+        SString getAbsolutePath() const { return computeAbsolutePath(); }
+        FileEntry *findByDir(const SString &dir);
+
+        // ctors & dtors
+        explicit FileEntry(SString &&name);
+        FileEntry(SString &&name, FileEntry *parent);
+        FileEntry(FileEntry &&rhs) noexcept : name(move(rhs.name)), childs(move(rhs.childs)) {}
+        virtual ~FileEntry() {}
+
 //        constexpr FileEntry *getParent() const { return parent; }
 
-        virtual void open() = 0;
-        virtual void release() = 0;
-        virtual void remove() = 0;
-        virtual void close() = 0;
-
-        FileEntry *findByDir(const SString &dir);
     };
 
     template <> struct hash_function<FileEntry*> {
