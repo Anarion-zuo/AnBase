@@ -10,7 +10,21 @@
 namespace anarion {
 class TestString : public TestClass {
 protected:
-    void runner() override;
+    void runner() override {
+        SString string("1234567890");
+        checkString(string);
+
+        string.insert(1, 'p');
+        checkString(string);
+
+        string.insert(7, 'p');
+        checkString(string);
+
+        string.append("123456", 6);
+        checkString(string);
+        if (string.length() != 18) { throwTestFailed(); }
+
+    }
 
     void checkString(const SString &string);
 };

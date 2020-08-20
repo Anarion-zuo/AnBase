@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project (AnBase)
 
 #aux_source_directory(. DIR_SRCS)
-add_library(anarionbase STATIC
+add_library(anbase STATIC
         allocator/Allocator.cpp
         allocator/ListConcurrentAllocator.cpp
         allocator/FixedLengthAllocator.cpp
@@ -41,12 +41,14 @@ add_library(anarionbase STATIC
         io/channel/file/FileEntry.cpp
         io/channel/file/Directory.cpp
         io/channel/file/MemoryMappedFile.cpp
+        io/channel/file/FileSystemNotifier.cpp
         io/channel/network/ServerSocketChannel.cpp
         io/channel/network/SocketChannel.cpp
         io/channel/network/TcpServerSocketChannel.cpp
         io/channel/network/TcpSocketChannel.cpp
         io/channel/terminal/TerminalPrintChannel.cpp
         io/channel/terminal/TerminalScanChannel.cpp
+        io/channel/path/Path.cpp
 
         reflector/dynamic_reflect.cpp
 
@@ -68,27 +70,16 @@ add_library(anarionbase STATIC
 
         logger/Logger.cpp
 
-#        serialize/Serializable.cpp
-
         time/Time.cpp
         time/Date.cpp
 
         pointers/PointerManager.cpp
 
         )
-#add_library(anarionbase SHARED ${DIR_SRCS})
 
-# subdirectories
-#add_subdirectory(allocator)
-#add_subdirectory(concurrent)
-#add_subdirectory(container)
-#add_subdirectory(reflector)
-#add_subdirectory(context)
-#add_subdirectory(io)
-#target_link_libraries(anarionbase )#ALLOCATOR CONCURRENT CONTAINER REFLECTOR IO CONTEXT)
-
-target_link_libraries(anarionbase pthread)
+target_link_libraries(anbase pthread)
 include_directories(../include)
 
 # tests
 add_subdirectory(test)
+

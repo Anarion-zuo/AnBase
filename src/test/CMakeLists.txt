@@ -7,7 +7,7 @@ add_library(
         BenchMarker.cpp
 )
 
-target_link_libraries(antest anarionbase)
+target_link_libraries(antest anbase)
 
 include_directories(../../include/test)
 include_directories(../../include)

@@ -8,6 +8,8 @@
 #include "../../src/test/TestBitArray.h"
 #include "../classes/TestBplusTreeSet.h"
 #include "../classes/TestBplusTreeMap.h"
+#include "../classes/TestFileChannel.h"
+#include "../classes/TestPath.h"
 
 bool binarySearch(int *arr, const int &obj, int &begin, int &end) {
     while (end - begin > 1) {
@@ -39,5 +41,7 @@ int main() {
 //    binarySearch(arr, 3, begin, end);
 
 //    anarion::TestBplusTreeSet().run();
-    anarion::TestBplusTreeMap().run();
+//    anarion::TestBplusTreeMap().run();
+//    anarion::TestFileChannel().run();
+    anarion::TestPath().run();
 }
