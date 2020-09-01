@@ -8,7 +8,7 @@
 
 anarion::MemoryMappedFile::MemoryMappedFile(const anarion::SString &dir) : channel(FileChannel::open(dir)) {
     phead = mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, channel.getFd(), 0);
-    if (phead == MAP_FAILED) { throw OpenFdException(); }
+    if (phead == MAP_FAILED) { throw OpenFdFailed(); }
 }
 
 anarion::MemoryMappedFile::MemoryMappedFile(anarion::MemoryMappedFile &&rhs) noexcept : channel(move(rhs.channel)), phead(rhs.phead) {

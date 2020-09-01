@@ -16,9 +16,6 @@ namespace anarion {
             Path absPath(SString("/home/anarion/testdir/"));
             Path relPath(SString("test1/test2/test3"));
             Path relPathStrong(SString("./test1/test2/test3"));
-            absPath.printPath();
-            relPath.printPath();
-            relPathStrong.printPath();
         }
     };
 }

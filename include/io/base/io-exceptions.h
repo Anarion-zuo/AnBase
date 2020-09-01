@@ -5,9 +5,28 @@
 #ifndef ANBASE_IO_EXCEPTIONS_H
 #define ANBASE_IO_EXCEPTIONS_H
 
-struct FdWriteException : public SystemException {};
-struct FdReadException : public SystemException {};
-struct OpenFdException : public SystemException {};
+#include <exception>
+#include <SystemException.h>
+
+struct InvalidIOParameters : std::exception {};
+
+class FdWriteFailed : public SystemException {};
+class FdReadFailed : public SystemException {};
+class OpenFdFailed : public SystemException {};
+class FsyncFailed : public SystemException {};
+class LinkFailed : public SystemException {};
+class StatFailed : public SystemException {};
+class RenameFailed : public SystemException {};
+class ChmodFailed : public SystemException {};
+struct RemoveFileFailed : public SystemException {};
+
+struct DirectoryException : public SystemException {};
+struct DirectoryOpenFailed : public DirectoryException {};
+struct DirectoryCreateFailed : public DirectoryException {};
+struct DirectoryIterateFailed : public DirectoryException {};
+struct TellDirFailed : public DirectoryException {};
+struct DirEntryToFileFailed : public DirectoryException {};
+struct RemoveDirectoryFailed : public DirectoryException {};
 
 class SocketException : public SystemException {};
 class SocketSendException : public SocketException {};

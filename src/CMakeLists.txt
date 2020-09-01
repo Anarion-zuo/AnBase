@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project (AnBase)
 
-#aux_source_directory(. DIR_SRCS)
 add_library(anbase STATIC
         allocator/Allocator.cpp
         allocator/ListConcurrentAllocator.cpp
@@ -42,12 +41,12 @@ add_library(anbase STATIC
         io/channel/file/Directory.cpp
         io/channel/file/MemoryMappedFile.cpp
         io/channel/file/FileSystemNotifier.cpp
-        io/channel/network/ServerSocketChannel.cpp
-        io/channel/network/SocketChannel.cpp
-        io/channel/network/TcpServerSocketChannel.cpp
-        io/channel/network/TcpSocketChannel.cpp
-        io/channel/terminal/TerminalPrintChannel.cpp
-        io/channel/terminal/TerminalScanChannel.cpp
+#        io/channel/network/ServerSocketChannel.cpp
+#        io/channel/network/SocketChannel.cpp
+#        io/channel/network/TcpServerSocketChannel.cpp
+#        io/channel/network/TcpSocketChannel.cpp
+#        io/channel/terminal/TerminalPrintChannel.cpp
+#        io/channel/terminal/TerminalScanChannel.cpp
         io/channel/path/Path.cpp
 
         reflector/dynamic_reflect.cpp
@@ -74,6 +73,8 @@ add_library(anbase STATIC
         time/Date.cpp
 
         pointers/PointerManager.cpp
+
+        runtime/RunTimeData.cpp
 
         )
 

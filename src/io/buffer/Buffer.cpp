@@ -16,7 +16,7 @@ namespace anarion {
         anarion::size_type oldlen = nbytes;
         while (true) {
             len = ::write(fd, buf, nbytes);
-            if (len < 0) { throw FdWriteException(); }
+            if (len < 0) { throw FdWriteFailed(); }
             nbytes -= len;
             buf = (char *) buf + len;
             if (len == 0 || nbytes == 0) { return oldlen - nbytes; }
@@ -28,7 +28,7 @@ namespace anarion {
         anarion::size_type oldlen = nbytes;
         while (true) {
             len = ::read(fd, buf, nbytes);
-            if (len < 0) { throw FdReadException(); }
+            if (len < 0) { throw FdReadFailed(); }
             nbytes -= len;
             buf = (char *) buf + len;
             if (len == 0 || nbytes == 0) { return oldlen - nbytes; }

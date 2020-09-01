@@ -8,6 +8,9 @@
 #include <container/SString.h>
 #include <container/Map/HashMap.hpp>
 #include <container/List/LinkedList.hpp>
+#include <io/base/io-exceptions.h>
+#include <io/channel/path/Path.h>
+#include <time/Time.h>
 
 namespace anarion {
 
@@ -39,34 +42,42 @@ namespace anarion {
      * For directories, things are a bit special.
      *     - Directories must support traversing, namely, get child directories and files.
      *     - Directories can not be read or written like a regular file.
+     * Afterall, directories are stored as inodes, same as regular files.
+     * The class Directory is inherited from class FileChannel, so that it operates on similar file system interface.
+     * The stream read/write operations of directories should be prevented at runtime.
+     * This implementation uses dirent utilities from Unix interface.
      *
-     * It is resolved that the class structure should look like this:
-     *      FileEntry
-     *       -- Directory
-     *       -- FileChannel
+     * There are 2 ways of making use of this file system utility class and other io utilities.
+     *      You either use *Channel classes independently,
+     *      or compose *Channel classes with Directory, thus uses this hierarchy.
      */
 
     class FileEntry {
     protected:
-        SString name;
-        FileEntry *parent = nullptr;
-        LinkedList<FileEntry*> childs;
-        HashMap<SString, FileEntry*> name2childs;
+        using perm_t = int;
+        using flag_t = int;
+        /*
+         * Path and naming is a headache.
+         * An entry needs not store the full path name of it self.
+         * Its parent contains the `parent` part of the path.
+         * It is decreed that at the top of the file management structure,
+         *      the root node should store a path indexing it self,
+         *      whilst the lower nodes should store only their own names.
+         *
+         * This does not solve the problem entirely,
+         *      for when the process cwd changes, the relative paths must change accordingly,
+         *      or the path becomes invalid.
+         */
+        Path path;
 
-        // paths
-        void computePaths();
-
-        SString computeRelativePath() const ;
-        SString computeAbsolutePath() const ;
-        SString computeNameSuffix() const ;
-
-        void removeChildFromMembers(FileEntry *entry);
+        static void throwInvalidOperation();
     public:
 
         // open create close
         virtual void open() = 0;
-        virtual void release() = 0;
         virtual void close() = 0;
+        virtual void create(perm_t perm) = 0;
+        virtual bool isOpen() const = 0;
 
         // read/write
         virtual size_type in(const char *data, size_type nbytes) = 0;
@@ -77,8 +88,9 @@ namespace anarion {
         virtual Buffer out() = 0;
 
         // change operating offset
-        virtual void moveForth(size_type steps) = 0;
-        virtual void moveBack(size_type steps) = 0;
+        virtual void move_forth(size_type steps) = 0;
+        virtual void move_back(size_type steps) = 0;
+        virtual void set_cursor(size_type index) = 0;
 
         // remove/move/rename
         virtual void remove() = 0;
@@ -89,18 +101,20 @@ namespace anarion {
 
         // fetch attributes
         virtual void fetchAttributes() = 0;
-        virtual void getAttributes() const = 0;
+        virtual const struct stat & getAttributes() const = 0;
 
         // symbolic/hard links
         virtual void symlink(const SString &linkPath) = 0;
         virtual void hardlink(const SString &linkPath) = 0;
 
         // times
-        virtual void getTimeInfo() = 0;
+        virtual Time getLastAccessTime() = 0;
+        virtual Time getLastModifyTime() = 0;
+        virtual Time getLastStatusChangeTime() = 0;
 
         // permissions
         virtual void changePermission(int perm) = 0;
-        virtual bool hasPermission() = 0;
+        virtual bool hasPermission(int perm) = 0;
 
         // sizes
         virtual size_type size() const = 0;
@@ -109,34 +123,23 @@ namespace anarion {
         virtual bool isFile() const { return false; }
 
         // names
-        constexpr const SString &getName() const { return name; }
-        constexpr const SString &getSuffix() const { return nameSuffix; }
-
-        // hierarchy
-        constexpr FileEntry *getParent() const { return parent; }
-        constexpr void setParent(FileEntry *p) { parent = p; }
-        FileEntry * getChild(const SString &name);
-        constexpr LinkedList<FileEntry*> &getChilds() { return childs; }
-        constexpr const HashMap<SString, FileEntry*> &getMap() const { return name2childs; }
-        HashMap<SString, FileEntry*> &getMap() { return name2childs; }
+        constexpr const Path &getPath() const { return path; }
+        SString getSuffix() const { return path.getString().suffix('.'); }
+        virtual void rename(const SString &newName) = 0;
 
         // path
-        SString getRelativePath() const { return computeRelativePath(); }
-        SString getAbsolutePath() const { return computeAbsolutePath(); }
-        FileEntry *findByDir(const SString &dir);
+        SString getAbsolutePath() const { return path.getAbsolute().getString(); }
 
         // ctors & dtors
-        explicit FileEntry(SString &&name);
-        FileEntry(SString &&name, FileEntry *parent);
-        FileEntry(FileEntry &&rhs) noexcept : name(move(rhs.name)), childs(move(rhs.childs)) {}
-        virtual ~FileEntry() {}
-
-//        constexpr FileEntry *getParent() const { return parent; }
+        explicit FileEntry(const SString &name);
+        FileEntry(FileEntry &&rhs) noexcept ;
+        virtual ~FileEntry() = default ;
+        FileEntry(Path &&path);
 
     };
 
     template <> struct hash_function<FileEntry*> {
-        hash_type operator()(FileEntry *entry) { return hash_function<SString>().operator()(entry->getName()); }
+        hash_type operator()(FileEntry *entry) { return hash_function<SString>().operator()(entry->getAbsolutePath()); }
     };
 }
 

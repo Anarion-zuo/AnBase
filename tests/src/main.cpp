@@ -42,6 +42,6 @@ int main() {
 
 //    anarion::TestBplusTreeSet().run();
 //    anarion::TestBplusTreeMap().run();
-//    anarion::TestFileChannel().run();
-    anarion::TestPath().run();
+    anarion::TestFileChannel().run();
+//    anarion::TestPath().run();
 }

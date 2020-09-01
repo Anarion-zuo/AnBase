@@ -9,89 +9,31 @@
 #include "io/channel/file/Directory.h"
 
 static bool isDots(const char *str) {
-    int len = strlen(str);
-    if (len == 1) {
-        return *str == '.';
+    if (*str != '.') {
+        return false;
     }
-    if (len == 2) {
-        return *str == '.' && str[1] == '.';
-    }
-    return false;
-}
-
-void anarion::Directory::open() {
-    childs.clear();
-    char *name_cstr = name.copy_cstr();
-    handle = opendir(name_cstr);
-    if (handle == nullptr) {
-        mkdir(name_cstr, 0777);
-        handle = opendir(name_cstr);
-//        name.release_copied(name_cstr);
-//        return;
-    }
-
-    // current working directory
-    char *cwd = getcwd(nullptr, 0);
-    // change for convenience
-    chdir(name_cstr);
-
-    dirent *info = nullptr;
-
-    while (true) {
-        info = readdir(handle);
-        if (info == nullptr) {
-            break;
+    if (str[1] != '.') {
+        if (str[1] == '\0') {
+            return true;
         }
-        if (info->d_type == DT_DIR) {
-            // is directory
-            // check ../.
-            if (isDots(info->d_name)) {
-                continue;
-            }
-            Directory *directory = new Directory(SString(const_cast<const char*>(info->d_name)), this);
-            directory->open();
-            childs.push_back(directory);
-            name2childs.insert({SString(info->d_name), directory});
-        } else if (info->d_type == DT_REG) {
-            // is regular file
-            FileChannel *file = new FileChannel(SString(const_cast<const char*>(info->d_name)));
-            file->setParent(this);
-            childs.push_back(file);
-            name2childs.insert({SString(info->d_name), file});
-        }
+        return false;
     }
-    // change back
-    chdir(cwd);
-    free(cwd);
-
-    name.release_copied(name_cstr);
+    if (str[2] != '\0') {
+        return false;
+    }
+    return true;
 }
 
-anarion::Directory::Directory(SString &&name) : FileEntry(forward<SString>(name)) {}
+anarion::Directory::Directory(const SString &name)
+    : FileChannel(name) {}
 
-anarion::Directory::Directory(anarion::SString &&name, anarion::FileEntry *entry) : FileEntry(forward<SString>(name), entry) {
-
+anarion::Directory::Directory(anarion::Directory &&rhs) noexcept
+        : FileChannel(forward<Directory>(rhs)), dirp(rhs.dirp), dirEnt(rhs.dirEnt) {
+    rhs.dirp = nullptr;
+    rhs.dirEnt = nullptr;
 }
 
-void anarion::Directory::release() {
-    for (auto it = childs.begin_iterator(); it != childs.end_iterator(); ++it) {
-        (**it).release();
-        delete *it;
-    }
-    childs.clear();
-}
-
-anarion::Directory::~Directory() {
-    if (handle == nullptr) {
-        return;
-    }
-    for (LinkedList<FileEntry*>::iterator it = childs.begin_iterator(); it != childs.end_iterator(); ++it) {
-        delete &(**it);
-    }
-    closedir(handle);
-    handle = nullptr;
-}
-
+/*
 anarion::FileEntry *anarion::Directory::createChildFile(const SString &fileName) {
     StringBuilder builder;
     builder.cappend(relativePath);
@@ -121,24 +63,203 @@ anarion::FileEntry *anarion::Directory::createChildDirectory(anarion::SString &&
     name2childs.insert({forward<SString>(dirName), entry});
     return entry;
 }
+*/
+
+#pragma region invalid_operations
+anarion::size_type anarion::Directory::in(const char *data, anarion::size_type nbytes) {
+    throwInvalidOperation();
+}
+
+anarion::size_type anarion::Directory::in(anarion::Buffer &buffer) {
+    throwInvalidOperation();
+}
+
+anarion::size_type anarion::Directory::in(anarion::Buffer &buffer, anarion::size_type nbytes) {
+    throwInvalidOperation();
+}
+
+anarion::size_type anarion::Directory::out(char *p, anarion::size_type nbytes) {
+    throwInvalidOperation();
+}
+
+anarion::Buffer anarion::Directory::out(anarion::size_type nbytes) {
+    throwInvalidOperation();
+}
+
+anarion::Buffer anarion::Directory::out() {
+    throwInvalidOperation();
+}
+
+void anarion::Directory::move_forth(anarion::size_type steps) {
+    throwInvalidOperation();
+}
+
+void anarion::Directory::move_back(anarion::size_type steps) {
+    throwInvalidOperation();
+}
+
+void anarion::Directory::set_cursor(anarion::size_type index) {
+    throwInvalidOperation();
+}
+#pragma endregion
+
+void anarion::Directory::open() {
+    dirp = opendir(path.getString().cstr());
+    if (dirp == nullptr) {
+        throw DirectoryCreateFailed();
+    }
+    fd = dirfd(dirp);
+    if (dirp == nullptr) {
+        throw DirectoryOpenFailed();
+    }
+    fetchAttributes();
+}
+
+void anarion::Directory::create(perm_t perm) {
+    int ret = ::mkdir(path.getString().cstr(), perm);
+    if (ret < 0) {
+        throw DirectoryCreateFailed();
+    }
+}
 
 void anarion::Directory::remove() {
-    for (auto it = childs.begin_iterator(); it != childs.end_iterator(); ++it) {
-        (**it).remove();
+    int ret = ::rmdir(path.getString().cstr());
+    if (ret < 0) {
+        throw RemoveDirectoryFailed();
     }
-    char *p = absolutePath.copy_cstr();
-    rmdir(p);
-    absolutePath.release_copied(p);
-    if (parent) {
-        parent->removeChildFromMembers(this);
-    }
+    fd = -1;
+    dirEnt = nullptr;
+    dirp = nullptr;
 }
 
 void anarion::Directory::close() {
-    if (handle == nullptr) { return; }
-    for (auto it = childs.begin_iterator(); it != childs.end_iterator(); ++it) {
-        delete &**it;
+    if (!isOpen()) {
+        return;
     }
-    closedir(handle);
-    handle = nullptr;
+    // not closing fd directly
+    ::closedir(dirp);
+    dirp = nullptr;
+    dirEnt = nullptr;
+    fd = -1;
 }
+
+anarion::Directory::~Directory() {
+    if (fd < 0) {
+        return;
+    }
+    // not closing fd directly
+    ::closedir(dirp);
+    dirp = nullptr;
+    dirEnt = nullptr;
+    fd = -1;
+}
+
+struct dirent *anarion::Directory::next() const {
+    moveNextEnt();
+    return dirEnt;
+}
+
+void anarion::Directory::rewindIterate() const {
+    if (dirEnt == nullptr) {
+        dirEnt = readdir(dirp);
+    }
+    ::rewinddir(dirp);
+    dirEnt = nullptr;
+}
+
+anarion::size_type anarion::Directory::currentIndex() const {
+    long ret = ::telldir(dirp);
+    if (ret < 0) {
+        throw TellDirFailed();
+    }
+    return ret;
+}
+
+void anarion::Directory::setIndex(size_type index) {
+    ::seekdir(dirp, index);
+}
+
+struct dirent *anarion::Directory::curEnt() const {
+    if (dirEnt == nullptr) {
+        moveNextEnt();
+    }
+    return dirEnt;
+}
+
+anarion::size_type anarion::Directory::size() const {
+    rewindIterate();
+    do {
+
+    } while (next());
+}
+
+void anarion::Directory::moveNextEnt() const {
+    errno = 0;
+    do {
+        dirEnt = ::readdir(dirp);
+        if (dirEnt == nullptr) {
+            if (errno) {
+                throw DirectoryIterateFailed();
+            }
+            break;
+        }
+    } while (isDots(dirEnt->d_name));
+}
+
+anarion::FileChannel anarion::Directory::direntToFile(flag_t oflags) const {
+    if (curEnt()->d_type != DT_REG) {
+        throw DirEntryToFileFailed();
+    }
+    Path newPath = Path::combine(path, Path(SString(curEnt()->d_name)));
+    int newFd = ::open(newPath.getString().cstr(), oflags);
+    if (newFd < 0) {
+        throw OpenFdFailed();
+    }
+    FileChannel file(anarion::move(newPath), oflags);
+    file.setFd(newFd);
+    return anarion::move(file);
+}
+
+/*
+anarion::Directory::iterator::iterator(int fd)
+        : fd(fd), dirp(fdopendir(fd)), ent(readdir(dirp)) {
+
+}
+
+anarion::Directory::iterator::~iterator() {
+
+}
+
+dirent &anarion::Directory::iterator::operator*() {
+    return *ent;
+}
+
+
+const dirent &anarion::Directory::iterator::operator*() const {
+    return *ent;
+}
+
+dirent *anarion::Directory::iterator::operator->() const {
+    return ent;
+}
+
+anarion::Directory::iterator &anarion::Directory::iterator::operator++() {
+    ent = readdir(dirp);
+    return *this;
+}
+
+const anarion::Directory::iterator anarion::Directory::iterator::operator++(int) {
+    iterator result(*this);
+    ++(*this);
+    return result;
+}
+
+bool anarion::Directory::iterator::operator==(const iterator &rhs) const {
+    return dirp == rhs.dirp &&
+           ent == rhs.ent;
+}
+
+bool anarion::Directory::iterator::operator!=(const iterator &rhs) const {
+    return !(rhs == *this);
+}
+*/

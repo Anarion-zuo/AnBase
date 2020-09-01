@@ -10,28 +10,59 @@
 #include "FileEntry.h"
 
 namespace anarion {
+/*
+ * A Directory is also a file.
+ * The DIR struct holds a file descriptor inside for convenient operations, which is an extra utility for a directory as a file.
+ * Therefore, this class inherits all from FileChannel, making part of the operations invalid, protecting directory structure.
+ *
+ * Other than the utilities provided by the FileChannel class, this class encapsulates operations under dirent.h as an iterator.
+ */
 
-    struct DirectoryException : public SystemException {};
-    struct DirectoryCreateException : public DirectoryException {};
-    struct RemoveFileException : public DirectoryCreateException {};
-
-    class Directory : public FileEntry {
+    class Directory : public FileChannel {
     protected:
-        DIR *handle;
+        DIR *dirp = nullptr;
+        mutable struct dirent *dirEnt = nullptr;
+
+        void moveNextEnt() const ;
     public:
-        explicit Directory(SString &&name);
-        Directory(SString &&name, FileEntry *entry);
-        Directory(Directory &&rhs) noexcept : FileEntry(forward<Directory>(rhs)), handle(rhs.handle) { rhs.handle = nullptr; }
+        explicit Directory(const SString &name);
+        Directory(Directory &&rhs) noexcept ;
 
         ~Directory() override ;
 
-        void release() override ;
+        // open close
         void open() override;
-        void remove() override ;
-        void close() override ;
+        void close() override;
+        void create(perm_t perm) override ;
 
-        FileEntry *createChildFile(const SString &fileName);
-        FileEntry *createChildDirectory(SString &&dirName);
+        // read/write
+        size_type in(const char *data, size_type nbytes) override ;
+        size_type in(Buffer &buffer) override ;
+        size_type in(Buffer &buffer, size_type nbytes) override ;
+        size_type out(char *p, size_type nbytes) override ;
+        Buffer out(size_type nbytes) override ;
+        Buffer out() override ;
+
+        // change operating offset
+        void move_forth(size_type steps) override ;
+        void move_back(size_type steps) override ;
+        void set_cursor(size_type index) override ;
+
+        // sizes
+        size_type size() const override ;
+
+        // remove/move/rename
+        void remove() override ;
+
+        // iterates
+        struct dirent *next() const ;
+        void rewindIterate() const ;
+        size_type currentIndex() const ;
+        void setIndex(size_type index);
+        struct dirent *curEnt() const ;
+
+        // conversions
+        anarion::FileChannel direntToFile(flag_t oflags) const ;
     };
 }
 
