@@ -59,6 +59,7 @@ namespace anarion {
         size_type capacity() const ;
         size_type length() const;
         char *getArr() const;
+        void resize(size_type newSize);
 
         char &get(size_type index);
         const char &get(size_type index) const ;

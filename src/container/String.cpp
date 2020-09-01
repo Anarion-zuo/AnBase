@@ -389,4 +389,9 @@ char *SString::getArr() const {
     return cstr();
 }
 
+void SString::resize(size_type newSize) {
+    // +1 for the ending 0
+    Vector<char>::resize(newSize + 1);
+}
+
 
