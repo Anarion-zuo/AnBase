@@ -60,7 +60,7 @@ public:
 
     // fetch attributes
     void fetchAttributes() override ;
-    const stat &getAttributes() const override ;
+    const struct stat &getAttributes() const override ;
 
     // symbolic/hard links
     void symlink(const SString &linkPath) override ;
