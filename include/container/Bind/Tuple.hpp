@@ -15,7 +15,9 @@ namespace anarion {
 
     template <>
     class Tuple<> {
-    protected:
+    public:
+        virtual ~Tuple() = default;
+
         template <size_type index>
         int get() const {
 //            static_assert(index < sizeof...(Args));
@@ -30,7 +32,6 @@ namespace anarion {
         /*
          * type traits machine for type deduction
          * to deduct the type of the nth of a packet
-         * following by a declaration without implementation and recursive implementation
          */
         template <size_type index, typename ...As>
         struct index_deduct;
@@ -77,7 +78,7 @@ namespace anarion {
 
         Tuple(this_type &&rhs) noexcept : parent_type(forward<this_type>(rhs)), arg(move(rhs.arg)) {}
 
-        ~Tuple() = default;
+        virtual ~Tuple() = default;
 
         this_type &operator=(const this_type &rhs) {
             if (&rhs == this) { return *this; }
@@ -108,6 +109,26 @@ namespace anarion {
     template <typename ...Args>
     constexpr Tuple<Args...> make_tuple(Args ...args) {
         return Tuple<Args...>(args...);
+    }
+
+    template <typename CallableType, typename ...TupleArgs, typename ...Args>
+    auto tupleArgsCall(CallableType callable, Tuple<TupleArgs...> tuple, Args ...args) {
+        return tupleArgsCall(callable, tuple.get_parent(), args..., tuple.get());
+    }
+
+    template <typename CallableType, typename ...Args>
+    auto tupleArgsCall(CallableType callable, Tuple<> finalTuple, Args ...args) {
+        return callable(args...);
+    }
+
+    template <typename CallableType, typename ...TupleArgs, typename ...Args>
+    void tupleArgsCallNoReturn(CallableType callable, Tuple<TupleArgs...> tuple, Args ...args) {
+        tupleArgsCallNoReturn(callable, tuple.get_parent(), args..., tuple.get());
+    }
+
+    template <typename CallableType, typename ...Args>
+    void tupleArgsCallNoReturn(CallableType callable, Tuple<> finalTuple, Args ...args) {
+        callable(args...);
     }
 }
 
