@@ -9,39 +9,79 @@
 #include <pthread.h>
 #include <time/Time.h>
 #include <SystemException.h>
-#include "../../context/Callable.h"
-#include "../../feature/UnCopyable.h"
+#include "Routine.h"
+
+/*
+ * Thread class template
+ *
+ *
+ */
 
 namespace anarion {
-    class Thread : virtual public Callable, virtual public UnCopyable {
+    class ThreadCore {
     protected:
         pthread_t pid;
+        ThreadCore() = default;
 
-        static void *start_routine(void *p);
+        void startPThread(void *(*fp)(void *));
+        void joinPThread() const;
+
+    public:
+        static void sleep(const Time &sleepTime);
+
+        void cancel() const;
+    };
+
+    template <typename RoutineType>
+    class Thread : public ThreadCore {
+    protected:
+
+        static void *start_routine(void *p) {
+            RoutineType &proutine = static_cast<Thread<RoutineType> *>(p)->routine;
+            proutine.run();
+            return nullptr;
+        }
+
+        RoutineType routine;
 
     public:
 
-        Thread();
-        Thread(Thread &&rhs) noexcept;
+        Thread() = default;
+        Thread(const Thread &) = default;
+        Thread(Thread &&) noexcept = default;
+        ~Thread() = default;
+        Thread(const RoutineType &routine) : routine(routine) {}
+        Thread(RoutineType &&routine) : routine(forward<RoutineType>(routine)) {}
 
-        Thread &operator=(Thread &&rhs) noexcept;
+        void start() {
+            startPThread(start_routine);
+        }
+        void join() {
+            joinPThread();
+        }
 
-        void start();
-        void join();   // dont join yourself
-
-        static void sleep(const Time &sleepTime);
+        constexpr RoutineType &getRoutine() { return routine; }
+        constexpr const RoutineType &getRoutine() const { return routine; }
 
     };
 
     class ThreadException : public SystemException {};
     class ThreadStartException : public ThreadException {};
     struct ThreadJoinException : public SystemException {};
+    struct ThreadCancelFailed : public ThreadException {};
 
 struct SleepError : public SystemException {
     const char *what() const noexcept override {
         return "Error when the thread is entering sleep.";
     }
 };
+
+    class AsyncCall {
+    protected:
+
+    public:
+        void call();
+    };
 }
 
 #endif //MYCPPLIB_THREAD_H
