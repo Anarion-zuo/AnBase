@@ -102,7 +102,7 @@ namespace anarion {
     };
 
     template <size_type index, typename ...Args>
-    constexpr int get_tuple(Tuple<Args...> &tuple) {
+    constexpr auto &get_tuple(Tuple<Args...> &tuple) {
         return tuple.template get<index>();
     }
 
