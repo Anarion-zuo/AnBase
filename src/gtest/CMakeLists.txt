@@ -12,6 +12,7 @@ add_executable(gtests
 #        file/TestFileChannel.cpp
 
         concurrent/TestRoutine.cpp
+        concurrent/TestThread.cpp
         )
 
 target_link_libraries(gtests gtest gtest_main anbase)

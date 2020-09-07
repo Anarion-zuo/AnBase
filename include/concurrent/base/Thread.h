@@ -14,7 +14,13 @@
 /*
  * Thread class template
  *
+ * Real thread operations are done in ThreadCore, with Thread defining convenient calling interface.
+ * Thread encapuslates a RoutineType, with viable generic interface run.
+ * Routine's are for late function calls, storing parameters and procedure for calls at random time.
+ * Thread prepares a function call in a RoutineType, and calls it when starting a thread by system call.
  *
+ * Note:
+ *  - passing reference to BindRoutine type may not work accross threads, best pass by pointer.
  */
 
 namespace anarion {
@@ -64,6 +70,16 @@ namespace anarion {
         constexpr const RoutineType &getRoutine() const { return routine; }
 
     };
+
+    template <typename RoutineType>
+    Thread<RoutineType> makeThread(const RoutineType &routine) {
+        return Thread<RoutineType>(routine);
+    }
+
+    template <typename RoutineType>
+    Thread<RoutineType> makeThread(RoutineType &&routine) {
+        return Thread<RoutineType>(forward<RoutineType>(routine));
+    }
 
     class ThreadException : public SystemException {};
     class ThreadStartException : public ThreadException {};
