@@ -62,6 +62,7 @@ namespace anarion {
         const RetType &getReturn() const {
             return ret;
         }
+        constexpr Tuple<Args...> &getArgs() { return args; }
     };
 
     template <typename RetType, typename CallableType, typename ...Args>
@@ -90,6 +91,7 @@ namespace anarion {
         void operator()() {
             run();
         }
+        constexpr Tuple<Args...> &getArgs() { return args; }
     };
 
     template <typename CallableType, typename ...Args>
