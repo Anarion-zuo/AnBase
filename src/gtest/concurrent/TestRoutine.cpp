@@ -60,11 +60,42 @@ static size_type incrementOneReturn(size_type num) {
     return num + 1;
 }
 
-TEST(TestRoutine, NoParamsWithturn) {
+TEST(TestRoutine, NoParamsWithReturn) {
     size_type beforeInc = 4, afterInc = beforeInc + 1;
     auto incrementOneRoutine = makeBindRoutine<size_type>(incrementOneReturn, beforeInc);
     incrementOneRoutine.run();
     ASSERT_EQ(incrementOneRoutine.getReturn(), afterInc);
+}
+
+template <typename T, typename V>
+size_type addTwo(T x, V y) {
+    return x + y;
+}
+
+TEST(TestRoutine, TemplateFunction) {
+    // must specify parameters
+    auto tempRoutine = makeBindRoutine<size_type>(addTwo<int, int>, 1, 3);
+    tempRoutine.run();
+    ASSERT_EQ(tempRoutine.getReturn(), 1 + 3);
+}
+
+template <typename firstType, typename ...NumType>
+size_type sumVari(firstType firstNum, NumType ...nums) {
+    return sumVari(nums...) + firstNum;
+}
+
+template <typename ...NumType>
+size_type sumVari() {
+    return 0;
+}
+
+TEST(TestRoutine, VariadicWithReturn) {
+    // best not use variadic function with routine
+    /*
+    auto sumVariRoutine = makeBindRoutine<size_type>(sumVari<size_type, size_type, size_type, size_type>, 1ul, 2ul, 3ul);
+    sumVariRoutine.run();
+    ASSERT_EQ(sumVariRoutine.getReturn(), 1 + 2 + 3);
+     */
 }
 
 TEST(TestConcurrent, TestThread) {

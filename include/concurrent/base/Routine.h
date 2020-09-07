@@ -28,8 +28,15 @@
  *  - The callee may or may not have a return value.
  *  - The callee may or may not have passing parameters.
  * The specifications above must be tested.
+ *  - without return value
+ *  - with return value
+ *  - without parameters
+ *  - with parameters
+ *  - template functions and variadic template
  *
- *
+ * It is found in testing that template functions cannot be deducted directly,
+ *  even as the template parameter is specified as template template parameter.
+ * Template typenames must be secified by hand.
  */
 
 namespace anarion {
@@ -62,6 +69,11 @@ namespace anarion {
         return BindRoutine<CallableType, RetType, Args...>(callable, args...);
     }
 
+    template <typename RetType, template <typename...> class TemplCallable, typename ...Args>
+    BindRoutine<TemplCallable<Args...>, RetType, Args...> makeBindRoutine(TemplCallable<Args...> callable, Args ...args) {
+        return BindRoutine<TemplCallable<Args...>, RetType, Args...>(callable, args...);
+    }
+
     template <typename CallableType, typename ...Args>
     class BindRoutine<CallableType, void, Args...> {
     protected:
@@ -83,6 +95,11 @@ namespace anarion {
     template <typename CallableType, typename ...Args>
     BindRoutine<CallableType, void, Args...> makeBindRoutine(CallableType callable, Args ...args) {
         return BindRoutine<CallableType, void, Args...>(callable, args...);
+    }
+
+    template <typename RetType, template <typename...> class TemplCallable, typename ...Args>
+    BindRoutine<TemplCallable<Args...>, void, Args...> makeBindRoutine(TemplCallable<Args...> callable, Args ...args) {
+        return BindRoutine<TemplCallable<Args...>, void, Args...>(callable, args...);
     }
 }
 
