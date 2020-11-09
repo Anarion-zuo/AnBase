@@ -8,13 +8,13 @@
 #include "Thread.h"
 
 namespace anarion {
-    class BackgroundTask : public Thread {
+    class BackgroundTask {
     protected:
         Time rollTime;
     public:
         explicit BackgroundTask(Time &&time) : rollTime(time) {}
 
-        void run() override;
+        void run();
         virtual void task() = 0;
     };
 }

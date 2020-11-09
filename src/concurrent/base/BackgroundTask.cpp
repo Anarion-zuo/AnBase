@@ -8,6 +8,6 @@
 void anarion::BackgroundTask::run() {
     while (true) {
         task();
-        sleep(rollTime);
+//        sleep(rollTime);
     }
 }
