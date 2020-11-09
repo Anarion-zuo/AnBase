@@ -3,6 +3,7 @@
 
 #include <io/buffer/Buffer.h>
 #include <sys/file.h>
+#include <sys/stat.h>
 #include "../RandomChannel.h"
 #include "container/SString.h"
 #include "FileEntry.h"

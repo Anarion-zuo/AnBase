@@ -230,15 +230,27 @@ const struct stat &anarion::FileChannel::getAttributes() const {
 
 anarion::Time anarion::FileChannel::getLastAccessTime() {
     fetchAttributes();
+#ifdef __linux__
     return Time(statInfo.st_atim);
+#elif __APPLE__
+    return Time(statInfo.st_atimespec);
+#endif
 }
 
 anarion::Time anarion::FileChannel::getLastModifyTime() {
     fetchAttributes();
+#ifdef __linux__
     return Time(statInfo.st_mtim);
+#elif __APPLE__
+    return Time(statInfo.st_mtimespec);
+#endif
 }
 
 anarion::Time anarion::FileChannel::getLastStatusChangeTime() {
     fetchAttributes();
+#ifdef __linux__
     return Time(statInfo.st_ctim);
+#elif __APPLE__
+    return Time(statInfo.st_ctimespec);
+#endif
 }

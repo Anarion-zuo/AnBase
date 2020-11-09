@@ -21,5 +21,5 @@ anarion::DynamicThreadPool::CleanThread::CleanThread(anarion::Time &&time, anari
 
 anarion::DynamicThreadPool::DynamicThreadPool() : ThreadPool(1), cleanThread(Time(1, 0), nullptr) {
     cleanThread.pool = this;
-    cleanThread.start();
+//    cleanThread.start();
 }

@@ -7,10 +7,11 @@
 
 #include <SystemException.h>
 #include <container/List/Vector.hpp>
-#include <sys/epoll.h>
 #include <concurrent/base/Thread.h>
 #include "FileChannel.h"
 
+#ifdef __linux__
+#include <sys/epoll.h>
 namespace anarion {
 class FileSystemNotifier {
 protected:
@@ -31,5 +32,6 @@ struct NotifierInitFailed : public NotifierException {};
 struct NotifierPollFailed : public NotifierException {};
 struct NotifierAppendListenFailed : public NotifierException {};
 }
+#endif
 
 #endif //ANBASE_FILESYSTEMNOTIFIER_H

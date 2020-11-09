@@ -3,8 +3,10 @@
 //
 
 #include "io/channel/file/FileSystemNotifier.h"
-#include <sys/inotify.h>
 #include <unistd.h>
+
+#ifdef __linux__
+#include <sys/inotify.h>
 
 anarion::FileSystemNotifier::FileSystemNotifier() {
     // init inotify
@@ -55,3 +57,4 @@ anarion::FileSystemNotifier::~FileSystemNotifier() {
 void anarion::FileSystemNotifier::addFileChannel(const anarion::FileChannel &fileChannel) {
     addInotifier(fileChannel.getAbsolutePath().cstr(), IN_ACCESS);
 }
+#endif

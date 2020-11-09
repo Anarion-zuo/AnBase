@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <io/channel/file/FileChannel.h>
 #include <container/StringBuilder.h>
-#include <libnet.h>
+#include <sys/stat.h>
 #include "io/channel/file/Directory.h"
 
 static bool isDots(const char *str) {
