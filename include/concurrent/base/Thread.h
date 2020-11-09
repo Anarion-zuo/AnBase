@@ -11,19 +11,20 @@
 #include <SystemException.h>
 #include "Routine.h"
 
-/*
- * Thread class template
- *
- * Real thread operations are done in ThreadCore, with Thread defining convenient calling interface.
- * Thread encapuslates a RoutineType, with viable generic interface run.
- * Routine's are for late function calls, storing parameters and procedure for calls at random time.
- * Thread prepares a function call in a RoutineType, and calls it when starting a thread by system call.
- *
- * Note:
- *  - passing reference to BindRoutine type may not work accross threads, best pass by pointer.
- */
 
 namespace anarion {
+    /**
+     * Thread class template
+     *
+     * Real thread operations are done in ThreadCore, with Thread defining convenient calling interface.
+     * Thread encapuslates a RoutineType, with viable generic interface run.
+     * Routine's are for late function calls, storing parameters and procedure for calls at random time.
+     * Thread prepares a function call in a RoutineType, and calls it when starting a thread by system call.
+     *
+     * Note:
+     *  - passing reference to BindRoutine type may not work accross threads, best pass by pointer.
+     */
+
     class ThreadCore {
     protected:
         pthread_t pid;
