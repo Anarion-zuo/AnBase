@@ -23,7 +23,7 @@ namespace anarion {
         virtual ~LoggerInfo() = default;
     };
 
-    class Logger : public Thread {
+    class Logger {
     protected:
         LinkedList<InChannel*> outputs;
         Mutex infoLock;
@@ -35,7 +35,7 @@ namespace anarion {
 
     public:
 
-        Logger() { start(); }
+        Logger() {  }
 
         virtual ~Logger() {
             for (auto it = outputs.begin_iterator(); it != outputs.end_iterator(); ++it) {
@@ -54,7 +54,7 @@ namespace anarion {
             infoLock.unlock();
         }
 
-        void run() override ;
+        void run() ;
     };
 
 }

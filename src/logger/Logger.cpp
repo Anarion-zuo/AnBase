@@ -29,6 +29,6 @@ void anarion::Logger::run() {
             processOne(info);
         }
         infoLock.unlock();
-        Thread::sleep(refreshTime);
+//        Thread::sleep(refreshTime);
     }
 }
