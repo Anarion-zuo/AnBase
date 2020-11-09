@@ -12,7 +12,7 @@
 #include "FileChannel.h"
 
 namespace anarion {
-class FileSystemNotifier : public Thread {
+class FileSystemNotifier {
 protected:
     int ifd, epfd;
 
@@ -24,7 +24,7 @@ public:
 
     void addFileChannel(const FileChannel &fileChannel);
 
-    [[noreturn]] void run() override ;
+    [[noreturn]] void run() ;
 };
 struct NotifierException : public SystemException {};
 struct NotifierInitFailed : public NotifierException {};
