@@ -5,7 +5,11 @@
 #include "exceptions/Context/ContextCreateException.h"
 #include <unistd.h>
 #include <context/LocalContext.h>
+#ifdef __APPLE__
+#include <sys/wait.h>
+#elif __linux__
 #include <wait.h>
+#endif
 
 using namespace anarion;
 
