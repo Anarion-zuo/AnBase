@@ -16,7 +16,6 @@ namespace anarion {
         Buffer out(size_type nbytes) override;
         Buffer out() override;
 
-        void closeo() override;
         void close() override;
 
     };

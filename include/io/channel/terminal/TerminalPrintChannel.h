@@ -12,12 +12,11 @@ namespace anarion {
     public:
         TerminalPrintChannel();
 
-        size_type in(char *p, size_type nbytes) override;
+        size_type in(const char *p, size_type nbytes) override;
 
         size_type in(Buffer &buffer) override;
         size_type in(Buffer &buffer, size_type nbytes) override;
 
-        void closei() override;
         void close() override;
     };
 }

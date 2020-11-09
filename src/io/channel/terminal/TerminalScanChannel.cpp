@@ -24,8 +24,4 @@ anarion::Buffer anarion::TerminalScanChannel::out() {
     return move(buffer);
 }
 
-void anarion::TerminalScanChannel::closeo() {
-
-}
-
-anarion::TerminalScanChannel::TerminalScanChannel() : OutChannel(true) {}
+anarion::TerminalScanChannel::TerminalScanChannel() {}

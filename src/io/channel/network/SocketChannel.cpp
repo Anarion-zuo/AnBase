@@ -28,9 +28,9 @@ void anarion::SocketChannel::throwSocket() {
     }
 }
 
-anarion::size_type anarion::SocketChannel::in(char *p, anarion::size_type nbytes) {
+anarion::size_type anarion::SocketChannel::in(const char *p, anarion::size_type nbytes) {
     if (!i_valid) { throw InvalidOperation(); }
-    return sendn(sockfd, p, nbytes, 0);
+    return sendn(sockfd, (void *) p, nbytes, 0);
 }
 
 anarion::size_type anarion::SocketChannel::in(anarion::Buffer &buffer) {
