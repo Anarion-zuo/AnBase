@@ -19,3 +19,14 @@ add_executable(gtests
 
 target_link_libraries(gtests gtest gtest_main)
 include_directories(${INC_DIR})
+# platform derivation
+if(${APPLE})
+    message(On MacOSX)
+    include_directories(/usr/local/Cellar/googletest/1.10.0/include)
+elseif(${UNIX})
+    message(On Unix except MacOSX, possibly linux)
+elseif(${WIN32})
+    message(On WIN32)
+else()
+    message(Unknown CMake Platform!!!)
+endif()
