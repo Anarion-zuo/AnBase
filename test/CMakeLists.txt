@@ -17,8 +17,6 @@ add_executable(gtests
         concurrent/TestThread.cpp
         )
 
-target_link_libraries(gtests gtest gtest_main)
-include_directories(${INC_DIR})
 # platform derivation
 if(${APPLE})
     message("On MacOSX")
@@ -30,3 +28,6 @@ elseif(${WIN32})
 else()
     message("Unknown CMake Platform!!!")
 endif()
+
+target_link_libraries(gtests gtest gtest_main)
+include_directories(${INC_DIR})
