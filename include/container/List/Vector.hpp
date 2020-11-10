@@ -92,6 +92,10 @@ namespace anarion {
 /**
  * @class Vector Container holding elements in a continuous memory space.
  * @tparam T specifies the type of the elements.
+ *
+ * @details Cautions:
+ *      1) This container is fast for operations at the end. Other kinds of operations, although doable, is not supported fully by the nature of *continuous storage*.
+ *      2) This container, like all other containers, is not thread-safe, unless explicitly pointed out.
  */
     template<typename T>
     class Vector {
