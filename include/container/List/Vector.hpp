@@ -89,10 +89,13 @@ namespace anarion {
 
 #pragma endregion
 
+/**
+ * @class Vector Container holding elements in a continuous memory space.
+ * @tparam T specifies the type of the elements.
+ */
     template<typename T>
     class Vector {
     protected:
-
         T *begin = nullptr, *cur = nullptr, *end = nullptr;
 
         void expand_push() { resize(size() << 1u); }
@@ -144,6 +147,10 @@ namespace anarion {
         #pragma region ctors_assigns_dtor
         Vector() = default;
 
+        /**
+         * @param initialSize gives container this amount of memory jurisdiction. It gives the container initializeSize of in #T.
+         * @details Can have 0 bytes of memory.
+         */
         explicit Vector(size_type initialSize) {
             if (initialSize == 0) {
                 return;
@@ -152,7 +159,11 @@ namespace anarion {
             end = (begin + initialSize);
             cur = begin;
         }
-
+        /**
+         * @param initialSize specifies initial memory size in the unit of #T.
+         * @param rhs initialize all controlled memory with copies of this object by the copy constructor of T.
+         * @details It uses operator new to invoke copy constructors on specified address.
+         */
         Vector(size_type initialSize, const T &rhs) {
             if (initialSize == 0) {
                 return;
@@ -165,6 +176,9 @@ namespace anarion {
             }
         }
 
+        /**
+         * @param rhs copy constructor.
+         */
         Vector(const Vector<T> &rhs) : begin(new_space<T>(rhs.size())), cur(begin + rhs.size()), end(cur) {
             if (rhs.empty()) {
                 return;
@@ -172,10 +186,16 @@ namespace anarion {
             Copier<T>().copy(begin, rhs.begin, rhs.size());
         }
 
+        /**
+         * @param rhs move constructor.
+         */
         Vector(Vector<T> &&rhs) noexcept : begin(rhs.begin), cur(rhs.cur), end(rhs.end) {
             rhs.clearMove();
         }
 
+        /**
+         * @param initList
+         */
         Vector(std::initializer_list<T> &&initList) {
             size_type length = initList.size();
             if (length == 0) { return; }
@@ -189,8 +209,16 @@ namespace anarion {
             }
         }
 
+        /**
+         * @param p
+         * @param len
+         * @details take hold of the address range defined by these 2 params without actual copying.
+         */
         Vector(T *p, size_type len) : begin(p), cur(begin + len), end(cur) {}   // move
 
+        /**
+         * @details implemented by clear().
+         */
         virtual ~Vector() {
             clear();
         }
@@ -220,6 +248,9 @@ namespace anarion {
             return *this;
         }
 
+        /**
+         * @details calls in order 1) destructor, 2) operator delete.
+         */
         void clear() {
             clear_space(begin, size());
             operator delete(begin, (end - begin) * sizeof(T));
@@ -232,14 +263,26 @@ namespace anarion {
             return !size();
         }
 
+        /**
+         * @return address length actually holding elements in the unit of sizeof(T).
+         */
         constexpr size_type size() const {
             return cur - begin;
         }
 
+        /**
+         *
+         * @return address length of all addresses under control.
+         */
         constexpr size_type capacity() const {
             return end - begin;
         }
-        
+
+        /**
+         *
+         * @param new_size Change size into this new_size.
+         * @details Virtually, this function change the output of capacity(). If the requesting new_size is larger than current size(), container address control is expanded and no more. If the requesting new_size is smaller than current size(), elements at the end of the container is deleted by calling their destructors.
+         */
         void resize(size_type new_size) {
             if (new_size == 0) {
                 clear();
@@ -275,6 +318,9 @@ namespace anarion {
         #pragma endregion
 
         #pragma region back_front
+        /**
+         * @param o add this object to the end of the container by copy constructor.
+         */
         void push_back(const T &o) {
             if (begin == nullptr) {
                 resize(1);
@@ -284,7 +330,9 @@ namespace anarion {
             }
             new(cur++) T(o);
         }
-
+        /**
+         * @param o add this object to the end of the container by move constructor.
+         */
         void push_back(T &&o) {
             if (begin == nullptr) {
                 resize(1);
@@ -295,6 +343,9 @@ namespace anarion {
             new(cur++) T(forward<T>(o));
         }
 
+        /**
+         * @return the last element of the container and remove it from the position.
+         */
         T pop_back() {
             if (empty()) { throw EmptyContainer(); }
             --cur;
@@ -302,6 +353,9 @@ namespace anarion {
             return move(last);
         }
 
+        /**
+         * @return the first element of the container and remove it from the position.
+         */
         T pop_front() {
             if (empty()) { throw EmptyContainer(); }
             T ret = move(begin[0]);
@@ -309,21 +363,35 @@ namespace anarion {
             return move(ret);
         }
         #pragma endregion
-
+        /**
+         * @return element reference at the given index.
+         */
         constexpr T &get(size_type index) {
             if (index >= size()) { throw IndexOutOfRange(); }
             return begin[index];
         }
 
+        /**
+         * @return element reference at the given index.
+         * @details This is the const version, not changing the element from the returned reference.
+         */
         constexpr const T &get(size_type index) const {
             if (index >= size()) { throw IndexOutOfRange(); }
             return begin[index];
         }
 
+        /**
+         * @return element reference at the given index.
+         * @details wraps function get(index)
+         */
         T &operator[](size_type index) {
             return get(index);
         }
-
+        /**
+         * @return element reference at the given index.
+         * @details wraps function get(index).
+         * @details This is the const version, not changing the element from the returned reference.
+         */
         const T &operator[](size_type index) const {
             return get(index);
         }
@@ -333,10 +401,15 @@ namespace anarion {
          * Inserting Single element.
          * All iterators are transformed into indices.
          *
-         * In helper method @insertPrepare, necessary space in meory should be prepared.
+         * In helper method @insertPrepare, necessary space in memory should be prepared.
          * In public methods @insert, the only extra work is running constructor upon give pointer.
          */
     protected:
+        /**
+         * The helper method for functions insert*.
+         * @param index
+         * @details moves all elements starting at given index to the right by 1.
+         */
         void insertPrepare(size_type index) {
             if (capacity() == 0) {
                 resize(1);
@@ -347,19 +420,47 @@ namespace anarion {
         };
     public:
         // iterator transformed into index
+        /**
+         * @details Insert object o at the position of iterator it. After this operation, the element on the position of this old iterator should be the result of the copy constructor on object o.
+         * @param it specifies an position in the container.
+         * @param o
+         * @return the iterator of the newly inserted object.
+         * @details The parameter it may hold the same value as the return value, for they points to the same address. It may be the container expanded itself when copying, so that all old iterators are made invalid.
+         * @details This wraps function insert(index, o).
+         */
         iterator insert(iterator it, const T &o) {
             return insert(it - begin, o);
         }
+        /**
+         * @details Insert object o at the position of iterator it. After this operation, the element on the position of this old iterator should be the result of the move constructor on object o.
+         * @param it specifies a position in the container.
+         * @param o
+         * @return the iterator of the newly inserted object.
+         * @details The parameter it may hold the same value as the return value, for they points to the same address. It may be the container expanded itself when copying, so that all old iterators are made invalid.
+         * @details This wraps function insert(index, o).
+         */
         iterator insert(iterator it, T &&o) {
             return insert(it - begin, forward<T>(o));
         }
-
+        /**
+         * @details Insert object o at the position of index. After this operation, the element on the position of this old index should be the result of the copy constructor on object o.
+         * @param index specifies an index in the container.
+         * @param o
+         * @return the iterator of the newly inserted object.
+         * @details The parameter it may hold the same value as the return value, for they points to the same address. It may be the container expanded itself when copying, so that all old iterators are made invalid.
+         */
         iterator insert(size_type index, const T &o) {
             insertPrepare(index);
             new(begin + index) T(o);
             return begin + index;
         }
-
+        /**
+         * @details Insert object o at the position of index. After this operation, the element on the position of this old index should be the result of the move constructor on object o.
+         * @param index specifies an index in the container.
+         * @param o
+         * @return the iterator of the newly inserted object.
+         * @details The parameter it may hold the same value as the return value, for they points to the same address. It may be the container expanded itself when copying, so that all old iterators are made invalid.
+         */
         iterator insert(size_type index, T &&o) {
             insertPrepare(index);
             new(begin + index) T(forward<T>(o));
@@ -371,7 +472,12 @@ namespace anarion {
          * All insertions can be transformed into the form (dst_begin, src_begin, size_type num)
          */
     protected:
-            // do memory copying
+        /**
+         * The helper method for functions insert* on multiple objects.
+         * @param index
+         * @param num
+         * @details moves all elements starting at given index to the right by num.
+         */
         void insertPrepare(size_type index, size_type num) {
             if (capacity() == 0) {
                 if (index != 0) { throw IndexOutOfRange(); }
@@ -383,10 +489,29 @@ namespace anarion {
             copy_back_expand(index, num);
         }
     public:
+        /**
+         * @details Insert objects, starting at iterator b, ending at iterator e, at the position of iterator it. After this operation, the element on the position of this old iterator should be the result of the copy constructor on the object at b.
+         * @details iterator e is not included in the range, making this range left-closed, right-opened, [).
+         * @param it specifies a position in the container.
+         * @param b
+         * @param e
+         * @return the iterator of the newly inserted object.
+         * @details The parameter it may hold the same value as the return value, for they points to the same address. It may be the container expanded itself when copying, so that all old iterators are made invalid.
+         * @details This wraps function insert(index, p, num).
+         */
         iterator insert(iterator it, iterator b, iterator e) {
             return insert(it, b, e - b);
         }
-
+        /**
+         * @details Insert objects, starting at iterator b, ending at iterator e, at the position of iterator it. After this operation, the element on the position of this old iterator should be the result of the copy constructor on the object at b.
+         * @details iterator e is not included in the range, making this range left-closed, right-opened, [).
+         * @param it specifies a position in the container.
+         * @param p
+         * @param num
+         * @return the iterator of the newly inserted object.
+         * @details The parameter it may hold the same value as the return value, for they points to the same address. It may be the container expanded itself when copying, so that all old iterators are made invalid.
+         * @details This wraps function insert(index, p, num).
+         */
         iterator insert(iterator it, const T *p, size_type num) {
             return insert(it - begin, p, num);
         }
