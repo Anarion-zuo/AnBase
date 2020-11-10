@@ -10,6 +10,7 @@ add_executable(gtests
         containers/TestVector.cpp
         containers/TestBplusTreeMap.cpp
         containers/TestTuple.cpp
+        containers/TestHashSet.cpp
 
 #        file/TestFileChannel.cpp
 

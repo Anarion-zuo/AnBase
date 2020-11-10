@@ -10,10 +10,16 @@
 
 namespace anarion {
 
-
+    /**
+     * @details Doubly Linked List implementation.
+     * @tparam T element type
+     */
     template<typename T>
     class LinkedList {
     protected:
+        /**
+         * @details Node struct of LinkedList class.
+         */
         struct list_node {
             T obj;
             list_node *next, *prev;
@@ -77,6 +83,9 @@ namespace anarion {
         }
 
         friend class iterator;
+        /**
+         * @details Iterator class for LinkedList
+         */
         class iterator {
         public:
             list_node *node;
@@ -240,10 +249,17 @@ namespace anarion {
             head.prev = &head;
         }
 
+        /**
+         * @return number of elements the container holds.
+         */
         constexpr size_type size() const {
             return count;
         }
 
+        /**
+         * @return number of elements the container can hold with currently possessed space in memory.
+         * @details In the case of a doubly linked list, capacity() returns the same value as size() by definition.
+         */
         size_type capacity() const {
             return count;
         }
@@ -255,18 +271,24 @@ namespace anarion {
         iterator begin_iterator() const { return iterator(head.next); }
 
         iterator end_iterator() const { return iterator(const_cast<list_node*>(&head)); }
-
+        /**
+         * @details Append the result of the copy constructor of o at the end of the container.
+         * @param o
+         * @return the iterator of the newly added element.
+         */
         iterator push_back(const T &o) {
-//            list_node *node = newObject<list_node>(o, &head, head.prev);
             list_node *node = new list_node(o, &head, head.prev);
             head.prev->next = node;
             head.prev = node;
             ++count;
             return iterator(node);
         }
-
+        /**
+         * @details Append the result of the move constructor of o at the end of the container.
+         * @param o
+         * @return the iterator of the newly added element.
+         */
         iterator push_back(T &&o) {
-//            list_node *node = newObject<list_node>(forward<T>(o), &head, head.prev);
             list_node *node = new list_node(forward<T>(o), &head, head.prev);
             head.prev->next = node;
             head.prev = node;
