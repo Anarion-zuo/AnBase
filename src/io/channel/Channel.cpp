@@ -8,7 +8,11 @@
 //
 
 #include "io/base/sys_utility.h"
+#include <io/base/io-exceptions.h>
 
 
 using namespace anarion;
 
+void Channel::throwInvalidOperation(const char *functionName) {
+    throw InvalidIoOperations(functionName);
+}

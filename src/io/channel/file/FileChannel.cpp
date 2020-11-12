@@ -3,20 +3,13 @@
 #include <io/channel/file/FileChannel.h>
 #include <sys/stat.h>
 
-anarion::FileChannel anarion::FileChannel::open(const SString &dir) {
-    char *cdir = dir.copy_cstr();
-    int fd = ::open(cdir, O_RDWR | O_CREAT, 0666);
-    dir.release_copied(cdir);
-    if (fd < 0) { throw OpenFdFailed(); }
-    return FileChannel(SString(dir), fd);
-}
-
-void anarion::FileChannel::create(perm_t perm) {
-    int ret = ::creat(path.getString().cstr(), perm);
+void anarion::FileChannel::create(mode_t mode) {
+    close();
+    int ret = ::creat(path.getString().cstr(), mode);
     if (ret < 0) {
-        throw OpenFdFailed();
+        throw CreatFailed();
     }
-    fetchAttributes();
+//    fetchAttributes();
 }
 
 void anarion::FileChannel::close() {
@@ -25,14 +18,16 @@ void anarion::FileChannel::close() {
         fd = -1;
     }
 }
+
+/*
 void anarion::FileChannel::move(const anarion::SString &newPath) {
     int ret = ::rename(path.getString().cstr(), newPath.cstr());
     if (ret < 0) {
         throw RenameFailed();
     }
     path = Path(newPath);
-}
-
+}*/
+/*
 void anarion::FileChannel::rename(const anarion::SString &newName) {
     Path newPath = Path::combine(path.getParent(), Path(newName));
     int ret = ::rename(path.getString().cstr(), newPath.getString().cstr());
@@ -40,39 +35,39 @@ void anarion::FileChannel::rename(const anarion::SString &newName) {
         throw RenameFailed();
     }
     path = anarion::move(newPath);
-}
+}*/
 
 bool anarion::FileChannel::isOpen() const {
-    return fd > 0;
+    return fd >= 0;
 }
 
 #pragma region offset
-void anarion::FileChannel::rewind() {
-    if (fd < 0) { throw InvalidOperation(); }
+void anarion::FileChannel::resetCursor() {
+    if (!isOpen()) { throw InvalidOperation(); }
     ::lseek(fd, 0, SEEK_SET);
 }
 
-void anarion::FileChannel::set_append() {
-    if (fd < 0) { throw InvalidOperation(); }
+void anarion::FileChannel::setCursorAppend() {
+    if (!isOpen()) { throw InvalidOperation(); }
     ::lseek(fd, 0, SEEK_END);
 }
 
-void anarion::FileChannel::move_forth(size_type nbytes) {
-    if (fd >= 0) { throw InvalidOperation(); }
+void anarion::FileChannel::moveForthCursor(size_type nbytes) {
+    if (!isOpen()) { throw InvalidOperation(); }
     ::lseek(fd, nbytes, SEEK_CUR);
 }
 
-void anarion::FileChannel::move_back(size_type nbytes) {
-    if (fd >= 0) { throw InvalidOperation(); }
+void anarion::FileChannel::moveBackCursor(size_type nbytes) {
+    if (!isOpen()) { throw InvalidOperation(); }
     ::lseek(fd, -nbytes, SEEK_CUR);
 }
 
-void anarion::FileChannel::set_cursor(anarion::size_type index) {
+void anarion::FileChannel::setCursor(anarion::size_type index) {
     ::lseek(fd, index, SEEK_SET);
 }
 
 anarion::size_type anarion::FileChannel::size() const {
-    if (isOpen()) { throwInvalidOperation(); }
+    checkIsOpen();
     off_t off = ::lseek(fd, 0, SEEK_CUR);
     size_type ret = ::lseek(fd, 0, SEEK_END);
     ::lseek(fd, off, SEEK_SET);
@@ -82,94 +77,42 @@ anarion::size_type anarion::FileChannel::size() const {
 
 #pragma region read_write
 anarion::size_type anarion::FileChannel::in(const char *p, size_type nbytes) {
-    if (!isOpen()) { throwInvalidOperation(); }
+    checkIsOpen();
     size_type ret = writen(fd, (void *) p, nbytes);
     return ret;
 }
 
-anarion::size_type anarion::FileChannel::in(Buffer &buffer) {
-    if (!isOpen()) { throwInvalidOperation(); }
-    size_type ret = buffer.write_fd(fd, buffer.unread());
-    return ret;
-}
-
-anarion::size_type anarion::FileChannel::in(Buffer &buffer, size_type nbytes) {
-    if (!isOpen()) { throwInvalidOperation(); }
-    if (nbytes > buffer.unread()) { throw IndexOutOfRange(); }
-    size_type ret = buffer.write_fd(fd, nbytes);
-    return ret;
-}
-
 anarion::size_type anarion::FileChannel::out(char *p, size_type nbytes) {
-    if (!isOpen()) { throwInvalidOperation(); }
+    checkIsOpen();
     return readn(fd, p, nbytes);
 }
 
-anarion::Buffer anarion::FileChannel::out(size_type nbytes) {
-    if (!isOpen()) { throwInvalidOperation(); }
-    Buffer buffer(nbytes);
-    buffer.append_fd(fd, nbytes);
-    return anarion::move(buffer);
-}
-
-anarion::Buffer anarion::FileChannel::out() {
-    if (!isOpen()) { throwInvalidOperation(); }
-    off_t cur = ::lseek(fd, 0, SEEK_CUR);
-    off_t size = ::lseek(fd, 0, SEEK_END);
-    ::lseek(fd, cur, SEEK_SET);
-    off_t unread = size - cur;
-    return out(unread);
-}
 #pragma endregion
 
 void anarion::FileChannel::open() {
+    close();
     fd = ::open(path.getString().cstr(), oflags);
     if (fd < 0) {
         throw OpenFdFailed();
     }
-    ::fstat(fd, &statInfo);
 }
-
-void anarion::FileChannel::open(anarion::FileEntry::perm_t perm) {
-    fd = ::open(path.getString().cstr(), oflags, perm);
-    if (fd < 0) {
-        throw OpenFdFailed();
-    }
-    ::fstat(fd, &statInfo);
-}
-
+/*
 void anarion::FileChannel::remove() {
     close();
     int ret = ::remove(path.getString().cstr());
     if (ret < 0) {
         throw RemoveFileFailed();
     }
-}
-
-anarion::FileChannel::FileChannel(const anarion::SString &dir)
-    : FileEntry(SString(dir)), oflags(O_RDWR | O_CREAT) {
-}
+}*/
 
 anarion::FileChannel::FileChannel(anarion::Path &&path, flag_t oflags)
-    : FileEntry(forward<Path>(path)), oflags(oflags) {
+    : path(forward<Path>(path)), oflags(oflags) {
 
 }
 
 anarion::FileChannel::FileChannel(const anarion::SString &dir, int oflag)
-    : FileEntry(SString(dir)), oflags(oflag) {
+    : path(SString(dir)), oflags(oflag) {
 }
-
-anarion::FileChannel::FileChannel(const anarion::SString &dir, int oflag, int perm)
-    : FileEntry(SString(dir)), oflags(oflag) {
-}
-
-anarion::FileChannel::FileChannel(anarion::FileChannel &&rhs) noexcept :
-    InChannel(forward<FileChannel>(rhs)), OutChannel(forward<FileChannel>(rhs)), RandomChannel(forward<FileChannel>(rhs)), FileEntry(forward<FileChannel>(rhs)) , fd(rhs.fd), oflags(rhs.oflags) {
-    rhs.fd = -1;
-    rhs.oflags = 0;
-}
-
-anarion::FileChannel::FileChannel(anarion::SString &&name, int fd, flag_t oflags) : FileEntry(name), fd(fd), oflags(oflags) {}
 
 anarion::FileChannel::~FileChannel() {
     if (fd >= 0) {
@@ -183,29 +126,27 @@ anarion::FileChannel::~FileChannel() {
 }
 
 void anarion::FileChannel::sync() {
-    if (!isOpen()) {
-        throwInvalidOperation();
-    }
+    checkIsOpen();
     int ret = fsync(fd);
     if (ret == -1) {
         throw FsyncFailed();
     }
 }
-
+/*
 void anarion::FileChannel::symlink(const anarion::SString &linkPath) {
     int ret = ::symlink(path.getString().cstr(), linkPath.cstr());
     if (ret == -1) {
         throw LinkFailed();
     }
-}
-
+}*/
+/*
 void anarion::FileChannel::hardlink(const anarion::SString &linkPath) {
     int ret = link(path.getString().cstr(), linkPath.cstr());
     if (ret < 0) {
         throw LinkFailed();
     }
-}
-
+}*/
+/*
 void anarion::FileChannel::changePermission(int perm) {
     int ret = fchmod(fd, perm);
     if (ret < 0) {
@@ -215,19 +156,24 @@ void anarion::FileChannel::changePermission(int perm) {
 
 bool anarion::FileChannel::hasPermission(anarion::FileEntry::perm_t perm) {
     return perm & statInfo.st_mode;
-}
-
+}*/
+/*
 void anarion::FileChannel::fetchAttributes() {
     int ret = ::fstat(fd, &statInfo);
     if (ret < 0) {
         throw StatFailed();
     }
-}
+}*/
 
-const struct stat &anarion::FileChannel::getAttributes() const {
-    return statInfo;
+anarion::FileAttr anarion::FileChannel::getAttributes() const {
+    struct stat stat;
+    int ret = ::fstat(fd, &stat);
+    if (ret < 0) {
+        throw StatFailed();
+    }
+    return FileAttr(stat);
 }
-
+/*
 anarion::Time anarion::FileChannel::getLastAccessTime() {
     fetchAttributes();
 #ifdef __linux__
@@ -253,4 +199,16 @@ anarion::Time anarion::FileChannel::getLastStatusChangeTime() {
 #elif __APPLE__
     return Time(statInfo.st_ctimespec);
 #endif
+}*/
+
+anarion::FileChannel::FileChannel(anarion::FileChannel &&rhs) noexcept
+    : path(move(rhs.path)), oflags(rhs.oflags), fd(rhs.fd) {
+    rhs.fd = -1;
+    rhs.oflags = 0;
+}
+
+void anarion::FileChannel::checkIsOpen() const {
+    if (!isOpen()) {
+        throw FileOperationOnNotOpened();
+    }
 }

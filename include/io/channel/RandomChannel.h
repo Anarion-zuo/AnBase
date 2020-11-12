@@ -4,6 +4,7 @@
 #include "OutChannel.h"
 #include "InChannel.h"
 
+namespace anarion {
 /**
  * @Name: RandomChannel
  * @Parent: Channel
@@ -19,17 +20,23 @@
  *      3) 
  * 
  */
-
-namespace anarion {
 class RandomChannel : virtual public InChannel, virtual public OutChannel {
 public:
     // position
-    virtual void rewind() = 0;
-    virtual void set_append() = 0;
-    virtual void move_forth(size_type nbytes) = 0;
-    virtual void move_back(size_type nbytes) = 0;
+    virtual void resetCursor() = 0;
+    virtual void setCursorAppend() = 0;
+    virtual void moveForthCursor(size_type nbytes) = 0;
+    virtual void moveBackCursor(size_type nbytes) = 0;
+    virtual void setCursor(size_type index) = 0;
     virtual size_type size() const = 0;
 
+    void closeIn() override {
+        throwInvalidOperation(__FUNCTION__);
+    }
+
+    void closeOut() override {
+        throwInvalidOperation(__FUNCTION__);
+    }
 };
 } // namespace anarion
 

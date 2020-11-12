@@ -44,17 +44,19 @@ set(ANBASE_OBJS
         io/channel/InChannel
         io/channel/OutChannel
         io/channel/file/FileChannel
-        io/channel/file/FileEntry
-        io/channel/file/Directory
+#        io/channel/file/FileEntry
+#        io/channel/file/Directory
         io/channel/file/MemoryMappedFile
-        io/channel/file/FileSystemNotifier
+#        io/channel/file/FileSystemNotifier
         #        io/channel/network/ServerSocketChannel.cpp
         #        io/channel/network/SocketChannel.cpp
         #        io/channel/network/TcpServerSocketChannel.cpp
         #        io/channel/network/TcpSocketChannel.cpp
         #        io/channel/terminal/TerminalPrintChannel.cpp
         #        io/channel/terminal/TerminalScanChannel.cpp
-        io/channel/path/Path
+        io/fs/FileSystem
+        io/fs/Path
+
         reflector/dynamic_reflect
         parser/MapParser
         parser/ListParser

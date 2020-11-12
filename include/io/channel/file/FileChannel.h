@@ -4,83 +4,108 @@
 #include <io/buffer/Buffer.h>
 #include <sys/file.h>
 #include <sys/stat.h>
+#include "FileAttr.h"
 #include "../RandomChannel.h"
 #include "container/SString.h"
 #include "FileEntry.h"
 
 namespace anarion {
-class FileChannel : public RandomChannel, public FileEntry {
+
+/**
+ * @details
+ * This class is soley devoted to operations on file descriptors.
+ * Other operations on files may be provided by the file system. These are not provided by this class if it does not operate on a file descriptor.
+ *
+ * @details
+ * According to APUE, the UNIX syscalls on a file descriptor includes the following and no more:
+ * open creat close lseek read write dup sync fcntl ioctl
+ */
+class FileChannel : public RandomChannel/*, public FileEntry*/ {
+    using flag_t = int;
 protected:
     int fd = -1;
-    struct stat statInfo;
     flag_t oflags;
+    Path path;
+
+    void checkIsOpen() const ;
 
 public:
 
     FileChannel(anarion::Path &&path, flag_t oflags);
-    FileChannel(FileChannel &&rhs) noexcept ;
-    explicit FileChannel(const SString &dir);
-    FileChannel(SString &&name, int fd, flag_t oflags = O_RDWR | O_CREAT);
+
+    /**
+     * @details Direct wrapping of syscall open.
+     * @param dir File directory
+     * @param oflag Open flag
+     * @details Optional param mode is ommitted.
+     */
     FileChannel(const SString &dir, int oflag);
-    FileChannel(const SString &dir, int oflag, int perm);
-    ~FileChannel() override ;
 
-    static FileChannel open(const SString &dir);
+    /**
+     * @details This destructor does not make syscall close, which must be called explicitly by the user. This destructor release the object's attributes, if there is any to be released.
+     */
+    ~FileChannel() override;
+
+    FileChannel(FileChannel &&rhs) noexcept ;
+
     // open create close
+    /**
+     * @details Direct wrapping of syscall open, taking params from attributes initialized in constructors. Do not use this for file creation, instead of another method create.
+     */
     void open() override;
-    void open(perm_t perm);
-    void create(perm_t perm) override ;
-    void close() override;
-    bool isOpen() const override ;
 
+    /**
+     * @details Direct wrapping of syscall create.
+     * @param mode
+     */
+    void create(mode_t mode);
+
+    /**
+     * @details Direct wrapping of syscall close. This method is not called by the destructor, therefore must be called explicitly.
+     */
+    void close() override;
+
+    bool isOpen() const;
+
+    /**
+     * @return Current value of file descriptor
+     */
     int getFd() const { return fd; }
+
+    /**
+     * @param _fd Sets file descriptor value
+     */
     void setFd(int _fd) { fd = _fd; }
+
+    Path &getPath() { return path; }
+    const Path &getPath() const { return path; }
 
     // read/write
     size_type in(const char *p, size_type nbytes) override;
-    size_type in(Buffer &buffer) override;
-    size_type in(Buffer &buffer, size_type nbytes) override;
     size_type out(char *p, size_type nbytes) override;
-    Buffer out(size_type nbytes) override;
-    Buffer out() override ;
 
     // change operating offset
-    void rewind() override;
-    void set_append() override;
-    void move_forth(size_type nbytes) override;
-    void move_back(size_type nbytes) override;
-    void set_cursor(size_type index) override ;
-
-    // remove/move/rename
-    void remove() override ;
-    void move(const SString &newPath) override ;
-    void rename(const SString &newName) override ;
+    void resetCursor() override;
+    void setCursorAppend() override;
+    void moveForthCursor(size_type nbytes) override;
+    void moveBackCursor(size_type nbytes) override;
+    void setCursor(size_type index) override;
 
     // sync
-    void sync() override ;
+    /**
+     * @details Direct wrapping of syscall fsync
+     */
+    void sync();
 
     // fetch attributes
-    void fetchAttributes() override ;
-    const struct stat &getAttributes() const override ;
-
-    // symbolic/hard links
-    void symlink(const SString &linkPath) override ;
-    void hardlink(const SString &linkPath) override ;
-
-    // times
-    Time getLastAccessTime() override ;
-    Time getLastModifyTime() override ;
-    Time getLastStatusChangeTime() override ;
-
-    // permissions
-    void changePermission(int perm) override ;
-    bool hasPermission(perm_t perm) override ;
+    FileAttr getAttributes() const ;
 
     // sizes
-    size_type size() const override ;
+    size_type size() const override;
 
     // entry type
-    bool isFile() const override { return true; }};
+    //bool isFile() const override { return true; }};
+};
 }
 
 #endif // FILECHANNEL_H

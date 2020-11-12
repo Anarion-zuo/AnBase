@@ -8,14 +8,11 @@
 #include "Channel.h"
 
 namespace anarion {
-    class InChannel;
+//    class InChannel;
     class OutChannel : virtual public Channel {
     public:
         virtual size_type out(char *p, size_type nbytes) = 0;
-        virtual Buffer out(size_type nbytes) = 0;
-        virtual Buffer out() = 0;
-
-        void transferTo(InChannel &dst);
+        virtual void closeOut() = 0;
     };
 
 }

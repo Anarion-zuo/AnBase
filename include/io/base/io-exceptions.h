@@ -8,17 +8,30 @@
 #include <exception>
 #include <SystemException.h>
 
+struct InvalidIoOperations : std::exception {
+    const char *callingFunctionName;
+
+    explicit InvalidIoOperations(const char *callingFunctionName) : callingFunctionName(callingFunctionName) {}
+
+    const char *what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW override {
+        return callingFunctionName;
+    }
+};
+
 struct InvalidIOParameters : std::exception {};
 
 class FdWriteFailed : public SystemException {};
 class FdReadFailed : public SystemException {};
 class OpenFdFailed : public SystemException {};
+class CreatFailed : public SystemException {};
 class FsyncFailed : public SystemException {};
 class LinkFailed : public SystemException {};
 class StatFailed : public SystemException {};
 class RenameFailed : public SystemException {};
 class ChmodFailed : public SystemException {};
+class ChownFailed : public SystemException {};
 struct RemoveFileFailed : public SystemException {};
+struct FileOperationOnNotOpened : public SystemException {};
 
 struct DirectoryException : public SystemException {};
 struct DirectoryOpenFailed : public DirectoryException {};
