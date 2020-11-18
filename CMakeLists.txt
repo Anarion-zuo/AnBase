@@ -71,6 +71,9 @@ set(ANBASE_OBJS
         parser/json/JsonString
         parser/json/JsonBoolean
         parser/json/parse-json
+        parser/regular/RegularExpression
+        parser/regular/CharNFA
+
         logger/Logger
         time/Time
         time/Date
