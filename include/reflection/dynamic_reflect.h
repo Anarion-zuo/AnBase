@@ -20,5 +20,16 @@ template <typename T> struct reflector_trait {
 
     }
 };
+
+template <typename Class, typename Attr>
+unsigned int offsetofClass(typename Class::Attr *attrPointer) {
+    char space[sizeof(Class)];
+    Class &objRef = *static_cast<Class*>(space);
+    return static_cast<char *>(&objRef.*attrPointer) - space;
+}
+
+class Reflected {
+
+};
 }
 #endif //MYCPPBASE_DYNAMIC_REFLECT_H

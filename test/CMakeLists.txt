@@ -12,10 +12,13 @@ add_executable(gtests
         containers/TestTuple.cpp
         containers/TestHashSet.cpp
 
-#        file/TestFileChannel.cpp
+        file/TestFileChannel.cpp
 
         concurrent/TestRoutine.cpp
         concurrent/TestThread.cpp
+
+        reflector/TestStaticReflector.cpp
+        reflector/TestDynamicReflector.cpp
         )
 
 # platform derivation
