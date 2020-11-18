@@ -91,7 +91,7 @@ anarion::size_type anarion::FileChannel::out(char *p, size_type nbytes) {
 
 void anarion::FileChannel::open() {
     close();
-    fd = ::open(path.getString().cstr(), oflags);
+    fd = ::open(path.getString().cstr(), oflags.getOpenFlag());
     if (fd < 0) {
         throw OpenFdFailed();
     }
@@ -204,11 +204,27 @@ anarion::Time anarion::FileChannel::getLastStatusChangeTime() {
 anarion::FileChannel::FileChannel(anarion::FileChannel &&rhs) noexcept
     : path(move(rhs.path)), oflags(rhs.oflags), fd(rhs.fd) {
     rhs.fd = -1;
-    rhs.oflags = 0;
+    rhs.oflags.clear();
 }
 
 void anarion::FileChannel::checkIsOpen() const {
     if (!isOpen()) {
         throw FileOperationOnNotOpened();
     }
+}
+
+int anarion::FileChannel::callFcntl(int cmd) const {
+    int ret = fcntl(fd, cmd);
+    if (ret < 0) {
+        throw FcntlException();
+    }
+    return ret;
+}
+
+int anarion::FileChannel::callFcntl(int cmd, int arg) const {
+    int ret = fcntl(fd, cmd, arg);
+    if (ret < 0) {
+        throw FcntlException();
+    }
+    return ret;
 }

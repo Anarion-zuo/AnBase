@@ -8,6 +8,7 @@
 #include "../RandomChannel.h"
 #include "container/SString.h"
 #include "FileEntry.h"
+#include "FileOpenFlag.h"
 
 namespace anarion {
 
@@ -24,10 +25,14 @@ class FileChannel : public RandomChannel/*, public FileEntry*/ {
     using flag_t = int;
 protected:
     int fd = -1;
-    flag_t oflags;
+    FileOpenFlag oflags;
     Path path;
 
     void checkIsOpen() const ;
+
+    int callFcntl(int cmd) const;
+    int callFcntl(int cmd, int arg) const;
+
 
 public:
 
@@ -105,6 +110,8 @@ public:
 
     // entry type
     //bool isFile() const override { return true; }};
+
+    // fcntl
 };
 }
 
