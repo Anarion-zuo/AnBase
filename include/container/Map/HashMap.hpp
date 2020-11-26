@@ -103,6 +103,9 @@ namespace anarion {
 
 
         typename parent::iterator find(const K &key) const {
+            if (this->size() == 0) {
+                return this->end_iterator();
+            }
             hash_type hash_val;
             typename parent::hash_node *head_node, *prev;
             size_type head_index;
