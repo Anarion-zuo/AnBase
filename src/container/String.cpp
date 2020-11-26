@@ -253,8 +253,10 @@ SString SString::parseDec(size_type num) {
     SString ret;
     ret.begin = s;
     ret.cur = s + len;
-    ret.end = s + 21;
+    ret.end = s + 22;
     ret.hash();
+    *ret.cur = '\0';
+    ret.cur++;
     return ::move(ret);
 }
 
@@ -264,8 +266,10 @@ SString SString::parseDec(long num) {
     SString ret;
     ret.begin = s;
     ret.cur = s + len;
-    ret.end = s + 21;
+    ret.end = s + 22;
     ret.hash();
+    *ret.cur = '\0';
+    ret.cur++;
     return ::move(ret);
 }
 
@@ -275,8 +279,10 @@ SString SString::parseDec(int num) {
     SString ret;
     ret.begin = s;
     ret.cur = s + len;
-    ret.end = s + 21;
+    ret.end = s + 22;
     ret.hash();
+    *ret.cur = '\0';
+    ret.cur++;
     return ::move(ret);
 }
 
