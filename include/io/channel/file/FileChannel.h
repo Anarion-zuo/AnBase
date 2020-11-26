@@ -37,6 +37,7 @@ protected:
 public:
 
     FileChannel(anarion::Path &&path, flag_t oflags);
+    FileChannel(Path &&path, FileOpenFlag oflags);
 
     /**
      * @details Direct wrapping of syscall open.
@@ -58,6 +59,7 @@ public:
      * @details Direct wrapping of syscall open, taking params from attributes initialized in constructors. Do not use this for file creation, instead of another method create.
      */
     void open() override;
+    void open(mode_t mode);
 
     /**
      * @details Direct wrapping of syscall create.

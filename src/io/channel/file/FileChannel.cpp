@@ -96,6 +96,14 @@ void anarion::FileChannel::open() {
         throw OpenFdFailed();
     }
 }
+
+void anarion::FileChannel::open(mode_t mode) {
+    close();
+    fd = ::open(path.getString().cstr(), oflags.getOpenFlag(), mode);
+    if (fd < 0) {
+        throw OpenFdFailed();
+    }
+}
 /*
 void anarion::FileChannel::remove() {
     close();
@@ -227,4 +235,9 @@ int anarion::FileChannel::callFcntl(int cmd, int arg) const {
         throw FcntlException();
     }
     return ret;
+}
+
+anarion::FileChannel::FileChannel(anarion::Path &&path, anarion::FileOpenFlag oflags)
+    : path(forward<Path>(path)), oflags(oflags) {
+
 }
