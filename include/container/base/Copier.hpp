@@ -9,6 +9,7 @@
 #include <new>
 
 #include "type_trait.hpp"
+#include "container_utility.hpp"
 
 namespace anarion {
 
