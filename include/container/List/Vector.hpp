@@ -483,6 +483,9 @@ namespace anarion {
          * @details moves all elements starting at given index to the right by num.
          */
         void insertPrepare(size_type index, size_type num) {
+            if (num == 0) {
+                return;
+            }
             if (capacity() == 0) {
                 if (index != 0) { throw IndexOutOfRange(); }
                 resize(num + 1);
