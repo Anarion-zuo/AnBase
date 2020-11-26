@@ -349,7 +349,17 @@ namespace anarion {
             return head.prev->obj;
         }
 
+        const T &back() const {
+            if (empty()) { throw EmptyContainer(); }
+            return head.prev->obj;
+        }
+
         T &front() {
+            if (empty()) { throw EmptyContainer(); }
+            return head.next->obj;
+        }
+
+        const T &front() const {
             if (empty()) { throw EmptyContainer(); }
             return head.next->obj;
         }
