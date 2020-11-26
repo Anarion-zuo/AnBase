@@ -17,20 +17,26 @@ protected:
     BufferManager bufferManager;
     const pageoff_t pageSize;
 
+public:
     static const pageno_t pagenoNull = -1;
+protected:
+    struct BlockInfo {
+        blockno_t blockno;
+        blockoff_t blockoff;
+
+        BlockInfo(blockno_t blockno, blockoff_t blockoff)
+            : blockno(blockno), blockoff(blockoff) {}
+    };
+    const BlockInfo blockOffset;
 
     struct PageInfo {
-        static const bufferno_t buffernoNull = -1;
-        static const blockno_t blocknoNull = -1;
-
-        bufferno_t bufferno = buffernoNull;
-        blockno_t blockno = blocknoNull;
-        blockoff_t blockoff = 0;
+        bufferno_t bufferno = BufferManager::null;
+        BlockInfo blockInfo { FileBlockManager::null, 0 };
         bool isDirty : 1;
         bool isPresent : 1;
 
-        bool nullBuffer() const { return buffernoNull == bufferno; }
-        bool nullBlock() const { return blocknoNull == blockno; }
+        bool nullBuffer() const { return BufferManager::null == bufferno; }
+        bool nullBlock() const { return FileBlockManager::null == blockInfo.blockno; }
         void setNullBuffer(PageManager *pageManager);
         bool hasBuffer(PageManager *pageManager, pageno_t pageno) const ;
 
@@ -41,22 +47,25 @@ protected:
     };
 
     Vector<PageInfo> pageInfos;
-    void initBlocks();
+    void initBlockOffsets();
 
     PageInfo &getPage(pageno_t pageno);
 
     void warmPage(pageno_t pageno);
-    void evictPage(pageno_t pageno);
 
 public:
     constexpr pageno_t getPageCount() const { return pageInfos.size(); }
     constexpr size_type getTotalSize() const { return getPageCount() * pageSize; }
     constexpr pageoff_t getPageSize() const { return pageSize; }
 
-    PageManager(FileBlockManager *blockManager, pageoff_t pageSize, pageno_t pageInitCount, bufferno_t bufferInitCount);
+    PageManager(FileBlockManager *blockManager, BlockInfo blockInfo, pageoff_t pageSize, pageno_t pageInitCount,
+                bufferno_t bufferInitCount);
+    ~PageManager();
 
     void read(pageno_t pageno, pageoff_t pageoff, char *buffer, size_type length);
     void write(pageno_t pageno, pageoff_t pageoff, const char *buffer, size_type length);
+    void evictPage(pageno_t pageno);
+    void flushAll();
 
 struct Exception : public std::exception {};
 struct PageNotBackedByBlock : public Exception {};

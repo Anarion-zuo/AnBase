@@ -4,18 +4,14 @@
 
 #include "data/db/PageManager.h"
 
-anarion::db::PageManager::PageManager(
-        anarion::db::FileBlockManager *blockManager,
-        anarion::db::pageoff_t pageSize,
-        anarion::db::pageno_t pageInitCount,
-        anarion::db::bufferno_t bufferInitCount
-        ) :
+anarion::db::PageManager::PageManager(FileBlockManager *blockManager, BlockInfo blockInfo, pageoff_t pageSize, pageno_t pageInitCount, bufferno_t bufferInitCount) :
         blockManager(blockManager),
+        blockOffset(blockInfo),
         bufferManager(pageSize, bufferInitCount),
         pageSize(pageSize),
         pageInfos(pageInitCount, PageInfo())
 {
-    initBlocks();
+    initBlockOffsets();
 }
 
 anarion::db::PageManager::PageInfo &
@@ -33,8 +29,16 @@ void anarion::db::PageManager::evictPage(anarion::db::pageno_t pageno) {
     getPage(pageno).setNullBuffer(this);
 }
 
-void anarion::db::PageManager::initBlocks() {
-
+void anarion::db::PageManager::initBlockOffsets() {
+    BlockInfo blockInfo = blockOffset;
+    for (pageno_t pageno = 0; pageno < getPageCount(); ++pageno) {
+        getPage(pageno).blockInfo = blockInfo;
+        blockInfo.blockoff += pageSize;
+        if (blockInfo.blockoff > blockManager->getBlockSize()) {
+            ++blockInfo.blockno;
+            blockInfo.blockoff = 0;
+        }
+    }
 }
 
 void anarion::db::PageManager::read(
@@ -46,6 +50,7 @@ void anarion::db::PageManager::read(
         throw IndexOutOfRange();
     }
     memcpy(buffer, bufferManager.getBufferAddress(getPage(pageno).bufferno) + pageoff, length);
+    bufferManager.unpin(getPage(pageno).bufferno);
 }
 
 void anarion::db::PageManager::write(
@@ -58,18 +63,29 @@ void anarion::db::PageManager::write(
     }
     getPage(pageno).isDirty = true;
     memcpy(bufferManager.getBufferAddress(getPage(pageno).bufferno) + pageoff, buffer, length);
+    bufferManager.unpin(getPage(pageno).bufferno);
+}
+
+void anarion::db::PageManager::flushAll() {
+    for (size_type index = 0; index < getPageCount(); ++index) {
+        getPage(index).flush(this);
+    }
+}
+
+anarion::db::PageManager::~PageManager() {
+    flushAll();
 }
 
 void anarion::db::PageManager::PageInfo::load(PageManager *pageManager, pageno_t pageno) {
     if (hasBuffer(pageManager, pageno)) {
 
     } else {
-        bufferno = pageManager->bufferManager.getFreePin(pageno);
+        bufferno = pageManager->bufferManager.allocatePinned(pageno, nullptr);
 //    pageManager->bufferManager.setPageno(bufferno, pageno);
     }
     if (!isPresent) {
         pageManager->blockManager->out(
-                blockno, blockoff,
+                blockInfo.blockno, blockInfo.blockoff,
                 pageManager->bufferManager.getBufferAddress(bufferno),
                 pageManager->pageSize
         );
@@ -84,7 +100,7 @@ void anarion::db::PageManager::PageInfo::flush(PageManager *pageManager) {
     }
     if (isDirty) {
         pageManager->blockManager->in(
-                blockno, blockoff,
+                blockInfo.blockno, blockInfo.blockoff,
                 pageManager->bufferManager.getBufferAddress(bufferno),
                 pageManager->pageSize
                 );
@@ -93,7 +109,7 @@ void anarion::db::PageManager::PageInfo::flush(PageManager *pageManager) {
 
 void anarion::db::PageManager::PageInfo::setNullBuffer(PageManager *pageManager) {
     pageManager->bufferManager.setPageno(bufferno, pagenoNull);
-    bufferno = buffernoNull;
+    bufferno = BufferManager::null;
 }
 
 bool anarion::db::PageManager::PageInfo::hasBuffer(PageManager *pageManager, pageno_t pageno) const {

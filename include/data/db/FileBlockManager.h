@@ -12,6 +12,8 @@ namespace anarion {
 namespace db {
 
 class FileBlockManager {
+public:
+    static const blockno_t null = -1;
 protected:
     Vector<FileChannel *> blockFiles;
     size_type blockSize;
