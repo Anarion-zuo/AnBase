@@ -2,7 +2,7 @@
 // Created by anarion on 11/25/20.
 //
 
-#include "data/db/FileBlockManager.h"
+#include "data/db/storage/FileBlockManager.h"
 
 anarion::db::FileBlockManager::FileBlockManager(anarion::size_type blockSize, blockno_t blockInitCount)
 :    blockSize(blockSize), blockFiles(blockInitCount) {

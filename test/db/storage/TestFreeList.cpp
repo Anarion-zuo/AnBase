@@ -3,7 +3,7 @@
 //
 
 #include <gtest/gtest.h>
-#include <data/db/FreeList.hpp>
+#include <data/db/storage/FreeList.hpp>
 
 using namespace anarion;
 using namespace anarion::db;

@@ -3,7 +3,7 @@
 //
 
 #include <gtest/gtest.h>
-#include <data/db/LruList.h>
+#include <data/db/storage/LruList.h>
 
 using namespace anarion;
 using namespace anarion::db;

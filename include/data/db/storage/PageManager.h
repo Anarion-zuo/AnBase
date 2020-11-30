@@ -24,8 +24,15 @@ protected:
         blockno_t blockno;
         blockoff_t blockoff;
 
-        BlockInfo(blockno_t blockno, blockoff_t blockoff)
-            : blockno(blockno), blockoff(blockoff) {}
+        BlockInfo(blockno_t blockno, blockoff_t blockoff) : blockno(blockno), blockoff(blockoff) {}
+
+        size_type totalOffset(const FileBlockManager &blockManager) const {
+            return blockManager.getBlockSize() * blockno + blockoff;
+        }
+
+        bool isOutOfRange(const FileBlockManager &blockManager) const {
+            return totalOffset(blockManager) >= blockManager.getTotalSize();
+        }
     };
     const BlockInfo blockOffset;
 
@@ -41,19 +48,23 @@ protected:
         bool hasBuffer(PageManager *pageManager, pageno_t pageno) const ;
 
         void load(PageManager *pageManager, pageno_t pageno);
-        void flush(PageManager *pageManager);
+        void flush(PageManager *pageManager) const;
 
         PageInfo() : isDirty(false), isPresent(false) {}
     };
 
     Vector<PageInfo> pageInfos;
     void initBlockOffsets();
+    bool offset2info(size_type offset, BlockInfo &blockInfo, pageno_t &pageno, pageoff_t &pageoff) const ;
+    bool offset2PageInfo(size_type offset, pageno_t &pageno, pageoff_t &pageoff) const ;
+    bool offset2BlockInfo(size_type offset, BlockInfo &blockInfo) const ;
 
     PageInfo &getPage(pageno_t pageno);
 
     void warmPage(pageno_t pageno);
 
 public:
+
     constexpr pageno_t getPageCount() const { return pageInfos.size(); }
     constexpr size_type getTotalSize() const { return getPageCount() * pageSize; }
     constexpr pageoff_t getPageSize() const { return pageSize; }
@@ -63,12 +74,15 @@ public:
     ~PageManager();
 
     void read(pageno_t pageno, pageoff_t pageoff, char *buffer, size_type length);
+    void read(size_type offset, char *buffer, size_type length);
     void write(pageno_t pageno, pageoff_t pageoff, const char *buffer, size_type length);
+    void write(size_type offset, const char *buffer, size_type length);
     void evictPage(pageno_t pageno);
     void flushAll();
 
 struct Exception : public std::exception {};
 struct PageNotBackedByBlock : public Exception {};
+struct PageIndexOutOfRange : public Exception {};
 };
 
 }

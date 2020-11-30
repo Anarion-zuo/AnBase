@@ -3,7 +3,7 @@
 //
 
 #include <gtest/gtest.h>
-#include <data/db/PageManager.h>
+#include <data/db/storage/PageManager.h>
 
 using namespace anarion;
 using namespace anarion::db;
@@ -26,7 +26,7 @@ TEST(TestPage, TestSimpleRW) {
 
 TEST(TestPage, TestHugeRW) {
     size_type blockSize = 40960, pageSize = 4096, pageCount = 10, bufferCount = 2;
-    FileBlockManager *blockManager = new FileBlockManager(Path(SString("./TestPageDB")), blockSize, 1);
+    FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, 1);
     PageManager pageManager(blockManager, {0, 0}, pageSize, pageCount, bufferCount);
 
     const size_type stringLength = 4096;

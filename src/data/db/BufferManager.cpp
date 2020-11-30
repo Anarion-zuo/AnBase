@@ -2,8 +2,8 @@
 // Created by anarion on 11/25/20.
 //
 
-#include "data/db/BufferManager.h"
-#include "data/db/PageManager.h"
+#include "data/db/storage/BufferManager.h"
+#include "data/db/storage/PageManager.h"
 
 anarion::db::BufferManager::BufferManager(anarion::db::bufferoff_t bufferSize, anarion::db::bufferno_t bufferInitCount)
     : bufferSize(bufferSize),

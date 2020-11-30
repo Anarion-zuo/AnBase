@@ -28,6 +28,7 @@ public:
     ~FileBlockManager();
 
     constexpr size_type getBlockSize() const { return blockSize; }
+    constexpr blockno_t getBlockCount() const { return blockFiles.size(); }
     constexpr size_type getTotalSize() const { return getBlockSize() * blockFiles.size(); }
 
     void out(blockno_t blockno, blockoff_t offset, char *buffer, size_type length);
