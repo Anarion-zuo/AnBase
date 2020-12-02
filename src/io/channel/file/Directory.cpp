@@ -90,15 +90,15 @@ anarion::Buffer anarion::Directory::out() {
     throwInvalidOperation();
 }
 
-void anarion::Directory::move_forth(anarion::size_type steps) {
+void anarion::Directory::moveForthCursor(anarion::size_type steps) {
     throwInvalidOperation();
 }
 
-void anarion::Directory::move_back(anarion::size_type steps) {
+void anarion::Directory::moveBackCursor(anarion::size_type steps) {
     throwInvalidOperation();
 }
 
-void anarion::Directory::set_cursor(anarion::size_type index) {
+void anarion::Directory::setCursor(anarion::size_type index) {
     throwInvalidOperation();
 }
 #pragma endregion

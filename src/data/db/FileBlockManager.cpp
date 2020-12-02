@@ -15,7 +15,7 @@ void anarion::db::FileBlockManager::allocateNewBlockFile(const Path &dir) {
     oflag.setReadWrite();
     oflag.setCreateIfNotExists();
     FileChannel *channel = new FileChannel(Path::combine(dir, Path(SString::parseDec(blockno))), oflag);
-    blockFiles.push_back(channel);
+    blockFiles.pushBack(channel);
     channel->open(S_IRWXU);
 }
 

@@ -120,7 +120,7 @@ namespace db {
             index_t newBegin = size();
             list.resize(newBegin + count);
             for (size_type index = 0; index < count; ++index) {
-                list.push_back(null);
+                list.pushBack(null);
             }
             makeContinuous(newBegin, count);
             list.get(count + newBegin - 1) = head;

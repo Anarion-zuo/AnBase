@@ -18,7 +18,7 @@ anarion::Path::Path(const anarion::SString &pathString)
     switch (pathString.get(0)) {
         case '/':
             // absolute path
-            pathList.remove(pathList.begin_iterator());
+            pathList.remove(pathList.beginIterator());
             isAbsolute = true;
             break;
         default:

@@ -44,9 +44,9 @@ namespace anarion {
         Buffer out() override ;
 
         // change operating offset
-        void move_forth(size_type steps) override ;
-        void move_back(size_type steps) override ;
-        void set_cursor(size_type index) override ;
+        void moveForthCursor(size_type steps) override ;
+        void moveBackCursor(size_type steps) override ;
+        void setCursor(size_type index) override ;
 
         // sizes
         size_type size() const override ;
