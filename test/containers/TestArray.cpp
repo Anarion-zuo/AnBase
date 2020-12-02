@@ -8,5 +8,7 @@
 using namespace anarion;
 
 TEST(TestArray, TestInit) {
-
+    Array<uint16_t> array(10);
+    array.pushBack(1);
+    ASSERT_EQ(1, array.popBack());
 }

@@ -609,7 +609,7 @@ namespace anarion {
         }
 
         void remove(iterator it) {
-            copyForwardExpand(it - begin, 1);
+            remove(it - begin);
         }
 
         void remove(iterator b, iterator e) {
@@ -623,6 +623,7 @@ namespace anarion {
         void remove(size_type index, size_type length) {
             checkIndexOutOfRange(index);
             if (length == 0) { return; }
+            checkUnderflow(length);
             checkIndexOutOfRange(index + length);
             copyForwardExpand(index + length, length);
 //            if (size() < oldsize / 3) {

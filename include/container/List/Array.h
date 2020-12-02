@@ -19,7 +19,7 @@ struct UnderFlow : public Exception {};
 struct IndexOutOfRange : public Exception {};
 
     T *head, *cur;
-    const size_type count;
+    size_type count;
 
     void checkIndexOutOfRange(size_type index) const {
         if (index >= size()) {
@@ -47,18 +47,29 @@ struct IndexOutOfRange : public Exception {};
 
 public:
     explicit Array(size_type count) :
-    count(count), head(static_cast<T *>(operator new(count * sizeof(T)))) {
+    count(count), head(static_cast<T *>(operator new(count * sizeof(T)))), cur(head) {
     }
 
     Array(size_type count, const T &obj) : Array(count) {
         for (size_type index = 0; index < count; ++index) {
             new (&this->head[index]) T(obj);
         }
+        cur = head + count;
+    }
+
+    Array(const Array<T> &rhs) : Array(rhs.count) {
+        Copier<T>().copy(head, rhs.head, count);
+    }
+
+    Array(Array<T> &&rhs) noexcept : count(rhs.count), head(rhs.head), cur(rhs.cur) {
+        rhs.head = nullptr;
+        rhs.cur = nullptr;
+        rhs.count = 0;
     }
 
     ~Array() {
         clear();
-        operator delete (head, count);
+        operator delete (head, count * sizeof(T));
     }
 
     constexpr bool empty() const { return cur == head; }
@@ -68,6 +79,28 @@ public:
     void clear() {
         Copier<T>().clearSpace(head, size());
         cur = head;
+    }
+
+    void resize(size_type newSize) {
+        if (newSize == count) {
+            return;
+        }
+        // allocate
+        T *newBegin = static_cast<T*>(operator new(newSize * sizeof(T)));
+        // determine parameters
+        size_type copiedLength;
+        if (newSize > count) {
+            copiedLength = count;
+        } else {
+            copiedLength = newSize;
+        }
+        // act!
+        Copier<T>().move(newBegin, head, copiedLength);
+        Copier<T>().clearSpace(head, size());
+        // update attributes
+        head = newBegin;
+        cur = newBegin + copiedLength;
+        count = newSize;
     }
 
     T &get(size_type index) {
@@ -108,7 +141,7 @@ public:
 
 protected:
     void insertPrepare(size_type index, size_type insertLength) {
-        checkOverflow();
+        checkOverflow(insertLength);
         Copier<T>().moveBackward(head, size(), index, insertLength);
     }
 
@@ -155,12 +188,13 @@ public:
 protected:
     void removePrepare(size_type index, size_type removeLength) {
         checkUnderflow(removeLength);
-        Copier<T>().moveForward(head, size(), index, removeLength);
+        Copier<T>().moveForward(head, size(), index + removeLength, removeLength);
     }
 
 public:
     iterator remove(size_type index) {
         removePrepare(index, 1);
+        --cur;
         return head + index;
     }
 
@@ -170,6 +204,7 @@ public:
 
     iterator remove(size_type begin, size_type length) {
         removePrepare(begin, length);
+        cur -= length;
         return head + begin;
     }
 

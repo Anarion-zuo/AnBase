@@ -167,6 +167,9 @@ namespace anarion {
             if (length == 0) {
                 return;
             }
+            if (steps == 0) {
+                return;
+            }
             length -= begin;
             copiedType *dst = p + begin - steps, *src = p + begin;
             size_type times = length / steps, more = length % steps;
