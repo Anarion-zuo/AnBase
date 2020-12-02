@@ -113,16 +113,17 @@ namespace anarion {
                 while (true) {
                     if (end >= srcLength) {
                         length = srcLength - begin;
+                        clearSpace(dst + begin, length);
                         move(dst + begin, src + begin, length);
-                        clearSpace(src + begin, length);
                         break;
                     }
+                    clearSpace(dst + begin, length);
                     move(dst + begin, src + begin, length);
-                    clearSpace(src + begin, length);
                     begin = end;
                     end = begin + length;
                 }
                 // the rest unoverlapped
+                clearSpace(dst + overlappedLength, unoverlappedLength);
                 move(dst + overlappedLength, src + overlappedLength, unoverlappedLength);
             } else if (src <= dst) {
                 if (src + srcLength < dst) {
@@ -135,20 +136,80 @@ namespace anarion {
                     if (begin <= unoverlappedLength) {
                         begin = unoverlappedLength;
                         length = end - begin;
+                        clearSpace(dst + begin, length);
                         move(dst + begin, src + begin, length);
-                        clearSpace(src + begin, length);
                         break;
                     }
+                    clearSpace(dst + begin, length);
                     move(dst + begin, src + begin, length);
-                    clearSpace(src + begin, length);
                     end = begin;
                     begin = end - length;
                 }
                 // the rest unoverlapped
+                clearSpace(dst, unoverlappedLength);
                 move(dst, src, unoverlappedLength);
             } else {
+                // src == dst
                 return;
             }
+        }
+
+        /**
+         * @brief Moves objects inside an array forwards within the same array.
+         * @param p head pointer of the array.
+         * @param length length of the array.
+         * @param begin begin index to be moved forwards.
+         * @param steps objective displacement.
+         *
+         * @details This method is used as a mean of shrinking address space. After this calling, the array would find spare raw space at the end of itself.
+         */
+        void moveForward(copiedType *p, size_type length, size_type begin, size_type steps) {
+            if (length == 0) {
+                return;
+            }
+            length -= begin;
+            copiedType *dst = p + begin - steps, *src = p + begin;
+            size_type times = length / steps, more = length % steps;
+            for (size_type time = 0; time < times; ++time) {
+                clearSpace(dst, steps);
+                move(dst, src, steps);
+                dst += steps;
+                src += steps;
+            }
+            clearSpace(dst, more);
+            move(dst, src, more);
+            clearSpace(dst + more, steps);
+        }
+        /**
+         * @brief Moves objects inside an array backwards within the same array. The array must have spare raw space at the end.
+         * @param p head pointer of the array.
+         * @param length length of the array.
+         * @param begin begin index to be moved forwards.
+         * @param steps objective displacement.
+         *
+         * @details This method is used as a mean of moving the spare raw space at the end of a continuous address space to the middle of it.
+         */
+        void moveBackward(copiedType *p, size_type length, size_type begin, size_type steps) {
+            if (length == 0) {
+                return;
+            }
+            length -= begin;
+            copiedType *dst = p + length, *src = p + length - steps;
+            move(dst, src, steps);
+            dst -= steps;
+            src -= steps;
+            size_type times = length / steps, more = length % steps;
+            for (size_type time = 0; time < times - 1; ++time) {
+                clearSpace(dst, steps);
+                move(dst, src, steps);
+                dst -= steps;
+                src -= steps;
+            }
+            dst += steps - more;
+            src += steps - more;
+            clearSpace(dst, more);
+            move(dst, src, more);
+            clearSpace(src, steps);
         }
 
     protected:

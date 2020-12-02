@@ -7,7 +7,7 @@
 
 
 #include <cstdlib>
-
+#include <new>
 
 /*
  * underlying allocator needs only provide interface with:

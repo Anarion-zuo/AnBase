@@ -9,6 +9,7 @@ set(TEST_DIR "test")
 # all objects here
 set(ANBASE_OBJS
         allocator/Allocator.cpp
+        allocator/SimpleAllocator.cpp
         allocator/ListConcurrentAllocator.cpp
         allocator/FixedLengthAllocator.cpp
 

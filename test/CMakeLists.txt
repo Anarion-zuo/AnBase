@@ -7,10 +7,14 @@ set(SRC_DIR "../src")
 add_executable(gtests
 
         containers/TestBplusTreeSet.cpp
+        containers/TestArray.cpp
         containers/TestVector.cpp
         containers/TestBplusTreeMap.cpp
         containers/TestTuple.cpp
         containers/TestHashSet.cpp
+        containers/TestCopier.cpp
+        containers/TestProxy.cpp
+        containers/TestBplusTree.cpp
 
         file/TestFileChannel.cpp
 
@@ -19,6 +23,13 @@ add_executable(gtests
 
         reflector/TestStaticReflector.cpp
         reflector/TestDynamicReflector.cpp
+
+        db/storage/TestFreeList.cpp
+        db/storage/TestLruList.cpp
+        db/storage/TestPage.cpp
+        db/TestIndexRangeRegistry.cpp
+
+        log/TestLog.cpp
         )
 
 # platform derivation

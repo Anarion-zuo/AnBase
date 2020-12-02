@@ -9,6 +9,7 @@
 #include "../base/container_utility.hpp"
 #include <iostream>
 #include <container/base/Copier.hpp>
+#include <allocator/SimpleAllocator.h>
 
 namespace anarion {
 
@@ -97,39 +98,80 @@ namespace anarion {
  *      1) This container is fast for operations at the end. Other kinds of operations, although doable, is not supported fully by the nature of *continuous storage*.
  *      2) This container, like all other containers, is not thread-safe, unless explicitly pointed out.
  */
-    template<typename T>
+    template<typename T, typename Allocator = SimpleAllocator>
     class Vector {
+    public:
+        struct Exception : std::exception {};
+        struct IndexOutOfRange : public Exception {};
+        struct Underflow : public Exception {};
     protected:
         T *begin = nullptr, *cur = nullptr, *end = nullptr;
 
-        void expand_push() { resize(size() << 1u); }
+        void expand(size_type newCapacity) { resize(newCapacity); }
+
+        void checkIndexOutOfRange(size_type index) const {
+            if (index >= size()) {
+                throw IndexOutOfRange();
+            }
+        }
+
+        void checkInsertIndexOutOfRange(size_type index) const {
+            if (index > size()) {
+                throw IndexOutOfRange();
+            }
+        }
+
+        void checkUnderflow() const {
+            if (empty()) {
+                throw Underflow();
+            }
+        }
+
+        void checkUnderflow(size_type length) const {
+            if (size() < length) {
+                throw Underflow();
+            }
+        }
+
+        void checkOverflow() {
+            if (size() == capacity()) {
+                expand(size() << 1u);
+            }
+        }
+
+        void checkOverflow(size_type length) {
+            if (size() + length >= capacity()) {
+                expand((size() + length) << 1u);
+            }
+        }
 
         // a hole that must be filled is left
-        void copy_back_expand(size_type index, size_type steps) {
+        void copyBackExpand(size_type index, size_type steps) {
             Copier<T> copier;
             size_type oldsize = size(), oldcap = capacity(), newsize = oldsize + steps;
+            // check whether to expand
             if (newsize > oldcap) {
+                // expand!
                 size_type newcap = newsize << 1ul;
-                T *newbegin = new_space<T>(newcap);
+                T *newbegin = static_cast<T *>(operator new(sizeof(T) * newcap));
                 copier.move(newbegin, begin, index);
                 copier.move(newbegin + index + steps, begin + index, oldsize - index);
+                copier.clearSpace(begin, oldsize);
                 operator delete (begin, oldcap);
                 begin = newbegin;
                 cur = begin + newsize;
                 end = begin + newcap;
                 return;
             }
-            copier.moveOverLap(begin + index + steps, begin + index, oldsize - index);
+            // move without expanding
+            copier.moveBackward(begin, size(), index, steps);
             cur += steps;
         }
 
-        void copy_forward_expand(size_type index, size_type steps) {
+        void copyForwardExpand(size_type index, size_type steps) {
             Copier<T> copier;
-            size_type oldsize = size();
-            if (steps > index) {
-                throw IndexOutOfRange();
-            }
-            copier.moveOverLap(begin + index - steps, begin + index, oldsize - index);
+            checkIndexOutOfRange(index);
+            copier.moveForward(begin, size(), index, steps);
             cur -= steps;
         }
         #pragma endregion
@@ -144,9 +186,9 @@ namespace anarion {
 
         typedef T *iterator;
 
-        iterator begin_iterator() const { return begin; }
-        iterator end_iterator() const { return cur; }
-        bool has_iterator(iterator it) const { return it < cur && it >= begin; }
+        iterator beginIterator() const { return begin; }
+        iterator endIterator() const { return cur; }
+        bool hasIterator(iterator it) const { return it < cur && it >= begin; }
 
         #pragma region ctors_assigns_dtor
         Vector() = default;
@@ -325,43 +367,40 @@ namespace anarion {
         /**
          * @param o add this object to the end of the container by copy constructor.
          */
-        void push_back(const T &o) {
+        void pushBack(const T &o) {
             if (begin == nullptr) {
                 resize(1);
             }
-            if (cur == end) {
-                expand_push();
-            }
+            checkOverflow();
             new(cur++) T(o);
         }
         /**
          * @param o add this object to the end of the container by move constructor.
          */
-        void push_back(T &&o) {
+        void pushBack(T &&o) {
             if (begin == nullptr) {
                 resize(1);
             }
-            if (cur == end) {
-                expand_push();
-            }
+            checkOverflow();
             new(cur++) T(forward<T>(o));
         }
 
         /**
          * @return the last element of the container and remove it from the position.
          */
-        T pop_back() {
-            if (empty()) { throw EmptyContainer(); }
+        T popBack() {
+            checkUnderflow();
             --cur;
-            T &last = *cur;
+            T last = *cur;
+            Copier<T>().clearSpace(cur, 1);
             return move(last);
         }
 
         /**
          * @return the first element of the container and remove it from the position.
          */
-        T pop_front() {
-            if (empty()) { throw EmptyContainer(); }
+        T popFront() {
+            checkUnderflow();
             T ret = move(begin[0]);
             remove(0ul);
             return move(ret);
@@ -371,7 +410,7 @@ namespace anarion {
          * @return element reference at the given index.
          */
         constexpr T &get(size_type index) {
-            if (index >= size()) { throw IndexOutOfRange(); }
+            checkIndexOutOfRange(index);
             return begin[index];
         }
 
@@ -380,7 +419,7 @@ namespace anarion {
          * @details This is the const version, not changing the element from the returned reference.
          */
         constexpr const T &get(size_type index) const {
-            if (index >= size()) { throw IndexOutOfRange(); }
+            checkIndexOutOfRange(index);
             return begin[index];
         }
 
@@ -418,9 +457,9 @@ namespace anarion {
             if (capacity() == 0) {
                 resize(1);
             }
-            if (index > size()) { throw IndexOutOfRange(); }
-//            if (index == size()) { push_back(o); return cur - 1; }
-            copy_back_expand(index, 1);
+            checkInsertIndexOutOfRange(index);
+//            if (index == size()) { pushBack(o); return cur - 1; }
+            copyBackExpand(index, 1);
         };
     public:
         // iterator transformed into index
@@ -483,17 +522,16 @@ namespace anarion {
          * @details moves all elements starting at given index to the right by num.
          */
         void insertPrepare(size_type index, size_type num) {
+            checkInsertIndexOutOfRange(index);
             if (num == 0) {
                 return;
             }
             if (capacity() == 0) {
-                if (index != 0) { throw IndexOutOfRange(); }
                 resize(num + 1);
                 cur += num;
                 return;
             }
-            if (index > size()) { throw IndexOutOfRange(); }
-            copy_back_expand(index, num);
+            copyBackExpand(index, num);
         }
     public:
         /**
@@ -532,16 +570,17 @@ namespace anarion {
          * Inserting one element for multiple times
          */
         iterator insert(iterator it, const T &obj, size_type num) {
+            return insert(it - begin, obj, num);
+        }
+
+        iterator insert(size_type index, const T &obj, size_type num) {
+            checkIndexOutOfRange(index);
             if (capacity() == 0) {
-                size_type oldIndex = it - begin;
                 resize(num + 1);
-                it = begin + oldIndex;
             }
-            if (it > cur) { throw IndexOutOfRange(); }
-            size_type index = it - begin;
-            copy_back_expand(index, num);
-            for (size_type i = index; i < num; ++i) {
-                new(begin + index) T(obj);
+            insertPrepare(index, num);
+            for (iterator it = begin + index; it - begin < num; ++it) {
+                new (it) T(obj);
             }
             return begin + index;
         }
@@ -552,7 +591,7 @@ namespace anarion {
             clear();
             resize(num);
             for (size_type i = 0; i < num; ++i) {
-                push_back(o);
+                pushBack(o);
             }
         }
 
@@ -560,7 +599,7 @@ namespace anarion {
         void assign(I begin, I end) {
             clear();
             while (begin != end) {
-                push_back(*begin);
+                pushBack(*begin);
                 ++begin;
             }
         }
@@ -570,7 +609,7 @@ namespace anarion {
         }
 
         void remove(iterator it) {
-            copy_forward_expand(it - begin);
+            copyForwardExpand(it - begin, 1);
         }
 
         void remove(iterator b, iterator e) {
@@ -582,15 +621,13 @@ namespace anarion {
         }
 
         void remove(size_type index, size_type length) {
+            checkIndexOutOfRange(index);
             if (length == 0) { return; }
-            size_type oldsize = size();
-            if (index >= oldsize || index + length > oldsize) {
-                throw IndexOutOfRange();
-            }
-            copy_forward_expand(index + length, length);
-            if (size() < oldsize / 3) {
-                resize(oldsize / 3);
-            }
+            checkIndexOutOfRange(index + length);
+            copyForwardExpand(index + length, length);
+//            if (size() < oldsize / 3) {
+//                resize(oldsize / 3);
+//            }
         }
         #pragma endregion
 
@@ -625,7 +662,7 @@ namespace anarion {
                 }
                 ++p;
             }
-            return end_iterator();
+            return endIterator();
         }
 
     };
