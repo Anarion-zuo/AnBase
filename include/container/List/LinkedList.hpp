@@ -16,6 +16,9 @@ namespace anarion {
      */
     template<typename T>
     class LinkedList {
+    public:
+        struct Exception : public std::exception {};
+        struct Underflow : public Exception {};
     protected:
         /**
          * @details Node struct of LinkedList class.
@@ -69,6 +72,12 @@ namespace anarion {
             list_node *prev = node->prev, *newnode = new list_node(forward(o), node, prev);
             node->prev = newnode;
             prev->next = newnode;
+        }
+
+        void checkUnderflow() const {
+            if (empty()) {
+                throw Underflow();
+            }
         }
 
     public:
@@ -325,6 +334,7 @@ namespace anarion {
         }
 
         T pop_front() {
+            checkUnderflow();
             list_node *node = head.next;
             T obj{move(node->obj)};
             head.next = node->next;
@@ -335,6 +345,7 @@ namespace anarion {
         }
 
         T pop_back() {
+            checkUnderflow();
             list_node *node = head.prev;
             T obj{move(node->obj)};
             head.prev = node->prev;
@@ -345,26 +356,27 @@ namespace anarion {
         }
 
         T &back() {
-            if (empty()) { throw EmptyContainer(); }
+            checkUnderflow();
             return head.prev->obj;
         }
 
         const T &back() const {
-            if (empty()) { throw EmptyContainer(); }
+            checkUnderflow();
             return head.prev->obj;
         }
 
         T &front() {
-            if (empty()) { throw EmptyContainer(); }
+            checkUnderflow();
             return head.next->obj;
         }
 
         const T &front() const {
-            if (empty()) { throw EmptyContainer(); }
+            checkUnderflow();
             return head.next->obj;
         }
 
         iterator remove(iterator it) {
+            checkUnderflow();
             list_node *prev = it.node->prev, *next = it.node->next;
             prev->next = next;
             next->prev = prev;
@@ -374,6 +386,7 @@ namespace anarion {
         }
 
         void remove(const T &obj) {
+            checkUnderflow();
             list_node *node = head.next;
             while (node != &head) {
                 if (node->obj == obj) {
