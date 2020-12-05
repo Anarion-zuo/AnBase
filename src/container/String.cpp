@@ -400,4 +400,53 @@ void SString::resize(size_type newSize) {
     Vector<char>::resize(newSize + 1);
 }
 
+SString SString::concat(const anarion::Vector<SString> &strings) {
+    size_type length = 0;
+    for (size_type index = 0; index < strings.size(); ++index) {
+        length += strings.get(index).length();
+    }
+    char *strHead = static_cast<char *>(operator new(length + 1));
+    strHead[length] = 0;
+    char *dst = strHead;
+    for (size_type index = 0; index < strings.size(); ++index) {
+        memcpy(dst, strings.get(index).cstr(), strings.get(index).length());
+        dst += strings.get(index).length();
+    }
+    return SString::move(strHead, length + 1);
+}
+
+namespace anarion {
+    namespace parseDecimal {
+
+    }
+}
+
+
+SString SString::parseDec(double num, int floatBitCount) {
+    if (floatBitCount > 16) {
+        // not too large
+        floatBitCount = 16;
+    }
+    size_type integerPart = num;
+    size_type integerBitCount = decIntegerBitCount(integerPart);
+    char buf[integerBitCount + floatBitCount + 1];
+    size_type length = sprintf(buf, "%.*lf", floatBitCount, num);
+    return SString(buf, length);
+}
+
+size_type SString::decIntegerBitCount(size_type num) {
+    size_type ret = 0;
+    while (true) {
+        num /= 10;
+        ++ret;
+        if (num == 0) {
+            break;
+        }
+    }
+    return ret;
+}
+
+SString SString::parseDec(double num) {
+    return parseDec(num, 16);
+}
 

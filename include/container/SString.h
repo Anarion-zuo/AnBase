@@ -98,7 +98,12 @@ namespace anarion {
         static SString parseDec(size_type num);
         static SString parseDec(long num);
         static SString parseDec(int num);
+        static size_type decIntegerBitCount(size_type num);
+        static SString parseDec(double num, int floatBitCount);
+        static SString parseDec(double num);
         static SString parseHex(unsigned long num);
+
+        static SString concat(const Vector<SString> &strings);
     };
 
     template <> struct hash_function<SString> {
