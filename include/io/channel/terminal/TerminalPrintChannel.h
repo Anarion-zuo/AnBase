@@ -14,8 +14,9 @@ namespace anarion {
 
         size_type in(const char *p, size_type nbytes) override;
 
-        size_type in(Buffer &buffer) override;
-        size_type in(Buffer &buffer, size_type nbytes) override;
+        void open() override;
+
+        void closeIn() override;
 
         void close() override;
     };

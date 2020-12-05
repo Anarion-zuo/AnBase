@@ -13,8 +13,10 @@ namespace anarion {
         TerminalScanChannel();
 
         size_type out(char *p, size_type nbytes) override;
-        Buffer out(size_type nbytes) override;
-        Buffer out() override;
+
+        void open() override;
+
+        void closeOut() override;
 
         void close() override;
 

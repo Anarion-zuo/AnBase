@@ -12,16 +12,12 @@ anarion::size_type anarion::TerminalScanChannel::out(char *p, anarion::size_type
     return readn(STDIN_FILENO, p, nbytes);
 }
 
-anarion::Buffer anarion::TerminalScanChannel::out(anarion::size_type nbytes) {
-    Buffer buffer;
-    buffer.append_fd(STDIN_FILENO, nbytes);
-    return move(buffer);
-}
-
-anarion::Buffer anarion::TerminalScanChannel::out() {
-    Buffer buffer;
-    buffer.append_fd(STDIN_FILENO);
-    return move(buffer);
-}
-
 anarion::TerminalScanChannel::TerminalScanChannel() {}
+
+void anarion::TerminalScanChannel::open() {
+
+}
+
+void anarion::TerminalScanChannel::closeOut() {
+
+}
