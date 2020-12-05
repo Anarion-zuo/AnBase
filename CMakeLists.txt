@@ -53,8 +53,8 @@ set(ANBASE_OBJS
         #        io/channel/network/SocketChannel.cpp
         #        io/channel/network/TcpServerSocketChannel.cpp
         #        io/channel/network/TcpSocketChannel.cpp
-        #        io/channel/terminal/TerminalPrintChannel.cpp
-        #        io/channel/terminal/TerminalScanChannel.cpp
+        io/channel/terminal/TerminalPrintChannel.cpp
+        io/channel/terminal/TerminalScanChannel.cpp
         io/fs/FileSystem.cpp
         io/fs/Path.cpp
 
@@ -76,6 +76,10 @@ set(ANBASE_OBJS
         parser/regular/CharNFA.cpp
         parser/regular/RegularParser.cpp
         parser/regular/NFANode.cpp
+
+        serialize/Serializer.cpp
+        serialize/logger/LogEntry.cpp
+        serialize/logger/LogLevel.cpp
 
         logger/Logger.cpp
         time/Time.cpp

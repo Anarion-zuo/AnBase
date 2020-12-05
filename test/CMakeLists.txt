@@ -15,6 +15,7 @@ add_executable(gtests
         containers/TestCopier.cpp
         containers/TestProxy.cpp
         containers/TestBplusTree.cpp
+        containers/TestString.cpp
 
         file/TestFileChannel.cpp
 
@@ -30,6 +31,8 @@ add_executable(gtests
         db/TestIndexRangeRegistry.cpp
 
         log/TestLog.cpp
+
+        time/TestTime.cpp
         )
 
 # platform derivation
