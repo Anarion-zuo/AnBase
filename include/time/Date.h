@@ -9,7 +9,7 @@
 
 namespace anarion {
     class Date {
-        typedef unsigned long sec_type;
+        using sec_type = unsigned long;
         /*
          * Calender time
          * translate time to real-life calender format from precise kernel time
@@ -21,17 +21,18 @@ namespace anarion {
             memset(&calenderTime, 0, sizeof(tm));
         }
 
-        void setCalender(const timespec &kernelTime);  // initialize calenderTime according to kernelTime
-        enum TimeZone { LocalDependent, GMT } timeZone = LocalDependent;
 
     public:
+        enum TimeZone { LocalDependent, GMT } timeZone = LocalDependent;
+
         Date() { setNull(); }
         explicit Date(const Time &timeObj);
 
+        void setCalender(const timespec &kernelTime);  // initialize calenderTime according to kernelTime
         bool isNull();
 
         constexpr const tm &getCalenderHandle() const { return calenderTime; }
-        constexpr void setTimeZone(enum TimeZone zone) { timeZone = zone; }
+        void setTimeZone(enum TimeZone zone);
         void setTime(const Time &time) { setCalender(time.getSpecHandle()); }
 
         // calender
@@ -46,8 +47,8 @@ namespace anarion {
 
         // format
         // man strftime for detailed format instructions
-        SString print(const char *format);
-        SString print();
+        SString print(const char *format) const ;
+        SString print() const ;
     };
 }
 

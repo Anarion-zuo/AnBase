@@ -14,22 +14,22 @@ void anarion::Date::setCalender(const timespec &kernelTime) {
     time_t timet = s;
     tm *tp = nullptr;
     if (timezone == GMT) {
-        tp = localtime(&timet);
-    } else if (timeZone == LocalDependent) {
         tp = gmtime(&timet);
+    } else if (timeZone == LocalDependent) {
+        tp = localtime(&timet);
     } else {
 
     }
     memcpy(&calenderTime, tp, sizeof(tm));
 }
 
-anarion::SString anarion::Date::print(const char *format) {
-    char *ret = static_cast<char *>(operator new(256));
+anarion::SString anarion::Date::print(const char *format) const {
+    char ret[256];
     size_type len = strftime(ret, 256, format, &calenderTime);
-    return SString::move(ret, len);
+    return SString(ret, len);
 }
 
-anarion::SString anarion::Date::print() {
+anarion::SString anarion::Date::print() const {
     // Fir, 01 May 2020 08:55:11 GMT
     return print("%a, %d %b %Y %T %Z");
 }
@@ -46,5 +46,10 @@ bool anarion::Date::isNull() {
 }
 
 anarion::Date::Date(const anarion::Time &timeObj) {
+    setTimeZone(TimeZone::LocalDependent);
     setCalender(timeObj.getSpecHandle());
+}
+
+void anarion::Date::setTimeZone(anarion::Date::TimeZone zone) {
+    timeZone = zone;
 }
