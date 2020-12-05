@@ -85,4 +85,13 @@ anarion::Time &anarion::Time::operator=(anarion::Time &&rhs) noexcept {
     return operator=(rhs);
 }
 
+anarion::Time::Time(const anarion::Time &rhs)
+: kernelTime(rhs.kernelTime), clockid(rhs.clockid) {
+
+}
+
+double anarion::Time::getMsecField() const {
+    return kernelTime.tv_nsec * 1.0e-6;
+}
+
 

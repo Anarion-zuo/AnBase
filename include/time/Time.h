@@ -41,7 +41,7 @@ namespace anarion {
         Time(size_type sec, size_type nsec);
         explicit Time(timespec timespec) : kernelTime(timespec) {}
         explicit Time(time_t msec) : kernelTime({0, msec * 1000000}) {}
-        Time(const Time &) = default;
+        Time(const Time &rhs);
         Time(Time &&) noexcept = default;
 
         Time &operator=(const Time &rhs);
@@ -69,6 +69,7 @@ namespace anarion {
         constexpr sec_type getSecField() const { return kernelTime.tv_sec; }
         constexpr sec_type getNsecField() const { return kernelTime.tv_nsec; }
         constexpr double getDouble() const { return getSecField() + getNsecField() / 1e9; }
+        double getMsecField() const ;
 
         /*
          * Operators
