@@ -2,6 +2,13 @@
 
 ## Page & Disk
 
+### States
+
+A page corresponding to a region on a disk block can have one of these states:
+- Not present in memory. Must be loaded in if accessed.
+- Occupied. Cannot be evicted.
+- Evictable. Can be evicted.
+
 ### Mapping
 
 `Page`s are a form of abstraction of `Disk Block`s, so that buffer management could be more convinient. Any `Page` corresponds to a continuous region of a `Disk Block`. Consecutive pages do not necessarily correspond to physically consecutive disk blocks, which matters not, for as long as the mapping relation is clear, a disk block can rightly find their pages, and vice versa.
