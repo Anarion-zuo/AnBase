@@ -16,6 +16,7 @@ add_executable(gtests
         containers/TestProxy.cpp
         containers/TestBplusTree.cpp
         containers/TestString.cpp
+        containers/TestSoftArray.cpp
 
         file/TestFileChannel.cpp
 
@@ -29,6 +30,7 @@ add_executable(gtests
         db/storage/TestLruList.cpp
         db/storage/TestPage.cpp
         db/TestIndexRangeRegistry.cpp
+        db/TestNamedAllocate.cpp
 
         log/TestLog.cpp
 
