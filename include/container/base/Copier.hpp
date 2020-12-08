@@ -31,7 +31,6 @@ namespace anarion {
         using is_pod = typename pod_traits<T>::is_pod;
     };
 
-#pragma region basic_type_pod
     template <> struct pod_traits<char> { using is_pod = true_type; };
     template <> struct pod_traits<short> { using is_pod = true_type; };
     template <> struct pod_traits<int> { using is_pod = true_type; };
@@ -45,11 +44,10 @@ namespace anarion {
     template <> struct pod_traits<float> { using is_pod = true_type; };
     template <> struct pod_traits<double> { using is_pod = true_type; };
     template <> struct pod_traits<long double> { using is_pod = true_type; };
-#pragma endregion
 
     template <typename T>
     struct move_traits {
-        using has_move_cotr = false_type;
+        using has_move_ctor = false_type;
     };
 
     template <typename T>
@@ -65,7 +63,6 @@ namespace anarion {
         using has_move_ctor = typename move_traits<T>::has_move_cotr;
     };
 
-#pragma region basic_type_move
     template <> struct move_traits<char> { using has_move_ctor = false_type; };
     template <> struct move_traits<short> { using has_move_ctor = false_type; };
     template <> struct move_traits<int> { using has_move_ctor = false_type; };
@@ -79,7 +76,6 @@ namespace anarion {
     template <> struct move_traits<float> { using has_move_ctor = false_type; };
     template <> struct move_traits<double> { using has_move_ctor = false_type; };
     template <> struct move_traits<long double> { using has_move_ctor = false_type; };
-#pragma endregion
 
     using size_type = unsigned long;
 
