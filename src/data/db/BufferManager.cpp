@@ -7,7 +7,7 @@
 
 anarion::db::BufferManager::BufferManager(anarion::db::bufferoff_t bufferSize, anarion::db::bufferno_t bufferInitCount)
     : bufferSize(bufferSize),
-    bufferList(bufferInitCount, {.head = nullptr, .pin = false, .pageno = PageManager::pagenoNull}),
+    bufferList(bufferInitCount, {.head = nullptr, .refCount = 0, .pageno = PageManager::pagenoNull}),
     freeList(bufferInitCount) {
     allocateNewBuffer(bufferInitCount);
 }
@@ -55,59 +55,79 @@ anarion::db::BufferManager::getBuffer(anarion::db::bufferno_t bufferno) const {
     return bufferList.get(bufferno);
 }
 
-anarion::db::bufferno_t
-anarion::db::BufferManager::allocatePinned(anarion::db::pageno_t pageno, PageManager *pageManager) {
-    bufferno_t bufferno = allocate(pageno, pageManager);
-    if (bufferno != null) {
-        pin(bufferno);
-    }
-    return bufferno;
-}
-
-void anarion::db::BufferManager::pin(anarion::db::bufferno_t bufferno) {
-    if (!evictableList.remove(bufferno)) {
-        // buffer not pinned
-    } else {
-        // buffer just pinned
-        getBuffer(bufferno).pin = true;
-    }
-}
-
-void anarion::db::BufferManager::unpin(anarion::db::bufferno_t bufferno) {
-    evictableList.add(bufferno);
-    getBuffer(bufferno).pin = false;
-}
-
-anarion::db::bufferno_t anarion::db::BufferManager::allocate(pageno_t pageno, PageManager *pageManager) {
-    bufferno_t bufferno;
-    if (freeList.fetch(bufferno)) {
-        // there is a free buffer
-    } else {
-        // must evict a page
-        bufferno = pickEvict();
-        if (bufferno == null) {
-            // no page to evict
-            return null;
-        }
-        pageManager->evictPage(pageno);
-    }
-    getBuffer(bufferno).pageno = pageno;
-    return bufferno;
-}
-
-anarion::db::bufferno_t
-anarion::db::BufferManager::allocateUnpinned(anarion::db::pageno_t pageno, PageManager *pageManager) {
-    bufferno_t bufferno = allocate(pageno, pageManager);
-    if (bufferno != null) {
-        unpin(bufferno);
-    }
-    return bufferno;
-}
-
 anarion::db::bufferno_t anarion::db::BufferManager::pickEvict() {
     if (evictableList.size() == 0) {
         return null;
     }
     bufferno_t bufferno = evictableList.popLeastRecent();
     return bufferno;
+}
+
+void anarion::db::BufferManager::map(anarion::db::PageManager *pageManager, anarion::db::pageno_t pageno,
+                                     anarion::db::bufferno_t bufferno) {
+    BufferInfo &buffer = getBuffer(bufferno);
+    buffer.pageManager = pageManager;
+    buffer.pageno = pageno;
+    buffer.refCount = 0;
+}
+
+void anarion::db::BufferManager::unmap(anarion::db::bufferno_t bufferno) {
+    BufferInfo &buffer = getBuffer(bufferno);
+    buffer.pageManager = nullptr;
+    buffer.pageno = PageManager::pagenoNull;
+    buffer.refCount = 0;
+}
+
+void anarion::db::BufferManager::markUsing(anarion::db::bufferno_t bufferno) {
+    BufferInfo &buffer = getBuffer(bufferno);
+    if (buffer.refCount == 0) {
+        // extract from evict list
+        evictableList.remove(bufferno);
+    }
+    buffer.refCount++;
+}
+
+void anarion::db::BufferManager::markNotUsing(anarion::db::bufferno_t bufferno) {
+    BufferInfo &buffer = getBuffer(bufferno);
+    if (buffer.refCount == 0) {
+        return;
+    }
+    --buffer.refCount;
+    if (buffer.refCount == 0) {
+        evictableList.add(bufferno);
+    }
+}
+
+anarion::db::bufferno_t anarion::db::BufferManager::allocateOne() {
+    bufferno_t bufferno;
+    bool success = freeList.fetch(bufferno);
+    if (!success) {
+        bufferno = pickEvict();
+        evict(bufferno);
+    }
+    return bufferno;
+}
+
+void anarion::db::BufferManager::evict(anarion::db::bufferno_t bufferno) {
+    BufferInfo &buffer = getBuffer(bufferno);
+    if (buffer.refCount != 0) {
+        throw EvictingPinnedPage();
+    }
+    buffer.pageManager->evictPage(buffer.pageno);
+    unmap(bufferno);
+}
+
+anarion::db::bufferno_t anarion::db::BufferManager::mapPage(anarion::db::PageManager *pageManager, anarion::db::pageno_t pageno) {
+    bufferno_t bufferno = allocateOne();
+    map(pageManager, pageno, bufferno);
+    beginUsing(bufferno);
+    return bufferno;
+}
+
+void anarion::db::BufferManager::beginUsing(anarion::db::bufferno_t bufferno) {
+    markUsing(bufferno);
+}
+
+void anarion::db::BufferManager::endUsing(anarion::db::bufferno_t bufferno) {
+    markNotUsing(bufferno);
 }

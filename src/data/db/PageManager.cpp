@@ -2,6 +2,7 @@
 // Created by anarion on 11/25/20.
 //
 
+#include <io/channel/terminal/TerminalPrintChannel.h>
 #include "data/db/storage/PageManager.h"
 
 anarion::db::PageManager::PageManager(FileBlockManager *blockManager, BlockInfo blockInfo, pageoff_t pageSize, pageno_t pageInitCount, bufferno_t bufferInitCount) :
@@ -12,6 +13,7 @@ anarion::db::PageManager::PageManager(FileBlockManager *blockManager, BlockInfo 
         pageInfos(pageInitCount, PageInfo())
 {
     initBlockOffsets();
+    logInfo(new DataBaseLogEntry(SString::format("PageManager initialized at address 0x%lx pageSize %u", this, this->pageSize), new DebugLogLevel));
 }
 
 anarion::db::PageManager::PageInfo &
@@ -27,6 +29,7 @@ void anarion::db::PageManager::warmPage(anarion::db::pageno_t pageno) {
 }
 
 void anarion::db::PageManager::evictPage(anarion::db::pageno_t pageno) {
+    logInfo(new DataBaseLogEntry(SString::format("PageManager evicted pageno %u", pageno), new DebugLogLevel));
     getPage(pageno).flush(this);
     getPage(pageno).isPresent = false;
     getPage(pageno).setNullBuffer(this);
@@ -50,7 +53,7 @@ void anarion::db::PageManager::read(
 {
     warmPage(pageno);
     memcpy(buffer, bufferManager.getBufferAddress(getPage(pageno).bufferno) + pageoff, length);
-    bufferManager.unpin(getPage(pageno).bufferno);
+    bufferManager.endUsing(getPage(pageno).bufferno);
 }
 
 void anarion::db::PageManager::write(
@@ -60,7 +63,7 @@ void anarion::db::PageManager::write(
     warmPage(pageno);
     getPage(pageno).isDirty = true;
     memcpy(bufferManager.getBufferAddress(getPage(pageno).bufferno) + pageoff, buffer, length);
-    bufferManager.unpin(getPage(pageno).bufferno);
+    bufferManager.endUsing(getPage(pageno).bufferno);
 }
 
 void anarion::db::PageManager::flushAll() {
@@ -119,12 +122,17 @@ void anarion::db::PageManager::write(anarion::size_type offset, const char *buff
     write(pageno, pageoff, buffer, length);
 }
 
+void anarion::db::PageManager::logInfo(anarion::db::DataBaseLogEntry *entry) {
+    logSerializer.add(entry);
+    TerminalPrintChannel printer;
+    logSerializer.commit(printer);
+}
+
 void anarion::db::PageManager::PageInfo::load(PageManager *pageManager, pageno_t pageno) {
     if (hasBuffer(pageManager, pageno)) {
 
     } else {
-        bufferno = pageManager->bufferManager.allocatePinned(pageno, nullptr);
-//    pageManager->bufferManager.setPageno(bufferno, pageno);
+        bufferno = pageManager->bufferManager.mapPage(pageManager, pageno);
     }
     if (!isPresent) {
         pageManager->blockManager->out(
@@ -159,5 +167,6 @@ bool anarion::db::PageManager::PageInfo::hasBuffer(PageManager *pageManager, pag
     if (nullBuffer()) {
         return false;
     }
-    return pageManager->bufferManager.getBufferPageno(bufferno) == pageno;
+    BufferManager::BufferInfo &buffer = pageManager->bufferManager.getBuffer(bufferno);
+    return buffer.pageno == pageno && buffer.pageManager == pageManager;
 }

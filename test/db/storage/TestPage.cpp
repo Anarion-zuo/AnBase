@@ -42,3 +42,24 @@ TEST(TestPage, TestHugeRW) {
     pageManager.read(0, 0, str, stringLength);
     ASSERT_TRUE(!strcmp(str, str2));
 }
+
+TEST(TestPage, TestEvict) {
+    size_type blockSize = 40960, pageSize = 6, pageCount = 10, bufferCount = 1;
+    FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, 1);
+    PageManager pageManager(blockManager, {0, 0}, pageSize, pageCount, bufferCount);
+
+    const char *page1 = "123456", *page2 = "abcdef";
+    char buf[6];
+    pageManager.write(0, 0, page1, 6);
+    pageManager.read(0, 0, buf, 6);
+    ASSERT_EQ(0, strcmp(buf, page1));
+
+    // must evict page1
+    pageManager.write(1, 0, page2, 6);
+    pageManager.read(1, 0, buf, 6);
+    ASSERT_EQ(0, strcmp(page2, buf));
+
+    // page1 is still intact
+    pageManager.read(0, 0, buf, 6);
+    ASSERT_EQ(0, strcmp(buf, page1));
+}

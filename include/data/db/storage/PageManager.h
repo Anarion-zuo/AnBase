@@ -5,6 +5,8 @@
 #ifndef ANBASE_PAGEMANAGER_H
 #define ANBASE_PAGEMANAGER_H
 
+#include <serialize/Serializer.h>
+#include <data/db/loginfo/DataBaseLogEntry.h>
 #include "FileBlockManager.h"
 #include "BufferManager.h"
 
@@ -63,6 +65,10 @@ protected:
 
     void warmPage(pageno_t pageno);
 
+    // loginfo
+    Serializer logSerializer;
+    void logInfo(DataBaseLogEntry *entry);
+
 public:
 
     constexpr pageno_t getPageCount() const { return pageInfos.size(); }
@@ -83,6 +89,7 @@ public:
 struct Exception : public std::exception {};
 struct PageNotBackedByBlock : public Exception {};
 struct PageIndexOutOfRange : public Exception {};
+
 };
 
 }

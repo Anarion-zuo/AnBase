@@ -15,14 +15,19 @@ namespace db {
 
     class PageManager;
 
+    /**
+     * @brief Manages buffers backing disk blocks.
+     * @details
+     */
     class BufferManager {
     public:
         static const blockno_t null = -1;
 
         struct BufferInfo {
             char *head;
-            bool pin : 1;
+            size_type refCount;
             pageno_t pageno;
+            PageManager *pageManager;
         };
     protected:
         Vector<BufferInfo> bufferList;
@@ -33,16 +38,32 @@ namespace db {
         void allocateNewBuffer(bufferno_t count);
         void deallocateBuffer(bufferno_t bufferno);
 
-        BufferInfo &getBuffer(bufferno_t bufferno);
-        const BufferInfo &getBuffer(bufferno_t bufferno) const ;
-
-        anarion::db::bufferno_t allocate(pageno_t pageno, PageManager *pageManager);
         bufferno_t pickEvict();
+
+        /**
+         * @brief Creates mapping between certain page and buffer.
+         * @param pageManager Pointer to PageManager object.
+         * @param pageno Index of the page in the page manager obejct.
+         * @param bufferno Index of the buffer in this buffer manager.
+         */
+        void map(PageManager *pageManager, pageno_t pageno, bufferno_t bufferno);
+        /**
+         * @brief Destroy mapping beween certain page and buffer.
+         * @param bufferno Index of the buffer in this buffer manager.
+         */
+        void unmap(bufferno_t bufferno);
+        void markUsing(bufferno_t bufferno);
+        void markNotUsing(bufferno_t bufferno);
+        bufferno_t allocateOne();
+        void evict(bufferno_t bufferno);
 
     public:
         constexpr bufferno_t getBufferCount() const { return bufferList.size(); }
         constexpr bufferoff_t getBufferSize() const { return bufferSize; }
         constexpr size_type getTotalSize() const { return getBufferCount() * getBufferSize(); }
+
+        BufferInfo &getBuffer(bufferno_t bufferno);
+        const BufferInfo &getBuffer(bufferno_t bufferno) const ;
 
         BufferManager(bufferoff_t bufferSize, bufferno_t bufferInitCount);
 
@@ -51,11 +72,12 @@ namespace db {
         pageno_t getBufferPageno(bufferno_t) const ;
         void setPageno(bufferno_t bufferno, pageno_t pageno);
 
-        anarion::db::bufferno_t allocatePinned(anarion::db::pageno_t pageno, PageManager *pageManager);
-        anarion::db::bufferno_t allocateUnpinned(anarion::db::pageno_t pageno, PageManager *pageManager);
+        void beginUsing(bufferno_t bufferno);
+        void endUsing(bufferno_t bufferno);
+        bufferno_t mapPage(PageManager *pageManager, pageno_t pageno);
 
-        void pin(bufferno_t bufferno);
-        void unpin(bufferno_t bufferno);
+    struct Exception : public std::exception {};
+    struct EvictingPinnedPage : public Exception {};
     };
 
 }
