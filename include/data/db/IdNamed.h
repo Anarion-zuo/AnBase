@@ -24,9 +24,15 @@ public:
     NamedAllocator() = default;
 
     IdNamed *get(IdType id) {
+        if (id >= array.size()) {
+            return nullptr;
+        }
         return array.get(id);
     }
     const IdNamed *get(IdType id) const {
+        if (id >= array.size()) {
+            return nullptr;
+        }
         return array.get(id);
     }
     IdType idOf(const IdNamed *obj) const {
