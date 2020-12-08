@@ -45,6 +45,8 @@ namespace anarion {
         SString(SString &&rhs) noexcept;
         SString(const SString &rhs);
 
+        static SString format(const char *fmt, ...);
+
         SString &operator=(const SString &rhs);
         SString &operator=(SString &&rhs) noexcept;
 

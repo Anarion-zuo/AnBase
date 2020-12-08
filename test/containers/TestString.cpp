@@ -35,3 +35,15 @@ TEST(TestString, TestParseFloat) {
         printf("%s\n", buf);
     }
 }
+
+TEST(TestString, TestSnprintf) {
+    char buf[10];
+    int ret = snprintf(buf, 0, "%s\n", "123456");
+    printf("ret %d %s\n", ret, buf);
+}
+
+TEST(TestString, TestFormat) {
+    const char *buf = "1234567";
+    SString format = SString::format("%s", buf);
+    ASSERT_EQ(strcmp(format.cstr(), buf), 0);
+}

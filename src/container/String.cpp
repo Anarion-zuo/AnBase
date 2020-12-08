@@ -5,6 +5,7 @@
 #include <cstring>
 #include <container/SString.h>
 #include <io/buffer/Buffer.h>
+#include <cstdarg>
 
 using namespace anarion;
 
@@ -450,3 +451,19 @@ SString SString::parseDec(double num) {
     return parseDec(num, 16);
 }
 
+static int measureSprintfOutputLength(const char *fmt, va_list args) {
+    char c;
+    int ret;
+    return vsnprintf(nullptr, 0, fmt, args);
+}
+
+SString SString::format(const char *fmt, ...) {
+    char buf[4096];
+    int length;
+    va_list args;
+    va_start(args, fmt);
+    length = vsnprintf(buf, 4096, fmt, args);
+    va_end(args);
+    buf[length] = '\0';
+    return SString::move(buf, length);
+}
