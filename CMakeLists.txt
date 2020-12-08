@@ -92,6 +92,8 @@ set(ANBASE_OBJS
         data/db/BufferManager.cpp
         data/db/PageMappedObject.cpp
         data/db/IndexRangeRegistry.cpp
+        data/db/loginfo/DataBaseLogEntry.cpp
+        data/db/IdRegistry.cpp
         )
 # derive source file paths from object names
 set(ANBASE_SRCS ${ANBASE_OBJS})
