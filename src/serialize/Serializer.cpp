@@ -21,7 +21,9 @@ void anarion::Serializer::commit(anarion::InChannel &inChannel) {
     queueLock.lock();
     commitLock.lock();
     while (!uncommittedQueue.empty()) {
-        commitOne(uncommittedQueue.pop(), inChannel);
+        Serializable *entry = uncommittedQueue.pop();
+        commitOne(entry, inChannel);
+        delete entry;
     }
     commitLock.unlock();
     queueLock.unlock();

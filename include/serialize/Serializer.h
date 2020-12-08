@@ -11,6 +11,7 @@
 namespace anarion {
 class Serializable {
 public:
+    virtual ~Serializable() = default;
     virtual SString serialize() const = 0;
 };
 class Serializer {
@@ -38,6 +39,7 @@ public:
             for (Iterator it = begin; it != end; ++it) {
                 commitOne(serializable, **it);
             }
+            delete serializable;
         }
         commitLock.unlock();
         queueLock.unlock();

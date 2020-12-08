@@ -38,7 +38,7 @@ TEST(TestLog, TestFileOutput) {
     oflag.setAppend();
     oflag.setReadWrite();
     oflag.setCreateIfNotExists();
-    FileChannel file(Path(SString("./test.log")), oflag);
+    FileChannel file(Path(SString("./test.loginfo")), oflag);
     file.open(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     serializer.commit(file);
     file.close();
@@ -55,7 +55,7 @@ TEST(TestLog, Test2Output) {
     oflag.setAppend();
     oflag.setReadWrite();
     oflag.setCreateIfNotExists();
-    FileChannel file(Path(SString("./test.log")), oflag);
+    FileChannel file(Path(SString("./test.loginfo")), oflag);
     file.open(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 
     TerminalPrintChannel termnial;
