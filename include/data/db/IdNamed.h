@@ -84,6 +84,21 @@ public:
     struct OutOfNames : public Exception {};
     struct IdOutOfRange : public Exception {};
 };
+
+/**
+ * @brief Common part for all classes with an id.
+ * @tparam id_t Numeric type of id.
+ */
+template <typename id_t>
+class IdNamed {
+protected:
+    id_t id;
+public:
+    using IdType = id_t;
+
+    IdType getId() const { return id; }
+    void setId(const IdType &nid) { id = nid; }
+};
 }
 }
 #endif //ANBASE_IDNAMED_H
