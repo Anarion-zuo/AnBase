@@ -12,27 +12,31 @@ anarion::BitArray::BitArray(unsigned long length) : length(length) {
 
 anarion::BitArray::~BitArray() {}
 
-void anarion::BitArray::resize(BitArray::size_type length)  {
+void anarion::BitArray::resize(anarion::size_type length)  {
     this->length = length;
     size_type arrayLength = length / 8, moreLength = length % 8;
     if (moreLength) { ++arrayLength; }
     arr.resize(arrayLength);
 }
 
-bool anarion::BitArray::check(BitArray::size_type index) {
+bool anarion::BitArray::check(anarion::size_type index) {
+    if (index >= length) {
+        return false;
+    }
     size_type arr_index, bit_index;
     computeIndex(index, &arr_index, &bit_index);
     return arr[arr_index] & (1u << bit_index);
 }
 
-void anarion::BitArray::set(BitArray::size_type index) {
+void anarion::BitArray::set(anarion::size_type index) {
     size_type arr_index, bit_index;
     computeIndex(index, &arr_index, &bit_index);
     expandIfToSmall(arr_index);
     arr[arr_index] |= 1u << bit_index;
 }
 
-void anarion::BitArray::clear(BitArray::size_type index) {
+void anarion::BitArray::clear(anarion::size_type index) {
+    checkOutOfRange(index);
     size_type arr_index, bit_index;
     computeIndex(index, &arr_index, &bit_index);
     expandIfToSmall(arr_index);
@@ -49,11 +53,12 @@ void anarion::BitArray::setAll() {
 
 void anarion::BitArray::expandIfToSmall(anarion::size_type arr_index) {
     if (arr_index >= arr.capacity()) {
-        arr.resize(arr_index + 1);
+        arr.resize((arr_index + 1) * 2);
     }
-    if (arr_index >= arr.size()) {
-        arr.insert(arr.end_iterator(), (unsigned char)0, arr_index - arr.size() + 2);
+    for (size_type index = arr.size(); index <= arr_index; ++index) {
+        arr.pushBack(0);
     }
+    length = arr.size() * segSize;
 }
 
 bool anarion::BitArray::andAll() const {
@@ -85,7 +90,7 @@ bool anarion::BitArray::orAll() const {
             return true;
         }
     }
-    unsigned char *restArray = reinterpret_cast<unsigned char *>(array + arrayLength);
+    seg_t *restArray = reinterpret_cast<unsigned char *>(array + arrayLength);
     unsigned int byteCount = moreLength / 8, bitMore = moreLength % 8;
     for (size_type index = 0; index < byteCount; ++index) {
         if (restArray[index] != 0) {
@@ -96,4 +101,10 @@ bool anarion::BitArray::orAll() const {
         return restArray[byteCount] & (0xffu << bitMore);
     }
     return true;
+}
+
+void anarion::BitArray::checkOutOfRange(anarion::size_type index) const {
+    if (index >= length) {
+        throw OutOfRange();
+    }
 }

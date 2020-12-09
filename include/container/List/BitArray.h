@@ -12,17 +12,20 @@
 
 namespace anarion {
     class BitArray {
-        typedef unsigned long size_type;
+        using seg_t = unsigned char;
+        const static uint16_t segSize = sizeof(seg_t);
     protected:
-        Vector<unsigned char> arr;
+        Vector<seg_t> arr;
         size_type length = 0;
 
         void computeIndex(size_type index, size_type *arr_index, size_type *bit_index) {
-            *arr_index = index / 8;
-            *bit_index = index % 8;
+            *arr_index = index / segSize;
+            *bit_index = index % segSize;
         }
 
         void expandIfToSmall(size_type arr_index);
+
+        void checkOutOfRange(size_type index) const ;
 
     public:
         BitArray() = default;
@@ -42,6 +45,9 @@ namespace anarion {
 
         bool andAll() const ;
         bool orAll() const ;
+
+    struct Exception : public std::exception {};
+    struct OutOfRange : public Exception {};
 
     };
 }
