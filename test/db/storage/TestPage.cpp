@@ -10,14 +10,16 @@ using namespace anarion::db;
 
 TEST(TestPage, TestInit) {
     size_type blockSize = 40960, pageSize = 4096, pageCount = 10, bufferCount = 15;
-    FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, 1);
-    PageManager pageManager(blockManager, {0, 0}, pageSize, pageCount, bufferCount);
+    FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, pageSize, 1);
+    BufferManager *bufferManager = new BufferManager(pageSize, bufferCount);
+    PageManager pageManager(blockManager, pageSize, pageCount, bufferManager);
 }
 
 TEST(TestPage, TestSimpleRW) {
     size_type blockSize = 40960, pageSize = 4096, pageCount = 10, bufferCount = 15;
-    FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, 1);
-    PageManager pageManager(blockManager, {0, 0}, pageSize, pageCount, bufferCount);
+    FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, pageSize, 1);
+    BufferManager *bufferManager = new BufferManager(pageSize, bufferCount);
+    PageManager pageManager(blockManager, pageSize, pageCount, bufferManager);
     pageManager.write(0, 0, "12345", 5);
     char str[255] = {0};
     pageManager.read(0, 0, str, 5);
@@ -26,8 +28,9 @@ TEST(TestPage, TestSimpleRW) {
 
 TEST(TestPage, TestHugeRW) {
     size_type blockSize = 40960, pageSize = 4096, pageCount = 10, bufferCount = 2;
-    FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, 1);
-    PageManager pageManager(blockManager, {0, 0}, pageSize, pageCount, bufferCount);
+    FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, pageSize, 1);
+    BufferManager *bufferManager = new BufferManager(pageSize, bufferCount);
+    PageManager pageManager(blockManager, pageSize, pageCount, bufferManager);
 
     const size_type stringLength = 4096;
     char character = '9';
@@ -45,8 +48,9 @@ TEST(TestPage, TestHugeRW) {
 
 TEST(TestPage, TestEvict) {
     size_type blockSize = 40960, pageSize = 6, pageCount = 10, bufferCount = 1;
-    FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, 1);
-    PageManager pageManager(blockManager, {0, 0}, pageSize, pageCount, bufferCount);
+    FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, pageSize, 1);
+    BufferManager *bufferManager = new BufferManager(pageSize, bufferCount);
+    PageManager pageManager(blockManager, pageSize, pageCount, bufferManager);
 
     const char *page1 = "123456", *page2 = "abcdef";
     char buf[6];
