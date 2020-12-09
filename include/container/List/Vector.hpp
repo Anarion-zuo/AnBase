@@ -574,10 +574,6 @@ namespace anarion {
         }
 
         iterator insert(size_type index, const T &obj, size_type num) {
-            checkIndexOutOfRange(index);
-            if (capacity() == 0) {
-                resize(num + 1);
-            }
             insertPrepare(index, num);
             for (iterator it = begin + index; it - begin < num; ++it) {
                 new (it) T(obj);
