@@ -9,11 +9,12 @@
 #include <data/db/loginfo/DataBaseLogEntry.h>
 #include "FileBlockManager.h"
 #include "BufferManager.h"
+#include "../IdNamed.h"
 
 namespace anarion {
 namespace db {
 
-class PageManager {
+class PageManager : public IdNamed<uint16_t> {
 protected:
     FileBlockManager *blockManager;
     BufferManager *bufferManager;
@@ -22,6 +23,7 @@ protected:
 public:
     static const pageno_t pagenoNull = -1;
 protected:
+
     struct BlockInfo {
         blockno_t blockno;
         blockoff_t blockoff;
@@ -35,6 +37,17 @@ protected:
         bool isOutOfRange(const FileBlockManager &blockManager) const {
             return totalOffset(blockManager) >= blockManager.getTotalSize();
         }
+    };
+
+    // meta data
+    struct PageHeader {
+        BlockInfo blockInfo;
+        IdType managerId;
+        pageno_t pageno;
+    };
+
+    struct PageManagerHeader {
+        IdType managerId;
     };
 
     struct PageInfo {
@@ -52,7 +65,15 @@ protected:
         void flush(PageManager *pageManager) const;
 
         PageInfo() : isDirty(false), isPresent(false) {}
+
+        void read(PageManager *pageManager, anarion::db::pageoff_t pageoff, char *buffer,
+                  anarion::db::pageoff_t length);
+        void write(PageManager *pageManager, pageoff_t pageoff, const char *buffer, pageoff_t length);
+
+        PageHeader toHeader(PageManager *pageManager) const ;
+        void writeMeta(PageManager *pageManager);
     };
+    static pageoff_t pageMetaOffset() { return sizeof(PageHeader); }
 
     Vector<PageInfo> pageInfos;
     void initBlockOffsets();
@@ -62,7 +83,6 @@ protected:
      */
     bool offset2PageInfo(size_type offset, pageno_t &pageno, pageoff_t &pageoff) const ;
 
-    PageInfo &getPage(pageno_t pageno);
 
     void warmPage(pageno_t pageno);
 
@@ -70,11 +90,16 @@ protected:
     Serializer logSerializer;
     void logInfo(DataBaseLogEntry *entry);
 
+
 public:
 
     constexpr pageno_t getPageCount() const { return pageInfos.size(); }
     constexpr size_type getTotalSize() const { return getPageCount() * pageSize; }
-    constexpr pageoff_t getPageSize() const { return pageSize; }
+    pageoff_t getPageSize() const { return pageSize; }
+    pageoff_t getValidPageSize() const { return pageSize - pageMetaOffset(); }
+
+    PageInfo &getPage(pageno_t pageno);
+    pageno_t pagenoOf(const PageInfo *page) const ;
 
     PageManager(FileBlockManager *blockManager, pageoff_t pageSize, pageno_t pageInitCount, BufferManager *bufferManager);
     ~PageManager();

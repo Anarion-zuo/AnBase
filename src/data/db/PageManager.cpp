@@ -50,19 +50,14 @@ void anarion::db::PageManager::read(
         anarion::db::pageno_t pageno, anarion::db::pageoff_t pageoff,
         char *buffer,anarion::size_type length)
 {
-    warmPage(pageno);
-    memcpy(buffer, bufferManager->getBufferAddress(getPage(pageno).bufferno) + pageoff, length);
-    bufferManager->endUsing(getPage(pageno).bufferno);
+    getPage(pageno).read(this, pageoff, buffer, length);
 }
 
 void anarion::db::PageManager::write(
         anarion::db::pageno_t pageno, anarion::db::pageoff_t pageoff,
         const char *buffer, anarion::size_type length)
 {
-    warmPage(pageno);
-    getPage(pageno).isDirty = true;
-    memcpy(bufferManager->getBufferAddress(getPage(pageno).bufferno) + pageoff, buffer, length);
-    bufferManager->endUsing(getPage(pageno).bufferno);
+    getPage(pageno).write(this, pageoff, buffer, length);
 }
 
 void anarion::db::PageManager::flushAll() {
@@ -126,6 +121,10 @@ void anarion::db::PageManager::logInfo(anarion::db::DataBaseLogEntry *entry) {
     logSerializer.commit(printer);
 }
 
+anarion::db::pageno_t anarion::db::PageManager::pagenoOf(const anarion::db::PageManager::PageInfo *page) const {
+    return page - &this->pageInfos.get(0);
+}
+
 void anarion::db::PageManager::PageInfo::load(PageManager *pageManager, pageno_t pageno) {
     if (hasBuffer(pageManager, pageno)) {
 
@@ -167,4 +166,34 @@ bool anarion::db::PageManager::PageInfo::hasBuffer(PageManager *pageManager, pag
     }
     BufferManager::BufferInfo &buffer = pageManager->bufferManager->getBuffer(bufferno);
     return buffer.pageno == pageno && buffer.pageManager == pageManager;
+}
+
+anarion::db::PageManager::PageHeader anarion::db::PageManager::PageInfo::toHeader(anarion::db::PageManager *pageManager) const {
+    return PageHeader {
+        .blockInfo = blockInfo,
+        .managerId = pageManager->getId(),
+        .pageno = pageManager->pagenoOf(this),
+    };
+}
+
+void anarion::db::PageManager::PageInfo::writeMeta(PageManager *pageManager) {
+    PageHeader header = toHeader(pageManager);
+    char *buf = reinterpret_cast<char *>(&header);
+    write(pageManager, 0, buf, pageMetaOffset());
+}
+
+void
+anarion::db::PageManager::PageInfo::read(PageManager *pageManager, anarion::db::pageoff_t pageoff, char *buffer,
+                                         anarion::db::pageoff_t length) {
+    load(pageManager, pageManager->pagenoOf(this));
+    memcpy(buffer, pageManager->bufferManager->getBufferAddress(bufferno) + pageoff, length);
+    pageManager->bufferManager->endUsing(bufferno);
+}
+
+void anarion::db::PageManager::PageInfo::write(PageManager *pageManager, anarion::db::pageoff_t pageoff, const char *buffer,
+                                               anarion::db::pageoff_t length) {
+    load(pageManager, pageManager->pagenoOf(this));
+    isDirty = true;
+    memcpy(pageManager->bufferManager->getBufferAddress(bufferno) + pageoff, buffer, length);
+    pageManager->bufferManager->endUsing(bufferno);
 }
