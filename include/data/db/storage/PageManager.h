@@ -16,7 +16,7 @@ namespace db {
 class PageManager {
 protected:
     FileBlockManager *blockManager;
-    BufferManager bufferManager;
+    BufferManager *bufferManager;
     const pageoff_t pageSize;
 
 public:
@@ -36,7 +36,6 @@ protected:
             return totalOffset(blockManager) >= blockManager.getTotalSize();
         }
     };
-    const BlockInfo blockOffset;
 
     struct PageInfo {
         bufferno_t bufferno = BufferManager::null;
@@ -57,9 +56,11 @@ protected:
 
     Vector<PageInfo> pageInfos;
     void initBlockOffsets();
+    /*
     bool offset2info(size_type offset, BlockInfo &blockInfo, pageno_t &pageno, pageoff_t &pageoff) const ;
-    bool offset2PageInfo(size_type offset, pageno_t &pageno, pageoff_t &pageoff) const ;
     bool offset2BlockInfo(size_type offset, BlockInfo &blockInfo) const ;
+     */
+    bool offset2PageInfo(size_type offset, pageno_t &pageno, pageoff_t &pageoff) const ;
 
     PageInfo &getPage(pageno_t pageno);
 
@@ -75,8 +76,7 @@ public:
     constexpr size_type getTotalSize() const { return getPageCount() * pageSize; }
     constexpr pageoff_t getPageSize() const { return pageSize; }
 
-    PageManager(FileBlockManager *blockManager, BlockInfo blockInfo, pageoff_t pageSize, pageno_t pageInitCount,
-                bufferno_t bufferInitCount);
+    PageManager(FileBlockManager *blockManager, pageoff_t pageSize, pageno_t pageInitCount, BufferManager *bufferManager);
     ~PageManager();
 
     void read(pageno_t pageno, pageoff_t pageoff, char *buffer, size_type length);
@@ -89,6 +89,8 @@ public:
 struct Exception : public std::exception {};
 struct PageNotBackedByBlock : public Exception {};
 struct PageIndexOutOfRange : public Exception {};
+struct BufferPageSizeNotConsistent : public Exception {};
+struct FileBlockPageSizeNotConsistent : public Exception {};
 
 };
 
