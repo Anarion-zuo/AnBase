@@ -20,9 +20,9 @@ TEST(TestPage, TestSimpleRW) {
     FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, pageSize, 1);
     BufferManager *bufferManager = new BufferManager(pageSize, bufferCount);
     PageManager pageManager(blockManager, pageSize, pageCount, bufferManager);
-    pageManager.write(0, 0, "12345", 5);
+    pageManager.singleAtomicWrite(0, 0, "12345", 5);
     char str[255] = {0};
-    pageManager.read(0, 0, str, 5);
+    pageManager.singleAtomicRead(0, 0, str, 5);
     ASSERT_TRUE(!strcmp(str, "12345"));
 }
 
@@ -41,8 +41,8 @@ TEST(TestPage, TestHugeRW) {
     }
     str[stringLength] = 0;
     str2[stringLength] = 0;
-    pageManager.write(0, 0, str, stringLength);
-    pageManager.read(0, 0, str, stringLength);
+    pageManager.singleAtomicWrite(0, 0, str, stringLength);
+    pageManager.singleAtomicRead(0, 0, str, stringLength);
     ASSERT_TRUE(!strcmp(str, str2));
 }
 
@@ -54,16 +54,16 @@ TEST(TestPage, TestEvict) {
 
     const char *page1 = "123456", *page2 = "abcdef";
     char buf[6];
-    pageManager.write(0, 0, page1, 6);
-    pageManager.read(0, 0, buf, 6);
+    pageManager.singleAtomicWrite(0, 0, page1, 6);
+    pageManager.singleAtomicRead(0, 0, buf, 6);
     ASSERT_EQ(0, strcmp(buf, page1));
 
     // must evict page1
-    pageManager.write(1, 0, page2, 6);
-    pageManager.read(1, 0, buf, 6);
+    pageManager.singleAtomicWrite(1, 0, page2, 6);
+    pageManager.singleAtomicRead(1, 0, buf, 6);
     ASSERT_EQ(0, strcmp(page2, buf));
 
     // page1 is still intact
-    pageManager.read(0, 0, buf, 6);
+    pageManager.singleAtomicRead(0, 0, buf, 6);
     ASSERT_EQ(0, strcmp(buf, page1));
 }
