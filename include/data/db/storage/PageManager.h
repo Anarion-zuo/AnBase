@@ -90,7 +90,6 @@ protected:
     Serializer logSerializer;
     void logInfo(DataBaseLogEntry *entry);
 
-
 public:
 
     constexpr pageno_t getPageCount() const { return pageInfos.size(); }
@@ -104,10 +103,11 @@ public:
     PageManager(FileBlockManager *blockManager, pageoff_t pageSize, pageno_t pageInitCount, BufferManager *bufferManager);
     ~PageManager();
 
-    void read(pageno_t pageno, pageoff_t pageoff, char *buffer, size_type length);
-    void read(size_type offset, char *buffer, size_type length);
-    void write(pageno_t pageno, pageoff_t pageoff, const char *buffer, size_type length);
-    void write(size_type offset, const char *buffer, size_type length);
+    void singleAtomicRead(pageno_t pageno, pageoff_t pageoff, char *buffer, size_type length);
+    void singleAtomicRead(size_type offset, char *buffer, size_type length);
+    void singleAtomicWrite(pageno_t pageno, pageoff_t pageoff, const char *buffer, size_type length);
+    void singleAtomicWrite(size_type offset, const char *buffer, size_type length);
+
     void evictPage(pageno_t pageno);
     void flushAll();
 

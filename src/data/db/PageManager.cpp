@@ -46,14 +46,14 @@ void anarion::db::PageManager::initBlockOffsets() {
     }
 }
 
-void anarion::db::PageManager::read(
+void anarion::db::PageManager::singleAtomicRead(
         anarion::db::pageno_t pageno, anarion::db::pageoff_t pageoff,
         char *buffer,anarion::size_type length)
 {
     getPage(pageno).read(this, pageoff, buffer, length);
 }
 
-void anarion::db::PageManager::write(
+void anarion::db::PageManager::singleAtomicWrite(
         anarion::db::pageno_t pageno, anarion::db::pageoff_t pageoff,
         const char *buffer, anarion::size_type length)
 {
@@ -101,18 +101,18 @@ bool anarion::db::PageManager::offset2BlockInfo(anarion::size_type offset,
     return true;
 }
 */
-void anarion::db::PageManager::read(anarion::size_type offset, char *buffer, anarion::size_type length) {
+void anarion::db::PageManager::singleAtomicRead(anarion::size_type offset, char *buffer, anarion::size_type length) {
     pageno_t pageno;
     pageoff_t pageoff;
     offset2PageInfo(offset, pageno, pageoff);
-    read(pageno, pageoff, buffer, length);
+    singleAtomicRead(pageno, pageoff, buffer, length);
 }
 
-void anarion::db::PageManager::write(anarion::size_type offset, const char *buffer, anarion::size_type length) {
+void anarion::db::PageManager::singleAtomicWrite(anarion::size_type offset, const char *buffer, anarion::size_type length) {
     pageno_t pageno;
     pageoff_t pageoff;
     offset2PageInfo(offset, pageno, pageoff);
-    write(pageno, pageoff, buffer, length);
+    singleAtomicWrite(pageno, pageoff, buffer, length);
 }
 
 void anarion::db::PageManager::logInfo(anarion::db::DataBaseLogEntry *entry) {
