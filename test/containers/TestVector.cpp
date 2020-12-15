@@ -192,7 +192,8 @@ TEST(TestVector, TestRemove) {
 TEST(TestVector, TestIterate) {
     size_type length = 100;
     Vector<int> vector = makeVector(length);
-    vector.iterate(0, length, [length](size_type index, int &element) {
+    auto func = [length](size_type index, int &element) {
         printf("vector length %lu index %lu element %d\n", length, index, element);
-    });
+    };
+    vector.iterate(0, length, func);
 }
