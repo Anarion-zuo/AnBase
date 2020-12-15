@@ -662,6 +662,13 @@ namespace anarion {
             return endIterator();
         }
 
+        template<typename FuncType>
+        void iterate(size_type begin, size_type end, FuncType func) {
+            for (size_type index = begin; index < end; ++index) {
+                func(index, this->get(index));
+            }
+        }
+
     };
 
     template <typename T>
