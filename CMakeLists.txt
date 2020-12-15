@@ -24,11 +24,7 @@ set(ANBASE_OBJS
         concurrent/base/Thread.cpp
         concurrent/base/BackgroundTask.cpp
         concurrent/base/Routine.cpp
-
-        concurrent/pool/ThreadPool.cpp
-        concurrent/pool/AsyncInvoke.cpp
-        concurrent/pool/AsyncCaller.cpp
-        concurrent/pool/DynamicThreadPool.cpp
+        concurrent/pool/AbstractThreadPool.cpp
 
         container/String.cpp
         container/StringBuilder.cpp

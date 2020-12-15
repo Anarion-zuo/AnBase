@@ -6,7 +6,7 @@
 
 using namespace anarion;
 /*
-void Thread::start() {
+void Thread::monitorStartRoutine() {
     int ret;
     ret = pthread_create(&pid, nullptr, start_routine, this);
     if (ret != 0) {
@@ -60,11 +60,7 @@ void ThreadCore::sleep(const Time &sleepTime) {
 }
 
 void ThreadCore::startPThread(void *(*fp)(void *)) {
-    int ret;
-    ret = pthread_create(&pid, nullptr, fp, this);
-    if (ret != 0) {
-        throw ThreadStartException();
-    }
+    startPThread(fp, this);
 }
 
 void ThreadCore::joinPThread() const {
@@ -77,5 +73,13 @@ void ThreadCore::cancel() const {
     int ret = pthread_cancel(pid);
     if (ret < 0) {
         throw ThreadCancelFailed();
+    }
+}
+
+void ThreadCore::startPThread(void *(*fp)(void *), void *arg) {
+    int ret;
+    ret = pthread_create(&pid, nullptr, fp, arg);
+    if (ret != 0) {
+        throw ThreadStartException();
     }
 }
