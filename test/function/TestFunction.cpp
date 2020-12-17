@@ -146,6 +146,84 @@ TEST(TestFunction, TestLambdaCapture) {
     auto fp = [number](int passedNum) {
         printf("captured number %d passed number %d\n", number, passedNum);
     };
-    auto lambda = Lambda<decltype(fp), void, int>{ fp };
+    auto lambda = WrappedCallable<decltype(fp), void, int>{fp };
     lambda(444);
+}
+
+static void incrementRef(int &number) {
+    ++number;
+}
+
+TEST(TestFunction, TestRef) {
+    int number = rand(), number2 = number;
+    Function<void(int&)> function {incrementRef};
+    function(number);
+    // check whether inner ++ took effect
+    ASSERT_EQ(number, number2 + 1);
+}
+
+TEST(TestFunction, TestLambdaRefFromOutside) {
+    int number = rand(), number2 = number;
+    // effective operation happens inside lambda
+    auto fp = [&]() {
+        ++number;
+    };
+    auto lambda = WrappedCallable<decltype(fp), void>{fp };
+    lambda();
+    // check whether inner ++ took effect
+    ASSERT_EQ(number2 + 1, number);
+}
+
+// proves reference to outside variables works
+TEST(TestFunction, TestLambdaRefFromInside) {
+    int number = rand(), number2 = number;
+    ++number;
+    // lambda refereces something outside itself
+    auto fp = [&]() {
+        ASSERT_EQ(number, number2 + 1);
+    };
+    auto lambda = WrappedCallable<decltype(fp), void>{fp };
+    lambda();
+}
+
+// proves reference works correctly, aware of operations between the declaration and calling of the lambda
+TEST(TestFunction, TestLambdaRefAfterLambdaDecl) {
+    int number = rand(), number2 = number;
+    // lambda refereces something outside itself
+    auto fp = [&]() {
+        ASSERT_EQ(number, number2 + 1);
+    };
+    auto lambda = WrappedCallable<decltype(fp), void>{ fp };
+    // operation happens after declaration of lambda, but before its calling
+    ++number;
+    lambda();
+}
+
+static auto returnsLambda() {
+    auto fp = [&]() {
+        printf("inside lambda number\n");
+    };
+    return WrappedCallable<decltype(fp), void>{ fp };
+}
+
+TEST(TestFunction, TestLambdaMoveCtor) {
+    auto lambda = returnsLambda();
+    lambda();
+}
+
+static auto returnsIntLambda(int &ret) {
+    int number = 999;
+    ret = number;
+    auto fp = [&]() -> int {
+        printf("number %d\n", number);
+        return number;
+    };
+    return WrappedCallable<decltype(fp), int>{ fp };
+}
+
+TEST(TestFunction, TestLambdaRefOutsideFunction) {
+    int number;
+    auto lambda = returnsIntLambda(number);
+    // cannot reference local variables on stack
+    ASSERT_NE(number, lambda());
 }

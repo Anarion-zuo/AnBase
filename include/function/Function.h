@@ -78,28 +78,30 @@ namespace anarion {
     };
 
     template <typename Callable, typename RetType, typename ...Args>
-    class Lambda {
+    class WrappedCallable {
     private:
         Callable callable;
         RetType(Callable::*callableOperatorBracket)(Args...) const ;
 
     public:
-        explicit Lambda(const Callable &callable) : callable(callable) {}
+        explicit WrappedCallable(const Callable &callable) : callable(callable) {}
+        WrappedCallable(WrappedCallable &&rhs) noexcept : callable(move(rhs.callable)) {}
         RetType operator() (Args ...args) const {
-            return callable.operator()(args...);
+            return callable.operator()(forward<Args>(args)...);
         }
     };
 
     template <typename Callable, typename ...Args>
-    class Lambda<Callable, void, Args...> {
+    class WrappedCallable<Callable, void, Args...> {
     private:
         Callable callable;
         void(Callable::*callableOperatorBracket)(Args...) const ;
 
     public:
-        explicit Lambda(const Callable &callable) : callable(callable) {}
+        explicit WrappedCallable(const Callable &callable) : callable(callable) {}
+        WrappedCallable(WrappedCallable &&rhs) noexcept : callable(move(rhs.callable)) {}
         void operator() (Args ...args) const {
-            callable.operator()(args...);
+            callable.operator()(forward<Args>(args)...);
         }
     };
 
