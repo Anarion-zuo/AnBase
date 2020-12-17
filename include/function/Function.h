@@ -39,6 +39,7 @@ namespace anarion {
         func_pt fp;
     public:
         explicit Function(func_pt fp) : fp(fp) {}
+        Function(const Function &rhs) : fp(rhs.fp) {}
         RetType operator()(Args ...args) {
             return fp(forward<Args>(args)...);
         }
@@ -51,6 +52,7 @@ namespace anarion {
         func_pt fp;
     public:
         explicit Function(func_pt fp) : fp(fp) {}
+        Function(const Function &rhs) : fp(rhs.fp) {}
         void operator()() { fp(); }
     };
 
@@ -61,6 +63,7 @@ namespace anarion {
         func_pt fp;
     public:
         explicit Function(func_pt fp) : fp(fp) {}
+        Function(const Function &rhs) : fp(rhs.fp) {}
         void operator()() { fp(); }
     };
 
@@ -71,6 +74,7 @@ namespace anarion {
         func_pt fp;
     public:
         explicit Function(func_pt fp) : fp(fp) {}
+        Function(const Function &rhs) : fp(rhs.fp) {}
 
         void operator()(Args ...args) {
             fp(forward<Args>(args)...);
@@ -95,13 +99,12 @@ namespace anarion {
     class WrappedCallable<Callable, void, Args...> {
     private:
         Callable callable;
-        void(Callable::*callableOperatorBracket)(Args...) const ;
 
     public:
         explicit WrappedCallable(const Callable &callable) : callable(callable) {}
         WrappedCallable(WrappedCallable &&rhs) noexcept : callable(move(rhs.callable)) {}
         void operator() (Args ...args) const {
-            callable.operator()(forward<Args>(args)...);
+            callable(forward<Args>(args)...);
         }
     };
 
