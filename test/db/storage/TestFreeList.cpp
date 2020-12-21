@@ -3,10 +3,9 @@
 //
 
 #include <gtest/gtest.h>
-#include <data/db/storage/FreeList.hpp>
+#include <container/numtype/FreeList.hpp>
 
 using namespace anarion;
-using namespace anarion::db;
 
 TEST(TestFreeList, TestPushPop) {
     size_type listLength = 10;

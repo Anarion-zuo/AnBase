@@ -48,6 +48,14 @@ namespace anarion {
     struct remove_ref<T &> {
         typedef T type;
     };
+    template <typename T>
+    struct remove_ref<T &&> {
+        using type = T &&;
+    };
+    template <typename T>
+    struct remove_ref<const T&> {
+        using type = T;
+    };
 
     template<typename T>
     struct bare_type {

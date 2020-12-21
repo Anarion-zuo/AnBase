@@ -6,7 +6,7 @@
 #define ANBASE_BUFFERMANAGER_H
 
 #include <container/List/Vector.hpp>
-#include "FreeList.hpp"
+#include "container/numtype/FreeList.hpp"
 #include "typedecl.h"
 #include "LruList.h"
 

@@ -25,6 +25,7 @@ set(ANBASE_OBJS
         concurrent/base/BackgroundTask.cpp
         concurrent/base/Routine.cpp
         concurrent/pool/AbstractThreadPool.cpp
+        concurrent/pool/ArrayThreadPool.cpp
 
         container/String.cpp
         container/StringBuilder.cpp
@@ -68,10 +69,7 @@ set(ANBASE_OBJS
         parser/json/JsonString.cpp
         parser/json/JsonBoolean.cpp
         parser/json/parse-json.cpp
-        parser/regular/RegularExpression.cpp
-        parser/regular/CharNFA.cpp
-        parser/regular/RegularParser.cpp
-        parser/regular/NFANode.cpp
+        parser/regular/NFA.cpp
 
         serialize/Serializer.cpp
         serialize/logger/LogEntry.cpp
@@ -101,6 +99,7 @@ add_library(anbase STATIC ${ANBASE_SRCS})
 
 target_link_libraries(anbase pthread)
 include_directories(${INC_DIR})
+include_directories(${SRC_DIR})
 
 # gtest framework
 add_subdirectory(${TEST_DIR})

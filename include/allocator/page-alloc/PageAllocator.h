@@ -68,7 +68,7 @@ namespace page_alloc {
         static page_index_type roundSizeToMultiple(handling_size_type inputSize);
         static handling_size_type pageIndexToSlotSize(page_index_type listIndex);
 
-        SlotPage *getPageByAddress(FreeSlotInfo *slotInfo) const ;
+        SlotPage *getPageByAddress(FreeSlotInfo *slotInfo) ;
         FreeSlotInfo *fetchASlot(page_index_type pageIndex);
         void returnASlot(page_index_type pageIndex, FreeSlotInfo *slot);
 

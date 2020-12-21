@@ -78,7 +78,7 @@ static bool parseNodeTag(XmlElement *node, const char *expression, size_type len
         }
 
         size_type keyOffset = leftOffset;
-        // count to =
+        // refCount to =
         size_type keyLen = indexOf(expression + leftOffset, unParsedLength, '=');
         if (keyLen == unParsedLength) { throw XmlParseFalied(); }
         // remove blanks between key string and =
@@ -124,7 +124,7 @@ XmlElement *parseXml(const char *expression, size_type length) {
      * The top of the stack is the parent node of the current node.
      * Pop the top if encounter a </ ... >.
      * Push the node into the stack if encounter a non-leaf part.
-     * Using push_back & pop_back as push & pop
+     * Using pushBack & popBack as push & pop
      */
 
     XmlElement *rootNode = nullptr;

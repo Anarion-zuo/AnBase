@@ -9,7 +9,7 @@
 #include <container/Map/HashMap.hpp>
 #include <container/List/LinkedList.hpp>
 #include <io/base/io-exceptions.h>
-#include <io/channel/path/Path.h>
+#include <io/fs/Path.h>
 #include <time/Time.h>
 
 namespace anarion {
@@ -41,10 +41,10 @@ namespace anarion {
      *
      * For directories, things are a bit special.
      *     - Directories must support traversing, namely, get child directories and files.
-     *     - Directories can not be read or written like a regular file.
+     *     - Directories can not be singleAtomicRead or written like a regular file.
      * Afterall, directories are stored as inodes, same as regular files.
      * The class Directory is inherited from class FileChannel, so that it operates on similar file system interface.
-     * The stream read/write operations of directories should be prevented at runtime.
+     * The stream singleAtomicRead/write operations of directories should be prevented at runtime.
      * This implementation uses dirent utilities from Unix interface.
      *
      * There are 2 ways of making use of this file system utility class and other io utilities.
@@ -79,7 +79,7 @@ namespace anarion {
         virtual void create(perm_t perm) = 0;
         virtual bool isOpen() const = 0;
 
-        // read/write
+        // singleAtomicRead/write
         virtual size_type in(const char *data, size_type nbytes) = 0;
         virtual size_type in(Buffer &buffer) = 0;
         virtual size_type in(Buffer &buffer, size_type nbytes) = 0;

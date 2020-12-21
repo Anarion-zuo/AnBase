@@ -19,7 +19,7 @@ void anarion::Barrier::checkin() {
 
 void anarion::Barrier::wait() {
     waitLock.lock();
-    cond.wait(bind(&Barrier::all_checked, *this));
+//    cond.wait(bind(&Barrier::all_checked, *this));
     waitLock.unlock();
 }
 

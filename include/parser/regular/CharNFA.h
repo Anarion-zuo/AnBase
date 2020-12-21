@@ -6,27 +6,24 @@
 #define ANBASE_CHARNFA_H
 
 #include <container/List/Vector.hpp>
-#include <container/Map/HashMap.hpp>
-#include <concurrent/base/Mutex.h>
+#include "NFANode.h"
 
 namespace anarion {
 class CharNFA {
-    struct Node {
-        HashMap<char, Vector<Node*>> char2nexts;
 
-        Vector<Node *> &getNext(char c);
 
-        static Node *destination, *error;
-        static Mutex mutex;
-        static Node *getDestination();
+    struct MatchInfo {
+        LinkedList<NFANode *> nodes;
 
-        bool isDestination() const ;
-        size_type nextsCount() const ;
+        bool putChar(char c);
+        void init(NFANode *source);
 
-        static Node *parseRegular(const char *regular, size_type length);
+        explicit MatchInfo(NFANode *source) { init(source); }
+
+        void matchFirst();
     };
 
-    Node *source = nullptr;
+    NFANode *source = nullptr, *destination = nullptr;
 
 public:
     CharNFA(const char *regular, size_type length);

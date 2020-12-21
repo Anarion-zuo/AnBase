@@ -7,7 +7,7 @@
 
 using namespace anarion;
 
-TEST(TestContainers, TestTuple) {
+TEST(TestTuple, TestInit) {
     // constructors
     auto tuple = make_tuple(1, 2u, "hello tuple");
     auto out = tuple.get();

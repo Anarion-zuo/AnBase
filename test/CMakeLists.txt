@@ -18,6 +18,7 @@ add_executable(gtests
         containers/TestString.cpp
         containers/TestSoftArray.cpp
         containers/TestBitArray.cpp
+        containers/TestNumLinkedList.cpp
 
         file/TestFileChannel.cpp
 

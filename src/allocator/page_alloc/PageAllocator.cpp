@@ -72,7 +72,7 @@ void anarion::page_alloc::PageAllocator::returnASlot
 }
 
 anarion::page_alloc::SlotPage *
-anarion::page_alloc::PageAllocator::getPageByAddress(anarion::page_alloc::FreeSlotInfo *slotInfo) const {
+anarion::page_alloc::PageAllocator::getPageByAddress(anarion::page_alloc::FreeSlotInfo *slotInfo) {
     auto it = allocatedPagesMap.find(reinterpret_cast<char *>(slotInfo));
     if (it == allocatedPagesMap.end_iterator()) {
         return nullptr;

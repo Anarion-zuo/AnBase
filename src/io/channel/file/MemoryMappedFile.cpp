@@ -6,7 +6,7 @@
 #include <sys/mman.h>
 #include <io/base/io-exceptions.h>
 
-anarion::MemoryMappedFile::MemoryMappedFile(const anarion::SString &dir) : channel(FileChannel::open(dir)) {
+anarion::MemoryMappedFile::MemoryMappedFile(const anarion::SString &dir) : channel(FileChannel(dir, 0666)) {
     phead = mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, channel.getFd(), 0);
     if (phead == MAP_FAILED) { throw OpenFdFailed(); }
 }

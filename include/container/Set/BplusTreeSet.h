@@ -117,11 +117,11 @@ namespace anarion {
             }
             template <typename ThisArrayType, typename NewArrayType>
             static void insertRightObjsToNewNode(Vector<NewArrayType> &newNodeObjArray, size_type thisSize, size_type newSize, const Vector<ThisArrayType> &objArray) {
-                newNodeObjArray.insert(0ul, objArray.begin_iterator() + thisSize, newSize);
+                newNodeObjArray.insert(0ul, objArray.beginIterator() + thisSize, newSize);
             }
 //            virtual void removeMovedNode(size_type thisSize, size_type newSize) = 0;
-//            virtual Node *createNewNode() = 0;
-//            virtual void moveChildsToNewNode(Node *newNode, size_type thisSize, size_type newSize) = 0;
+//            virtual NFANode *createNewNode() = 0;
+//            virtual void moveChildsToNewNode(NFANode *newNode, size_type thisSize, size_type newSize) = 0;
             size_type getParentIndex() const {
                 for (size_type index = 0; index < parent->childsArray.size(); ++index) {
                     if (parent->childsArray.get(index) == this) {
@@ -135,10 +135,10 @@ namespace anarion {
                 this->parent = newRoot;
                 newNode->parent = this->parent;
                 // insert obj
-                this->parent->objArray.push_back(objArray.get(thisSize - 1));
+                this->parent->objArray.pushBack(objArray.get(thisSize - 1));
                 // insert child
-                this->parent->childsArray.push_back(this);
-                this->parent->childsArray.push_back(newNode);
+                this->parent->childsArray.pushBack(this);
+                this->parent->childsArray.pushBack(newNode);
                 return newRoot;
             }
             MiddleNode *setupNewRootAsParentObj(Node *newNode, size_type thisSize, Vector<T> &objArray) {
@@ -146,14 +146,14 @@ namespace anarion {
                 this->parent = newRoot;
                 newNode->parent = this->parent;
                 // insert obj
-                this->parent->objArray.push_back(keyGetter().get(objArray.get(thisSize - 1)));
+                this->parent->objArray.pushBack(keyGetter().get(objArray.get(thisSize - 1)));
                 // insert child
-                this->parent->childsArray.push_back(this);
-                this->parent->childsArray.push_back(newNode);
+                this->parent->childsArray.pushBack(this);
+                this->parent->childsArray.pushBack(newNode);
                 return newRoot;
             }
 
-//            virtual void updateLinkedList(Node *newNode) = 0;
+//            virtual void updateLinkedList(NFANode *newNode) = 0;
             virtual MiddleNode *split() = 0;
             virtual bool needsSplit() const = 0;
             /*
@@ -161,7 +161,7 @@ namespace anarion {
                 // prepare
                 size_type thisSize, newSize;
                 computeSpltSizes(thisSize, newSize);
-                Node *newNode = createNewNode();
+                NFANode *newNode = createNewNode();
                 // objs
                 insertRightObjsToNewNode(newNode, thisSize, newSize);
                 // possible childs
@@ -183,7 +183,7 @@ namespace anarion {
             template <typename Type>
             static void print(const Vector<Type> &objArray) {
                 printf("#");
-                for (auto it = objArray.begin_iterator(); it != objArray.end_iterator(); ++it) {
+                for (auto it = objArray.beginIterator(); it != objArray.endIterator(); ++it) {
                     printf("%d ", *it);
                 }
                 printf("#");
@@ -219,11 +219,11 @@ namespace anarion {
                 }
                 // insert pointers into newNode
                 // be extra careful with this 1
-                newMiddleNode->childsArray.insert(0ul, childsArray.begin_iterator() + thisSize, newSize + 1);
+                newMiddleNode->childsArray.insert(0ul, childsArray.beginIterator() + thisSize, newSize + 1);
                 childsArray.remove(thisSize, newSize + 1);
             }
 /*
-            void updateLinkedList(Node *newNode) override {
+            void updateLinkedList(NFANode *newNode) override {
                 // nothing here
             }
 */
@@ -252,7 +252,7 @@ namespace anarion {
             }
 
             void removeChilds() override {
-                for (auto it = childsArray.begin_iterator(); it != childsArray.end_iterator(); ++it) {
+                for (auto it = childsArray.beginIterator(); it != childsArray.endIterator(); ++it) {
                     (**it).removeChilds();
                     delete *it;
                 }
@@ -270,7 +270,7 @@ namespace anarion {
                 this->objArray.remove(thisSize, newSize);
             }
 /*
-            void moveChildsToNewNode(Node *newNode, size_type thisSize, size_type newSize) {
+            void moveChildsToNewNode(NFANode *newNode, size_type thisSize, size_type newSize) {
                 // nothing here
             }
 */
@@ -442,7 +442,7 @@ namespace anarion {
                 printf("\n");
                 if (!node->isLeaf()) {
                     Vector<Node*> &childs = dynamic_cast<MiddleNode*>(node)->childsArray;
-                    for (auto it = childs.begin_iterator(); it != childs.end_iterator(); ++it) {
+                    for (auto it = childs.beginIterator(); it != childs.endIterator(); ++it) {
                         queue.push_front(*it);
                     }
                 }
@@ -456,11 +456,13 @@ namespace anarion {
          * Iterates from least to largest.
          */
         class iterator {
+            friend class BplusTreeSet;
         protected:
-            const LeafNode *curNode;
-            const T *vectorIterator;
+            LeafNode *curNode;
+            T *vectorIterator;
         public:
-            explicit iterator(const LeafNode *curNode) : curNode(curNode), vectorIterator(curNode->objArray.begin_iterator()) {}
+            iterator() = default;
+            explicit iterator(LeafNode *curNode) : curNode(curNode), vectorIterator(curNode->objArray.beginIterator()) {}
             ~iterator() = default;
             iterator(const iterator &rhs) = default;
             iterator &operator=(const iterator &) = default;
@@ -469,10 +471,16 @@ namespace anarion {
             const T *operator->() const { return vectorIterator; }
 
             iterator &operator++() {
-                ++vectorIterator;
-                if (vectorIterator == curNode->objArray.end_iterator()) {
+                if (vectorIterator == nullptr) {
+                    // is endIterator
                     curNode = curNode->next;
-                    vectorIterator = curNode->objArray.begin_iterator();
+                    vectorIterator = curNode->objArray.beginIterator();
+                    return *this;
+                }
+                ++vectorIterator;
+                if (vectorIterator == curNode->objArray.endIterator()) {
+                    curNode = curNode->next;
+                    vectorIterator = curNode->objArray.beginIterator();
                 }
                 return *this;
             }
@@ -484,10 +492,10 @@ namespace anarion {
             }
 
             iterator &operator--() {
-                if (vectorIterator == curNode->objArray.begin_iterator()) {
+                if (vectorIterator == curNode->objArray.beginIterator()) {
                     curNode = curNode->prev;
-                    T *endIt = curNode->objArray.end_iterator();
-                    if (endIt == curNode->objArray.begin_iterator()) {
+                    T *endIt = curNode->objArray.endIterator();
+                    if (endIt == curNode->objArray.beginIterator()) {
                         vectorIterator = endIt;
                         return *this;
                     }
@@ -514,10 +522,10 @@ namespace anarion {
             }
 
             iterator &operator+=(size_type steps) {
-                size_type nodeMore = curNode->objArray.end_iterator() - vectorIterator;
+                size_type nodeMore = curNode->objArray.endIterator() - vectorIterator;
                 while (steps >= nodeMore) {
                     curNode = curNode->next;
-                    vectorIterator = curNode->objArray.begin_iterator();
+                    vectorIterator = curNode->objArray.beginIterator();
                     steps -= nodeMore;
                     nodeMore = curNode->objArray.size();
                 }
@@ -526,10 +534,10 @@ namespace anarion {
             }
 
             iterator &operator-=(size_type steps) {
-                size_type nodeMore = vectorIterator - curNode->objArray.begin_iterator();
+                size_type nodeMore = vectorIterator - curNode->objArray.beginIterator();
                 while (steps > nodeMore) {
                     curNode = curNode->prev;
-                    vectorIterator = curNode->objArray.end_iterator();
+                    vectorIterator = curNode->objArray.endIterator();
                     steps -= nodeMore;
                     nodeMore = curNode->objArray.size();
                 }
@@ -539,19 +547,19 @@ namespace anarion {
 
         };
 
-        iterator begin_iterator() const {
+        iterator begin_iterator() {
             return iterator(stub.next);
         }
-        iterator end_iterator() const {
+        iterator end_iterator() {
             return iterator(&stub);
         }
 
-        /*
-         * Finding function returns an iterator.
+        /**
+         * @details Finding function returns an iterator.
          * Returns the position where the element should be inserted,
          * which is the position the element less than or equal to the input obj.
          */
-        iterator find(const K &obj) const {
+        iterator find(const K &obj) {
             if (objCount == 0) {
                 return end_iterator();
             }
@@ -608,10 +616,11 @@ namespace anarion {
                 Node *node = queue.pop_back();
                 if (!node->isLeaf()) {
                     Vector<Node*> &childs = dynamic_cast<MiddleNode*>(node)->childsArray;
-                    for (auto it = childs.begin_iterator(); it != childs.end_iterator(); ++it) {
+                    for (auto it = childs.beginIterator(); it != childs.endIterator(); ++it) {
                         if ((**it).parent != node) {
                             printf("This node has a child with parent not pointing to this node.\n");
-                            printf("This node address: %lx, This Child index: %lu, This Child's parent: %lx.\n", this, it - childs.begin_iterator(), (**it).parent);
+                            printf("This node address: %lx, This Child index: %lu, This Child's parent: %lx.\n", this, it -
+                                    childs.beginIterator(), (**it).parent);
                             printf("This node content: ");
                             Node::print(dynamic_cast<MiddleNode*>(node)->objArray);
                             printf("Faulty parent node content: ");

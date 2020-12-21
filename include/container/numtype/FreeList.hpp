@@ -8,7 +8,6 @@
 #include <container/List/Vector.hpp>
 
 namespace anarion {
-namespace db {
     /**
      * @brief Accounts for object occupation information.
      * @tparam index_t numerical type of the index.
@@ -162,5 +161,5 @@ namespace db {
     template <typename index_t>
     const index_t FreeList<index_t>::null = -1;
 }
-}
+
 #endif //ANBASE_FREELIST_HPP
