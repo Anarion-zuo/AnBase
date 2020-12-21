@@ -27,6 +27,8 @@ namespace anarion {
          * - Starting off a thread mainRoutine.
          * - Ending a thread routing.
          */
+    public:
+        using entry_t = uint32_t;
     protected:
         struct ThreadEntry {
             // task info
@@ -37,9 +39,9 @@ namespace anarion {
             ThreadCore thread;
             // thread state
             enum State {
-                isPending = 3, // is waiting to be assigned a task
-                isBusy = 2,    // is executing some task
-                isReady = 1,    // is going to run the task
+                isFree = 3, // is waiting to be assigned a task
+//                isBusy = 2,    // is executing some task
+                isBusy = 1,    // is going to run the task
                 isDead = 0,   // is exiting thread mainRoutine
             };
             enum State state = isDead;
@@ -60,12 +62,12 @@ namespace anarion {
              */
             bool monitorLaunchTask();
             bool monitorKillUnBusyRoutine();
+            void monitorWaitComplete();
 
             // set the state of this handle and pool
-            void enterBusy();
-            void enterPending();
+            void enterFree();
             void enterDead();
-            void enterReady();
+            void enterBusy();
             // entering and leaving a loop
             void acquireTaskEntrance();
             void releaseTaskEntrance();
@@ -75,11 +77,24 @@ namespace anarion {
 
         void startMainRoutine(size_type index, ThreadEntry *entry);
         virtual void markBusy(size_type index, ThreadEntry *entry) = 0;
-        virtual void markPending(size_type index, ThreadEntry *entry) = 0;
+        virtual void markFree(size_type index, ThreadEntry *entry) = 0;
         virtual void markDead(size_type index, ThreadEntry *entry) = 0;
-        virtual void markReady(size_type index, ThreadEntry *entry) = 0;
+
+        Vector<ThreadEntry> entries;
+        ThreadEntry &getEntry(size_type index);
+        const ThreadEntry &getEntry(size_type index) const ;
 
     public:
+
+        void start(size_type index);
+        void launch(size_type index);
+        void setTask(size_type index, PoolExecutable *executable);
+        bool tryKill(size_type index);
+        void forceKill(size_type index);
+
+        bool isBusy(size_type index);
+        bool isFree(size_type index);
+        bool isDead(size_type index);
 
         struct Exception : public std::exception {};
         struct ThreadStateUnknown : public Exception {};

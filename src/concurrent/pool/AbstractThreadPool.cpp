@@ -9,9 +9,9 @@ void anarion::AbstractThreadPool::ThreadEntry::mainRoutine() {
         // wait for non running state
         acquireTaskEntrance();
         // check for different states
-        if (state == isReady) {
+        if (state == isBusy) {
             // normal handling
-            enterBusy();
+//            enterBusy();
         } else if (state == isDead) {
             // entering dead state
             releaseTaskEntrance();
@@ -28,7 +28,7 @@ void anarion::AbstractThreadPool::ThreadEntry::mainRoutine() {
         }
         executable->run();
 
-        enterPending();
+        enterFree();
         releaseTaskEntrance();
     }
 }
@@ -40,7 +40,7 @@ void *anarion::AbstractThreadPool::ThreadEntry::entryRoutine(void *entryPointer)
 }
 
 void anarion::AbstractThreadPool::ThreadEntry::monitorStartRoutine() {
-    enterPending();
+    enterFree();
     thread.startPThread(entryRoutine, this);
 }
 
@@ -50,7 +50,7 @@ void anarion::AbstractThreadPool::ThreadEntry::monitorSetExecutable(anarion::Poo
 
 void anarion::AbstractThreadPool::ThreadEntry::acquireTaskEntrance() {
     mutex.lock();
-    while (state == isPending) {
+    while (state == isFree) {
         cond.wait();
     }
     ++refCount;
@@ -60,19 +60,14 @@ void anarion::AbstractThreadPool::ThreadEntry::acquireTaskEntrance() {
     }
 }
 
-void anarion::AbstractThreadPool::ThreadEntry::enterBusy() {
-    pool->markBusy(poolIndex, this);
-    state = isBusy;
-}
-
-void anarion::AbstractThreadPool::ThreadEntry::enterPending() {
-    pool->markPending(poolIndex, this);
-    state = isReady;
+void anarion::AbstractThreadPool::ThreadEntry::enterFree() {
+    pool->markFree(poolIndex, this);
+    state = isFree;
 }
 
 void anarion::AbstractThreadPool::ThreadEntry::enterDead() {
-    state = isDead;
     pool->markDead(poolIndex, this);
+    state = isDead;
 }
 
 void anarion::AbstractThreadPool::ThreadEntry::releaseTaskEntrance() {
@@ -81,16 +76,16 @@ void anarion::AbstractThreadPool::ThreadEntry::releaseTaskEntrance() {
 }
 
 bool anarion::AbstractThreadPool::ThreadEntry::monitorLaunchTask() {
-    if (state != isPending) {
+    if (state != isFree) {
         return false;
     }
-    enterReady();
+    enterBusy();
     cond.broadcast();
     return true;
 }
 
 bool anarion::AbstractThreadPool::ThreadEntry::monitorKillUnBusyRoutine() {
-    if (state != isPending) {
+    if (state != isFree) {
         return false;
     }
     enterDead();
@@ -98,9 +93,17 @@ bool anarion::AbstractThreadPool::ThreadEntry::monitorKillUnBusyRoutine() {
     return true;
 }
 
-void anarion::AbstractThreadPool::ThreadEntry::enterReady() {
-    state = isReady;
-    pool->markReady(poolIndex, this);
+void anarion::AbstractThreadPool::ThreadEntry::enterBusy() {
+    state = isBusy;
+    pool->markBusy(poolIndex, this);
+}
+
+void anarion::AbstractThreadPool::ThreadEntry::monitorWaitComplete() {
+    mutex.lock();
+    while (state == isBusy) {
+        cond.wait();
+    }
+    mutex.unlock();
 }
 
 void anarion::AbstractThreadPool::startMainRoutine(size_type index, anarion::AbstractThreadPool::ThreadEntry *entry) {
@@ -113,4 +116,40 @@ void anarion::AbstractThreadPool::startMainRoutine(size_type index, anarion::Abs
     entry->pool = this;
     // call monitorStartRoutine
     entry->monitorStartRoutine();
+}
+
+anarion::AbstractThreadPool::ThreadEntry &anarion::AbstractThreadPool::getEntry(anarion::size_type index) {
+    return entries.get(index);
+}
+
+const anarion::AbstractThreadPool::ThreadEntry &anarion::AbstractThreadPool::getEntry(anarion::size_type index) const {
+    return entries.get(index);
+}
+
+void anarion::AbstractThreadPool::start(anarion::size_type index) {
+    getEntry(index).monitorStartRoutine();
+}
+
+void anarion::AbstractThreadPool::launch(anarion::size_type index) {
+    getEntry(index).monitorLaunchTask();
+}
+
+void anarion::AbstractThreadPool::setTask(anarion::size_type index, anarion::PoolExecutable *executable) {
+    getEntry(index).monitorSetExecutable(executable);
+}
+
+bool anarion::AbstractThreadPool::tryKill(anarion::size_type index) {
+    return getEntry(index).monitorKillUnBusyRoutine();
+}
+
+bool anarion::AbstractThreadPool::isBusy(anarion::size_type index) {
+    return getEntry(index).state == ThreadEntry::isBusy;
+}
+
+bool anarion::AbstractThreadPool::isFree(anarion::size_type index) {
+    return getEntry(index).state == ThreadEntry::isFree;
+}
+
+bool anarion::AbstractThreadPool::isDead(anarion::size_type index) {
+    return getEntry(index).state == ThreadEntry::isDead;
 }
