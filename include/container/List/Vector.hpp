@@ -222,6 +222,19 @@ namespace anarion {
             }
         }
 
+        template <typename ...Args>
+        Vector(size_type initialSize, Args ...args) {
+            if (initialSize == 0) {
+                return;
+            }
+            begin = new_space<T>(initialSize);
+            end = (begin + initialSize);
+            cur = begin + initialSize;
+            for (size_type i = 0; i < initialSize; ++i) {
+                new(&begin[i]) T(forward<Args>(args)...);
+            }
+        }
+
         /**
          * @param rhs copy constructor.
          */
