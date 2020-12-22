@@ -77,6 +77,7 @@ void anarion::AbstractThreadPool::ThreadEntry::enterDead() {
 void anarion::AbstractThreadPool::ThreadEntry::releaseTaskEntrance() {
     --refCount;
     mutex.unlock();
+    cond.broadcast();
 }
 
 bool anarion::AbstractThreadPool::ThreadEntry::monitorLaunchTask() {
