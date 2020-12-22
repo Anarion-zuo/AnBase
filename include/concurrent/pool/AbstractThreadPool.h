@@ -50,7 +50,7 @@ namespace anarion {
             size_type poolIndex = -1;
             AbstractThreadPool *pool = nullptr;
 
-            ThreadEntry() : thread(), mutex(), cond(mutex) {}
+            explicit ThreadEntry(enum State initState) : thread(), mutex(), cond(mutex), state(initState) {}
 
             void mainRoutine();
             void monitorStartRoutine();
@@ -68,6 +68,10 @@ namespace anarion {
             void enterFree();
             void enterDead();
             void enterBusy();
+            void leaveFree();
+            void leaveDead();
+            void leaveBusy();
+
             // entering and leaving a loop
             void acquireTaskEntrance();
             void releaseTaskEntrance();
@@ -79,6 +83,9 @@ namespace anarion {
         virtual void markBusy(size_type index, ThreadEntry *entry) = 0;
         virtual void markFree(size_type index, ThreadEntry *entry) = 0;
         virtual void markDead(size_type index, ThreadEntry *entry) = 0;
+        virtual void unmarkBusy(size_type index, ThreadEntry *entry) = 0;
+        virtual void unmarkFree(size_type index, ThreadEntry *entry) = 0;
+        virtual void unmarkDead(size_type index, ThreadEntry *entry) = 0;
 
         Vector<ThreadEntry> entries;
         ThreadEntry &getEntry(size_type index);
@@ -86,11 +93,14 @@ namespace anarion {
 
     public:
 
+        explicit AbstractThreadPool(size_type poolSize) : entries(poolSize, ThreadEntry::isDead) {}
+
         void start(size_type index);
         void launch(size_type index);
         void setTask(size_type index, PoolExecutable *executable);
         bool tryKill(size_type index);
         void forceKill(size_type index);
+        void join(size_type index);
 
         bool isBusy(size_type index);
         bool isFree(size_type index);
