@@ -398,6 +398,11 @@ namespace anarion {
             new(cur++) T(forward<T>(o));
         }
 
+        template <typename ...Args>
+        void emplaceBack(Args ...args) {
+            new(cur++) T(forward<Args>(args)...);
+        }
+
         /**
          * @return the last element of the container and remove it from the position.
          */
@@ -520,6 +525,13 @@ namespace anarion {
         iterator insert(size_type index, T &&o) {
             insertPrepare(index);
             new(begin + index) T(forward<T>(o));
+            return begin + index;
+        }
+
+        template <typename ...Args>
+        iterator insertEmplace(size_type index, Args ...args) {
+            insertPrepare(index);
+            new(begin + index) T(forward<Args>(args)...);
             return begin + index;
         }
 
