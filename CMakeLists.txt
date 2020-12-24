@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
 project (AnBase)
 
+# compiler flags
+set(CLANG_FLAGS "-Wall -Xclang -fsized-deallocation")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CLANG_FLAGS}")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+#    set(CMAKE_CXX_FLAGS "${GCC_FLAGS}")
+endif()
+
 # project settings
 set(INC_DIR "include")
 set(SRC_DIR "src")
