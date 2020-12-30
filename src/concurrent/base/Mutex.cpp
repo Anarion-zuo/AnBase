@@ -56,7 +56,7 @@ Mutex &Mutex::operator=(Mutex &&rhs) noexcept {
     return *this;
 }
 
-pthread_mutex_t &Mutex::getHandle() {
+const pthread_mutex_t &Mutex::getHandle() const {
     return mu;
 }
 

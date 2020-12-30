@@ -23,7 +23,8 @@ public:
     ~Mutex();
     Mutex &operator=(Mutex &&rhs) noexcept ;
 
-    pthread_mutex_t &getHandle();
+    const pthread_mutex_t &getHandle() const ;
+    pthread_mutex_t &getHandle() { return mu; }
 
     void lock();
     void unlock();
