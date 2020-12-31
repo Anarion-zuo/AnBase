@@ -83,3 +83,8 @@ void ThreadCore::startPThread(void *(*fp)(void *), void *arg) {
         throw ThreadStartException();
     }
 }
+
+ThreadCore::ThreadCore(ThreadCore &&rhs) noexcept
+ : pid(rhs.pid) {
+    rhs.pid = -1;
+}

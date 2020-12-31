@@ -37,6 +37,12 @@ namespace anarion {
         void joinPThread() const;
 
         ThreadCore() = default;
+        ThreadCore(ThreadCore &&rhs) noexcept ;
+        ThreadCore(const ThreadCore &) = delete;
+
+        ThreadCore &operator=(const ThreadCore &) = delete;
+        ThreadCore &operator=(ThreadCore &&) noexcept = delete;
+
         static void sleep(const Time &sleepTime);
 
         void cancel() const;
@@ -56,7 +62,6 @@ namespace anarion {
     public:
 
         Thread() = default;
-        Thread(const Thread &) = default;
         Thread(Thread &&) noexcept = default;
         ~Thread() = default;
         Thread(const Callable &routine) : routine(routine) {}
