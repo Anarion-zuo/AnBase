@@ -4,6 +4,7 @@ project(AnBase)
 set(INC_DIR "../include")
 set(SRC_DIR "../src")
 
+
 add_executable(gtests
 
         containers/TestBplusTreeSet.cpp
@@ -43,18 +44,6 @@ add_executable(gtests
 
         function/TestFunction.cpp
         )
-
-# platform derivation
-if(${APPLE})
-    message("On MacOSX")
-    include_directories(/usr/local/Cellar/googletest/1.10.0/include)
-elseif(${UNIX})
-    message("On Unix except MacOSX, possibly linux")
-elseif(${WIN32})
-    message("On WIN32")
-else()
-    message("Unknown CMake Platform!!!")
-endif()
 
 target_link_libraries(gtests gtest gtest_main)
 include_directories(${INC_DIR})
