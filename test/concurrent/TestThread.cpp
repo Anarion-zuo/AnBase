@@ -45,3 +45,27 @@ TEST(TestThread, ThreadPassPointer) {
     thread.join();
     ASSERT_EQ(beforeInc, afterInc);
 }
+
+TEST(TestThread, Restart) {
+    auto thread = makeThread([] {
+        printf("hello there\n");
+    });
+    thread.start();
+    thread.join();
+    thread.start();
+    thread.join();
+}
+
+TEST(TestThread, Cancel) {
+    auto thread = makeThread([] {
+        size_type times = 0;
+        while (true) {
+            printf("hello there for the %lu time\n", times);
+            ++times;
+            ThreadCore::sleep(Time(1, 0));
+        }
+    });
+    thread.start();
+    thread.cancel();
+    thread.join();
+}
