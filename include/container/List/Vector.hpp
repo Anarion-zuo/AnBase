@@ -399,8 +399,9 @@ namespace anarion {
         }
 
         template <typename ...Args>
-        void emplaceBack(Args ...args) {
+        iterator emplaceBack(Args ...args) {
             new(cur++) T(forward<Args>(args)...);
+            return cur - 1;
         }
 
         /**
