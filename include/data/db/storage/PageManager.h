@@ -8,118 +8,63 @@
 #include <serialize/Serializer.h>
 #include <data/db/loginfo/DataBaseLogEntry.h>
 #include "FileBlockManager.h"
-#include "BufferManager.h"
 #include "../IdNamed.h"
 
 namespace anarion {
 namespace db {
-
-class PageManager : public IdNamed<uint16_t> {
-protected:
-    FileBlockManager *blockManager;
-    BufferManager *bufferManager;
-    const pageoff_t pageSize;
-
-public:
-    static const pageno_t pagenoNull = -1;
-protected:
-
-    struct BlockInfo {
-        blockno_t blockno;
-        blockoff_t blockoff;
-
-        BlockInfo(blockno_t blockno, blockoff_t blockoff) : blockno(blockno), blockoff(blockoff) {}
-
-        size_type totalOffset(const FileBlockManager &blockManager) const {
-            return blockManager.getBlockSize() * blockno + blockoff;
-        }
-
-        bool isOutOfRange(const FileBlockManager &blockManager) const {
-            return totalOffset(blockManager) >= blockManager.getTotalSize();
-        }
-    };
-
-    // meta data
-    struct PageHeader {
-        BlockInfo blockInfo;
-        IdType managerId;
-        pageno_t pageno;
-    };
-
-    struct PageManagerHeader {
-        IdType managerId;
-    };
-
-    struct PageInfo {
-        bufferno_t bufferno = BufferManager::null;
-        BlockInfo blockInfo { FileBlockManager::null, 0 };
-        bool isDirty : 1;
+    class BufferManager;
+    struct Page {
+        static const pageno_t pagenoNull = -1;
+        bufferno_t bufferno = pagenoNull;
         bool isPresent : 1;
+        bool isDirty : 1;
+        uint32_t refCount = 0;
 
-        bool nullBuffer() const { return BufferManager::null == bufferno; }
-        bool nullBlock() const { return FileBlockManager::null == blockInfo.blockno; }
-        void setNullBuffer(PageManager *pageManager);
-        bool hasBuffer(PageManager *pageManager, pageno_t pageno) const ;
+        Page() : isPresent(false), isDirty(false) {}
 
-        void load(PageManager *pageManager, pageno_t pageno);
-        void flush(PageManager *pageManager) const;
+        constexpr void bindBuffer(bufferno_t bufferno1) {
+            bufferno = bufferno1;
+        }
 
-        PageInfo() : isDirty(false), isPresent(false) {}
-
-        void read(PageManager *pageManager, anarion::db::pageoff_t pageoff, char *buffer,
-                  anarion::db::pageoff_t length);
-        void write(PageManager *pageManager, pageoff_t pageoff, const char *buffer, pageoff_t length);
-
-        PageHeader toHeader(PageManager *pageManager) const ;
-        void writeMeta(PageManager *pageManager);
     };
-    static pageoff_t pageMetaOffset() { return sizeof(PageHeader); }
 
-    Vector<PageInfo> pageInfos;
-    void initBlockOffsets();
-    /*
-    bool offset2info(size_type offset, BlockInfo &blockInfo, pageno_t &pageno, pageoff_t &pageoff) const ;
-    bool offset2BlockInfo(size_type offset, BlockInfo &blockInfo) const ;
-     */
-    bool offset2PageInfo(size_type offset, pageno_t &pageno, pageoff_t &pageoff) const ;
+    class PageManager : public IdNamed<uint16_t> {
+    friend class Page;
+    protected:
+        Vector<Page> pageList;
+        FileBlockManager *fileBlockManager;
+        BufferManager *bufferManager;
+        blockno_t beginBlock;
+        const pageoff_t pageSize;
 
+        void pageno2blockoff(pageno_t pageno, blockno_t &blockno, blockoff_t &blockoff) const ;
 
-    void warmPage(pageno_t pageno);
+    public:
+        PageManager(FileBlockManager *fileBlockManager1, blockno_t beginBlock, BufferManager *bufferManager1, pageno_t pageCount, pageoff_t pageSize);
 
-    // loginfo
-    Serializer logSerializer;
-    void logInfo(DataBaseLogEntry *entry);
+        pageoff_t getValidPageSize() const { return pageSize; }
 
-public:
+        Page &getPage(pageno_t pageno) { return pageList.get(pageno); }
+        const Page &getPage(pageno_t pageno) const { return pageList.get(pageno); }
+        pageno_t getPageno(Page *page) const ;
 
-    constexpr pageno_t getPageCount() const { return pageInfos.size(); }
-    constexpr size_type getTotalSize() const { return getPageCount() * pageSize; }
-    pageoff_t getPageSize() const { return pageSize; }
-    pageoff_t getValidPageSize() const { return pageSize - pageMetaOffset(); }
+        void loadPageBuffer(pageno_t pageno);
+        void flushPageBuffer(pageno_t pageno);
 
-    PageInfo &getPage(pageno_t pageno);
-    pageno_t pagenoOf(const PageInfo *page) const ;
+        void load(pageno_t pageno);
+        void release(pageno_t pageno);
 
-    PageManager(FileBlockManager *blockManager, pageoff_t pageSize, pageno_t pageInitCount, BufferManager *bufferManager);
-    ~PageManager();
+        void atomicRead(pageno_t pageno, pageoff_t pageoff, char *buf, pageoff_t length);
+        void atomicWrite(pageno_t pageno, pageoff_t pageoff, const char *buf, pageoff_t length);
 
-    void singleAtomicRead(pageno_t pageno, pageoff_t pageoff, char *buffer, size_type length);
-    void singleAtomicRead(size_type offset, char *buffer, size_type length);
-    void singleAtomicWrite(pageno_t pageno, pageoff_t pageoff, const char *buffer, size_type length);
-    void singleAtomicWrite(size_type offset, const char *buffer, size_type length);
-
-    void evictPage(pageno_t pageno);
-    void flushAll();
-
-struct Exception : public std::exception {};
-struct PageNotBackedByBlock : public Exception {};
-struct PageIndexOutOfRange : public Exception {};
-struct BufferPageSizeNotConsistent : public Exception {};
-struct FileBlockPageSizeNotConsistent : public Exception {};
-
-};
-
+    struct Exception : public std::exception {};
+    struct ComponentsPageSizeInconsistent : public Exception {};
+    struct FlushingNonPresentPage : public Exception {};
+    struct AccessOutofPageRange : public Exception {};
+    };
 }
 }
+
+
 
 #endif //ANBASE_PAGEMANAGER_H

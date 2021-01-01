@@ -7,83 +7,75 @@
 
 #include <container/List/Vector.hpp>
 #include "container/numtype/FreeList.hpp"
+#include <container/numtype/NumListSet.h>
 #include "typedecl.h"
 #include "LruList.h"
+#include "PageManager.h"
 
 namespace anarion {
 namespace db {
 
     class PageManager;
 
+    struct Buffer {
+        char *bytes = nullptr;
+        // buffer state
+        Mutex stateLock;
+        // indicates where is this buffer
+        enum State {
+            Free = 0,
+            Evictable,
+            Pinned,
+        };
+        enum State state = Free;
+        // page manager
+        PageManager *pageManager = nullptr;
+        pageno_t pageno = Page::pagenoNull;
+
+        void allocateBytes(size_type count);
+        void deallocateBytes(size_type count);
+
+        void bindPage(PageManager *pageManager1, pageno_t pageno1);
+    };
+
     /**
      * @brief Manages buffers backing disk blocks.
      * @details
      */
     class BufferManager {
-    public:
-        static const blockno_t null = -1;
-
-        struct BufferInfo {
-            char *head;
-            size_type refCount;
-            pageno_t pageno;
-            PageManager *pageManager;
-        };
     protected:
-        Vector<BufferInfo> bufferList;
+        Vector<Buffer> bufferList;
         FreeList<bufferno_t> freeList;
         LruList<bufferno_t> evictableList;
+        NumListSet<bufferno_t> pinnedList;
         const bufferoff_t bufferSize;
+        Mutex freeListLock, evictableListLock, pinnedListLock;
 
-        void allocateNewBuffer(bufferno_t count);
-        void deallocateBuffer(bufferno_t bufferno);
+        bufferno_t popFree();
+        bufferno_t popEvictable();
+        void pushFree(bufferno_t bufferno);
+        void pushEvictable(bufferno_t bufferno);
 
-        bufferno_t pickEvict();
-
-        /**
-         * @brief Creates mapping between certain page and buffer.
-         * @param pageManager Pointer to PageManager object.
-         * @param pageno Index of the page in the page manager obejct.
-         * @param bufferno Index of the buffer in this buffer manager.
-         */
-        void map(PageManager *pageManager, pageno_t pageno, bufferno_t bufferno);
-        /**
-         * @brief Destroy mapping beween certain page and buffer.
-         * @param bufferno Index of the buffer in this buffer manager.
-         */
-        void unmap(bufferno_t bufferno);
-        void markUsing(bufferno_t bufferno);
-        void markNotUsing(bufferno_t bufferno);
-        bufferno_t allocateOne();
         void evict(bufferno_t bufferno);
-
     public:
-        constexpr bufferno_t getBufferCount() const { return bufferList.size(); }
-        constexpr bufferoff_t getBufferSize() const { return bufferSize; }
-        constexpr size_type getTotalSize() const { return getBufferCount() * getBufferSize(); }
+        BufferManager(bufferoff_t pageSize, bufferno_t bufferCount);
+        ~BufferManager();
 
-        BufferInfo &getBuffer(bufferno_t bufferno);
-        const BufferInfo &getBuffer(bufferno_t bufferno) const ;
+        Buffer &getBuffer(bufferno_t bufferno) { return bufferList.get(bufferno); }
+        const Buffer &getBuffer(bufferno_t bufferno) const { return bufferList.get(bufferno); }
+        bufferoff_t getBufferSize() const { return bufferSize; }
 
-        BufferManager(bufferoff_t bufferSize, bufferno_t bufferInitCount);
-
-        char *getBufferAddress(bufferno_t bufferno);
-        const char *getBufferAddress(bufferno_t bufferno) const ;
-        pageno_t getBufferPageno(bufferno_t) const ;
-        void setPageno(bufferno_t bufferno, pageno_t pageno);
-
-        void beginUsing(bufferno_t bufferno);
-        void endUsing(bufferno_t bufferno);
-        bufferno_t mapPage(PageManager *pageManager, pageno_t pageno);
+        void loadPage(PageManager &pageManager, pageno_t pageno);
+        void unloadPage(PageManager &pageManager, pageno_t pageno);
 
     struct Exception : public std::exception {};
-    struct EvictingPinnedPage : public Exception {};
+    struct FreeListExhausted : public Exception {};
+    struct WholePoolExhausted : public Exception {};  // the whole pool is in use
+    struct FreeHangingBuffer : public Exception {};   // a buffer in the free list points to a page
+    struct EvictingNonEvictable : public Exception {};
     };
 
 }
-template<> struct move_traits<db::BufferManager::BufferInfo> {
-    using has_move_ctor = false_type;
-};
 }
 
 #endif //ANBASE_BUFFERMANAGER_H

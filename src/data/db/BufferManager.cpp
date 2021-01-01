@@ -5,129 +5,170 @@
 #include "data/db/storage/BufferManager.h"
 #include "data/db/storage/PageManager.h"
 
-anarion::db::BufferManager::BufferManager(anarion::db::bufferoff_t bufferSize, anarion::db::bufferno_t bufferInitCount)
-    : bufferSize(bufferSize),
-    bufferList(bufferInitCount, {.head = nullptr, .refCount = 0, .pageno = PageManager::pagenoNull}),
-    freeList(bufferInitCount) {
-    allocateNewBuffer(bufferInitCount);
+
+void anarion::db::Buffer::allocateBytes(size_type count) {
+    bytes = static_cast<char *>(operator new(count));
 }
 
-void anarion::db::BufferManager::allocateNewBuffer(bufferno_t count) {
-    for (size_type index = 0; index < count; ++index) {
-        char *p = static_cast<char *>(operator new(bufferSize));
-        bufferList.get(index).head = p;
+void anarion::db::Buffer::deallocateBytes(size_type count) {
+    operator delete (bytes, count);
+}
+
+void anarion::db::Buffer::bindPage(anarion::db::PageManager *pageManager1, anarion::db::pageno_t pageno1) {
+    pageManager = pageManager1;
+    pageno = pageno1;
+}
+
+anarion::db::BufferManager::BufferManager(anarion::db::bufferoff_t pageSize, anarion::db::bufferno_t bufferCount)
+: bufferSize(pageSize), bufferList(bufferCount), freeList(bufferCount), pinnedList(bufferCount) {
+    for (bufferno_t index = 0; index < bufferCount; ++index) {
+        bufferList.emplaceBack()->allocateBytes(pageSize);
     }
 }
 
-void anarion::db::BufferManager::deallocateBuffer(anarion::db::bufferno_t bufferno) {
-    operator delete(bufferList.get(bufferno).head, bufferSize);
-    bufferList.remove(bufferno);
-}
-
-char *anarion::db::BufferManager::getBufferAddress(anarion::db::bufferno_t bufferno) {
-    if (bufferno >= getBufferCount()) {
-        return nullptr;
-    }
-    return bufferList.get(bufferno).head;
-}
-
-const char *anarion::db::BufferManager::getBufferAddress(anarion::db::bufferno_t bufferno) const {
-    if (bufferno >= getBufferCount()) {
-        return nullptr;
-    }
-    return bufferList.get(bufferno).head;
-}
-
-void anarion::db::BufferManager::setPageno(anarion::db::bufferno_t bufferno, anarion::db::pageno_t pageno) {
-    getBuffer(bufferno).pageno = pageno;
-}
-
-anarion::db::BufferManager::BufferInfo &anarion::db::BufferManager::getBuffer(anarion::db::bufferno_t bufferno) {
-    return bufferList.get(bufferno);
-}
-
-anarion::db::pageno_t anarion::db::BufferManager::getBufferPageno(anarion::db::bufferno_t bufferno) const {
-    return getBuffer(bufferno).pageno;
-}
-
-const anarion::db::BufferManager::BufferInfo &
-anarion::db::BufferManager::getBuffer(anarion::db::bufferno_t bufferno) const {
-    return bufferList.get(bufferno);
-}
-
-anarion::db::bufferno_t anarion::db::BufferManager::pickEvict() {
-    if (evictableList.size() == 0) {
-        return null;
-    }
-    bufferno_t bufferno = evictableList.popLeastRecent();
-    return bufferno;
-}
-
-void anarion::db::BufferManager::map(anarion::db::PageManager *pageManager, anarion::db::pageno_t pageno,
-                                     anarion::db::bufferno_t bufferno) {
-    BufferInfo &buffer = getBuffer(bufferno);
-    buffer.pageManager = pageManager;
-    buffer.pageno = pageno;
-    buffer.refCount = 0;
-}
-
-void anarion::db::BufferManager::unmap(anarion::db::bufferno_t bufferno) {
-    BufferInfo &buffer = getBuffer(bufferno);
-    buffer.pageManager = nullptr;
-    buffer.pageno = PageManager::pagenoNull;
-    buffer.refCount = 0;
-}
-
-void anarion::db::BufferManager::markUsing(anarion::db::bufferno_t bufferno) {
-    BufferInfo &buffer = getBuffer(bufferno);
-    if (buffer.refCount == 0) {
-        // extract from evict list
-        evictableList.remove(bufferno);
-    }
-    buffer.refCount++;
-}
-
-void anarion::db::BufferManager::markNotUsing(anarion::db::bufferno_t bufferno) {
-    BufferInfo &buffer = getBuffer(bufferno);
-    if (buffer.refCount == 0) {
-        return;
-    }
-    --buffer.refCount;
-    if (buffer.refCount == 0) {
-        evictableList.add(bufferno);
+anarion::db::BufferManager::~BufferManager() {
+    for (auto it = bufferList.beginIterator(); it != bufferList.endIterator(); ++it) {
+        it->deallocateBytes(bufferSize);
     }
 }
 
-anarion::db::bufferno_t anarion::db::BufferManager::allocateOne() {
+anarion::db::bufferno_t anarion::db::BufferManager::popFree() {
     bufferno_t bufferno;
-    bool success = freeList.fetch(bufferno);
-    if (!success) {
-        bufferno = pickEvict();
-        evict(bufferno);
+    freeListLock.lock();
+    if (!freeList.fetch(bufferno)) {
+        freeListLock.unlock();
+        throw FreeListExhausted();
     }
+    freeListLock.unlock();
     return bufferno;
+}
+
+anarion::db::bufferno_t anarion::db::BufferManager::popEvictable() {
+    evictableListLock.lock();
+    bufferno_t bufferno = evictableList.popLeastRecent();
+    evictableListLock.unlock();
+    return bufferno;
+}
+
+void anarion::db::BufferManager::pushFree(anarion::db::bufferno_t bufferno) {
+    Buffer &buffer = getBuffer(bufferno);
+    freeListLock.lock();
+    buffer.stateLock.lock();
+
+    freeList.putBack(bufferno);
+    buffer.state = Buffer::Free;
+
+    buffer.stateLock.unlock();
+    freeListLock.unlock();
+}
+
+void anarion::db::BufferManager::pushEvictable(anarion::db::bufferno_t bufferno) {
+    Buffer &buffer = getBuffer(bufferno);
+    evictableListLock.lock();
+    buffer.stateLock.lock();
+
+    evictableList.add(bufferno);
+    getBuffer(bufferno).state = Buffer::Evictable;
+
+    buffer.stateLock.unlock();
+    evictableListLock.unlock();
+}
+
+void anarion::db::BufferManager::loadPage(anarion::db::PageManager &pageManager, anarion::db::pageno_t pageno) {
+    evictableListLock.lock();
+
+    Page &page = pageManager.getPage(pageno);
+    if (page.bufferno < bufferList.size()) {
+        Buffer &buffer = getBuffer(page.bufferno);
+
+        buffer.stateLock.lock();
+        if (buffer.pageno == pageno && buffer.pageManager == &pageManager) {
+            // the buffer is for this page
+            if (buffer.state == Buffer::Evictable) {
+                // formerly mapped to a evictable buffer
+                // can be used directly
+                evictableList.remove(page.bufferno);
+                buffer.state = Buffer::Pinned;
+
+                // return this special case
+                buffer.stateLock.unlock();
+                evictableListLock.unlock();
+                return;
+            }
+            if (buffer.state == Buffer::Pinned) {
+                // buffer already fetched
+                // return this special case
+                buffer.stateLock.unlock();
+                evictableListLock.unlock();
+                return;
+            }
+            // a buffer in the free list points to a page
+            buffer.stateLock.unlock();
+            evictableListLock.unlock();
+            throw FreeHangingBuffer();
+        }
+        buffer.stateLock.unlock();
+    }
+    // this buffer is not for this page
+    // must find another by freeList or evictList
+
+    // fetch buffer
+    freeListLock.lock();
+    bufferno_t newno;
+    bool success = freeList.fetch(newno);
+    freeListLock.unlock();
+    if (!success) {
+        // must evict
+        try {
+            newno = evictableList.popLeastRecent();
+        } catch (LinkedList<bufferno_t>::Underflow &) {
+            // evictable list exhausted
+            // cannot allocate anymore
+            throw WholePoolExhausted();
+        }
+        evict(newno);
+    }
+    // newno must be out of both free and evictable list by now
+    // which means newno is pinned
+    Buffer &newbuf = getBuffer(newno);
+    newbuf.stateLock.lock();
+    newbuf.state = Buffer::Pinned;
+    // bind both ways
+    page.bindBuffer(newno);
+    newbuf.bindPage(&pageManager, pageno);
+    // load buffer
+    pageManager.loadPageBuffer(pageno);
+
+    // return general case
+    newbuf.stateLock.unlock();
+    evictableListLock.unlock();
 }
 
 void anarion::db::BufferManager::evict(anarion::db::bufferno_t bufferno) {
-    BufferInfo &buffer = getBuffer(bufferno);
-    if (buffer.refCount != 0) {
-        throw EvictingPinnedPage();
+    // variable prepare
+    Buffer &buffer = getBuffer(bufferno);
+    if (buffer.state != Buffer::Evictable) {
+        throw EvictingNonEvictable();
     }
-    buffer.pageManager->evictPage(buffer.pageno);
-    unmap(bufferno);
+    pageno_t pageno = buffer.pageno;
+    PageManager *pageManager = buffer.pageManager;
+    Page &page = pageManager->getPage(pageno);
+    // execute
+    if (page.isDirty) {
+        pageManager->flushPageBuffer(pageno);
+    }
+    // promise of out
+    evictableList.remove(bufferno);
+    page.isPresent = false;
 }
 
-anarion::db::bufferno_t anarion::db::BufferManager::mapPage(anarion::db::PageManager *pageManager, anarion::db::pageno_t pageno) {
-    bufferno_t bufferno = allocateOne();
-    map(pageManager, pageno, bufferno);
-    beginUsing(bufferno);
-    return bufferno;
-}
-
-void anarion::db::BufferManager::beginUsing(anarion::db::bufferno_t bufferno) {
-    markUsing(bufferno);
-}
-
-void anarion::db::BufferManager::endUsing(anarion::db::bufferno_t bufferno) {
-    markNotUsing(bufferno);
+void anarion::db::BufferManager::unloadPage(anarion::db::PageManager &pageManager, anarion::db::pageno_t pageno) {
+    Page &page = pageManager.getPage(pageno);
+    Buffer &buffer = getBuffer(page.bufferno);
+    evictableListLock.lock();
+    buffer.stateLock.lock();
+    evictableList.add(page.bufferno);
+    buffer.state = Buffer::Evictable;
+    buffer.stateLock.unlock();
+    evictableListLock.unlock();
 }

@@ -6,6 +6,7 @@
 #define ANBASE_TYPEDECL_H
 
 #include <container/List/Vector.hpp>
+#include <concurrent/base/Cond.h>
 
 namespace anarion {
     namespace db {
