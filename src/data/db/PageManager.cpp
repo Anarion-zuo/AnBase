@@ -53,6 +53,7 @@ void anarion::db::PageManager::load(pageno_t pageno) {
     bufferManager->loadPage(*this, pageno);
     page.isPresent = true;
     ++page.refCount;
+    page.cond.broadcast();
 }
 
 void anarion::db::PageManager::release(pageno_t pageno) {
@@ -66,23 +67,47 @@ void anarion::db::PageManager::release(pageno_t pageno) {
     }
 }
 
-void anarion::db::PageManager::atomicRead(pageno_t pageno, pageoff_t pageoff, char *buf, pageoff_t length) {
+void anarion::db::PageManager::loadReadRelease(pageno_t pageno, pageoff_t pageoff, char *buf, pageoff_t length) {
     if (pageoff + length > pageSize) {
         throw AccessOutofPageRange();
     }
     load(pageno);
-    Page &page = getPage(pageno);
-    memcpy(buf, bufferManager->getBuffer(page.bufferno).bytes + pageoff, length);
+    rawRead(pageno, pageoff, buf, length);
     release(pageno);
 }
 
-void anarion::db::PageManager::atomicWrite(pageno_t pageno, pageoff_t pageoff, const char *buf, pageoff_t length) {
+void anarion::db::PageManager::loadWriteRelease(pageno_t pageno, pageoff_t pageoff, const char *buf, pageoff_t length) {
     if (pageoff + length > pageSize) {
         throw AccessOutofPageRange();
     }
     load(pageno);
+    rawWrite(pageno, pageoff, buf, length);
+    release(pageno);
+}
+
+void anarion::db::PageManager::rawRead(pageno_t pageno, pageoff_t pageoff, char *buf, pageoff_t length) {
+    Page &page = getPage(pageno);
+    memcpy(buf, bufferManager->getBuffer(page.bufferno).bytes + pageoff, length);
+}
+
+void anarion::db::PageManager::rawWrite(pageno_t pageno, pageoff_t pageoff, const char *buf, pageoff_t length) {
     Page &page = getPage(pageno);
     memcpy(bufferManager->getBuffer(page.bufferno).bytes + pageoff, buf, length);
     page.isDirty = true;
-    release(pageno);
+}
+
+void anarion::db::Page::loadHeader(char *buf) {
+    memcpy(&this->header, buf, sizeof(struct Header));
+}
+
+void anarion::db::Page::flushHeader(char *buf) {
+    memcpy(buf, &this->header, sizeof(struct Header));
+}
+
+void anarion::db::Page::waitLoad() {
+    mutex.lock();
+    while (refCount == 0) {
+        cond.waitRaw();
+    }
+    mutex.unlock();
 }

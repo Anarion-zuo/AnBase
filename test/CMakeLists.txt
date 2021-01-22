@@ -37,6 +37,7 @@ add_executable(gtests
         db/TestIndexRangeRegistry.cpp
         db/TestNamedAllocate.cpp
         db/column/TestGeneralColumn.cpp
+        db/column/TestDataType.cpp
 
         log/TestLog.cpp
 
