@@ -86,14 +86,14 @@ public:
         if (!pageManager->validBind(pageno)) {
             FAIL() << "Requesting page " << pageno << " failed. Buffer bound to another page.";
         }
-        sleep(sleepSec);
+//        sleep(sleepSec);
         pageManager->release(pageno);
     }
 };
 
 TEST(TestPage, Concurrent) {
     // init params
-    size_type blockSize = 40960, pageSize = 6, pageCount = 200, bufferCount = 20;
+    size_type blockSize = 40960, pageSize = 6, pageCount = 4000, bufferCount = 100;
     FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, pageSize, 1);
     BufferManager *bufferManager = new BufferManager(pageSize, bufferCount);
     PageManager pageManager(blockManager, 0, bufferManager, pageCount, pageSize);
@@ -101,17 +101,21 @@ TEST(TestPage, Concurrent) {
     // prepare threads
     using thread_type = WaitThread<PageFetchRoutine>;
     Vector<thread_type> threads;
-    size_type workerCount = 20;
+    size_type workerCount = 4000;
     threads.resize(workerCount);
     for (size_type i = 0; i < workerCount; ++i) {
         threads.emplaceBack(PageFetchRoutine(&pageManager, i));
     }
+    // fetch all
     for (size_type i = 0; i < workerCount; ++i) {
         threads.get(i).startWait();
     }
-    // fetch all
     for (size_type i = 0; i < workerCount; ++i) {
         threads.get(i).launchWait();
+    }
+    // join all
+    for (size_type i = 0; i < workerCount; ++i) {
+        threads.get(i).join();
     }
     // fetch again
     for (size_type i = 0; i < workerCount; ++i) {
