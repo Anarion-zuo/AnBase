@@ -8,6 +8,7 @@
 #include <container/List/Vector.hpp>
 #include "container/numtype/FreeList.hpp"
 #include <container/numtype/NumListSet.h>
+#include <logger/Logger.h>
 #include "typedecl.h"
 #include "LruList.h"
 #include "PageManager.h"
@@ -36,6 +37,7 @@ namespace db {
         void deallocateBytes(size_type count);
 
         void bindPage(PageManager *pageManager1, pageno_t pageno1);
+//        bool validBind();
     };
 
     /**
@@ -47,7 +49,7 @@ namespace db {
         Vector<Buffer> bufferList;
         FreeList<bufferno_t> freeList;
         LruList<bufferno_t> evictableList;
-        NumListSet<bufferno_t> pinnedList;
+//        NumListSet<bufferno_t> pinnedList;
         const bufferoff_t bufferSize;
         Mutex freeListLock, evictableListLock, pinnedListLock;
 
@@ -64,9 +66,17 @@ namespace db {
         Buffer &getBuffer(bufferno_t bufferno) { return bufferList.get(bufferno); }
         const Buffer &getBuffer(bufferno_t bufferno) const { return bufferList.get(bufferno); }
         bufferoff_t getBufferSize() const { return bufferSize; }
+        bufferno_t getBufferno(const Buffer *pbuffer) const { return pbuffer - bufferList.beginIterator(); }
+
+        bufferno_t getTotalCount() const { return bufferList.size(); }
+        bufferno_t getEvictableCount() const { return evictableList.size(); }
+//        bufferno_t getPinnedCount() const { return pinnedList.size(); }
+        bufferno_t getFreeCount() const { return freeList.freeCount(); }
 
         void loadPage(PageManager &pageManager, pageno_t pageno);
         void unloadPage(PageManager &pageManager, pageno_t pageno);
+
+        void logInfo(Logger &logger);
 
     struct Exception : public std::exception {};
     struct FreeListExhausted : public Exception {};

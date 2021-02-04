@@ -18,9 +18,17 @@ void anarion::db::Buffer::bindPage(anarion::db::PageManager *pageManager1, anari
     pageManager = pageManager1;
     pageno = pageno1;
 }
+/*
+bool anarion::db::Buffer::validBind() {
+    try {
+        return pageManager->getPage(pageno).bufferno == pageManager->getBufferManager().getBufferno(this);
+    } catch (std::exception &) {
+        return false;
+    }
+}*/
 
 anarion::db::BufferManager::BufferManager(anarion::db::bufferoff_t pageSize, anarion::db::bufferno_t bufferCount)
-: bufferSize(pageSize), bufferList(bufferCount), freeList(bufferCount), pinnedList(bufferCount) {
+: bufferSize(pageSize), bufferList(bufferCount), freeList(bufferCount)/*, pinnedList(bufferCount)*/ {
     for (bufferno_t index = 0; index < bufferCount; ++index) {
         bufferList.emplaceBack()->allocateBytes(pageSize);
     }
@@ -171,4 +179,24 @@ void anarion::db::BufferManager::unloadPage(anarion::db::PageManager &pageManage
     buffer.state = Buffer::Evictable;
     buffer.stateLock.unlock();
     evictableListLock.unlock();
+}
+namespace anarion {
+    class BufferLoggerInfo : public LoggerInfo {
+    protected:
+        db::BufferManager *bufferManager;
+    public:
+        BufferLoggerInfo(db::BufferManager *bufferManager1) : bufferManager(bufferManager1) {}
+        void toChannel(InChannel &inChannel) override {
+            SString info { SString::format("[Buffer manager Info] individual size[%lu]  total[%lu]  free[%lu] evictable[%lu] *",
+                                           bufferManager->getBufferSize(), bufferManager->getTotalCount(),
+                                           bufferManager->getFreeCount(), bufferManager->getEvictableCount()
+                                           ) };
+            inChannel.in(info.getArr(), info.length());
+        }
+    };
+
+}
+
+void anarion::db::BufferManager::logInfo(anarion::Logger &logger) {
+    logger.addInfo(new BufferLoggerInfo(this));
 }
