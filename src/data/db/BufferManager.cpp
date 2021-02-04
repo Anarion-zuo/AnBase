@@ -28,7 +28,7 @@ bool anarion::db::Buffer::validBind() {
 }*/
 
 anarion::db::BufferManager::BufferManager(anarion::db::bufferoff_t pageSize, anarion::db::bufferno_t bufferCount)
-: bufferSize(pageSize), bufferList(bufferCount), freeList(bufferCount)/*, pinnedList(bufferCount)*/ {
+: bufferSize(pageSize), bufferList(bufferCount), freeList(bufferCount), evictableListLock(), evictableCond(evictableListLock)/*, pinnedList(bufferCount)*/ {
     for (bufferno_t index = 0; index < bufferCount; ++index) {
         bufferList.emplaceBack()->allocateBytes(pageSize);
     }
@@ -127,13 +127,16 @@ void anarion::db::BufferManager::loadPage(anarion::db::PageManager &pageManager,
     freeListLock.unlock();
     if (!success) {
         // must evict
-        try {
+        /*try {*/
+            while (evictableList.size() == 0) {
+                evictableCond.waitRaw();
+            }
             newno = evictableList.popLeastRecent();
-        } catch (LinkedList<bufferno_t>::Underflow &) {
+        /*} catch (LinkedList<bufferno_t>::Underflow &) {
             // evictable list exhausted
             // cannot allocate anymore
             throw WholePoolExhausted();
-        }
+        }*/
         evict(newno);
     }
     // newno must be out of both free and evictable list by now
@@ -179,6 +182,7 @@ void anarion::db::BufferManager::unloadPage(anarion::db::PageManager &pageManage
     buffer.state = Buffer::Evictable;
     buffer.stateLock.unlock();
     evictableListLock.unlock();
+    evictableCond.signal();
 }
 namespace anarion {
     class BufferLoggerInfo : public LoggerInfo {

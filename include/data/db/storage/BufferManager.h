@@ -52,6 +52,7 @@ namespace db {
 //        NumListSet<bufferno_t> pinnedList;
         const bufferoff_t bufferSize;
         Mutex freeListLock, evictableListLock, pinnedListLock;
+        Cond<Mutex> evictableCond;
 
         bufferno_t popFree();
         bufferno_t popEvictable();
