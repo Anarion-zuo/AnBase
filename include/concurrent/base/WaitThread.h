@@ -16,6 +16,7 @@ namespace anarion {
             WaitThread<Callable> *thread = static_cast<WaitThread<Callable> *>(p);
             thread->waitGo();
             thread->routine();
+            return nullptr;
         }
 
         Mutex mutex;
