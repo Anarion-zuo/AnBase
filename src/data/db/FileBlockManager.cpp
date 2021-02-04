@@ -9,6 +9,7 @@ anarion::db::blockno_t anarion::db::FileBlockManager::allocateNewBlockFile(const
     FileOpenFlag oflag;
     oflag.setReadWrite();
     oflag.setCreateIfNotExists();
+//    oflag.setDirect();
     FileChannel *channel = new FileChannel(Path::combine(dir, Path(SString::parseDec(blockno))), oflag);
     blockFiles.pushBack(BlockInfo(channel, blockSize, pageSize));
     channel->open(S_IRWXU);
