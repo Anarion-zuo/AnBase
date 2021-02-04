@@ -27,6 +27,7 @@ add_executable(gtests
         concurrent/TestThread.cpp
         concurrent/TestCond.cpp
         concurrent/TestArrayThreadPool.cpp
+        concurrent/TestWaitThread.cpp
 
         reflector/TestStaticReflector.cpp
         reflector/TestDynamicReflector.cpp

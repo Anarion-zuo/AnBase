@@ -10,6 +10,7 @@
 #include <time/Time.h>
 #include <SystemException.h>
 #include "Routine.h"
+#include "Cond.h"
 
 
 namespace anarion {
@@ -39,6 +40,7 @@ namespace anarion {
         ThreadCore() = default;
         ThreadCore(ThreadCore &&rhs) noexcept ;
         ThreadCore(const ThreadCore &) = delete;
+        virtual ~ThreadCore() = default;
 
         ThreadCore &operator=(const ThreadCore &) = delete;
         ThreadCore &operator=(ThreadCore &&) noexcept = delete;
@@ -70,6 +72,7 @@ namespace anarion {
         void start() {
             startPThread(start_routine);
         }
+
         void join() {
             joinPThread();
         }
