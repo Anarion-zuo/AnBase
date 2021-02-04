@@ -33,6 +33,13 @@ namespace db {
         void loadHeader(char *buf);
 
         Page() : isPresent(false), isDirty(false), mutex(), cond(mutex) {}
+        Page(const Page &rhs) :
+            bufferno(rhs.bufferno),
+            isPresent(rhs.isPresent),
+            isDirty(rhs.isDirty),
+            refCount(rhs.refCount),
+            mutex(), cond(mutex),
+            header(rhs.header) {}
 
         constexpr void bindBuffer(bufferno_t bufferno1) {
             bufferno = bufferno1;
@@ -57,10 +64,14 @@ namespace db {
         PageManager(FileBlockManager *fileBlockManager1, blockno_t beginBlock, BufferManager *bufferManager1, pageno_t pageCount, pageoff_t pageSize);
 
         pageoff_t getValidPageSize() const { return pageSize - Page::headerLength; }
+        pageno_t getPageCount() const { return pageList.size(); }
 
         Page &getPage(pageno_t pageno) { return pageList.get(pageno); }
         const Page &getPage(pageno_t pageno) const { return pageList.get(pageno); }
         pageno_t getPageno(Page *page) const ;
+
+        BufferManager &getBufferManager() { return *bufferManager; }
+        FileBlockManager &getFileBlockManager() { return *fileBlockManager; }
 
         void loadPageBuffer(pageno_t pageno);
         void flushPageBuffer(pageno_t pageno);
@@ -72,6 +83,8 @@ namespace db {
         void rawWrite(pageno_t pageno, pageoff_t pageoff, const char *buf, pageoff_t length);
         void loadReadRelease(pageno_t pageno, pageoff_t pageoff, char *buf, pageoff_t length);
         void loadWriteRelease(pageno_t pageno, pageoff_t pageoff, const char *buf, pageoff_t length);
+
+        bool validBind(pageno_t pageno);
 
     struct Exception : public std::exception {};
     struct ComponentsPageSizeInconsistent : public Exception {};

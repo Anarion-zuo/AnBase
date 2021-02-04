@@ -96,6 +96,22 @@ void anarion::db::PageManager::rawWrite(pageno_t pageno, pageoff_t pageoff, cons
     page.isDirty = true;
 }
 
+bool anarion::db::PageManager::validBind(anarion::db::pageno_t pageno) {
+    try {
+        Page &page = getPage(pageno);
+        Buffer &buffer = bufferManager->getBuffer(page.bufferno);
+        if (buffer.pageManager != this) {
+            return false;
+        }
+        if (buffer.pageno != pageno) {
+            return false;
+        }
+        return true;
+    } catch (std::exception &) {
+        return false;
+    }
+}
+
 void anarion::db::Page::loadHeader(char *buf) {
     memcpy(&this->header, buf, sizeof(struct Header));
 }
