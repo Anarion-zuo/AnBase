@@ -23,6 +23,7 @@ namespace anarion {
         index_t head;
 
         static const index_t null;
+        index_t count = 0;
 
         /**
          * @brief Initializes a linked list on a continuous region of address.
@@ -59,6 +60,8 @@ namespace anarion {
          */
         index_t size() const { return list.size(); }
 
+        index_t freeCount() const { return count; }
+
         /**
          * @brief checks whether the object in the pool indexed by the index is marked used.
          * @param index
@@ -93,6 +96,8 @@ namespace anarion {
             head = list.get(head);
             // mark used
             setNextNull(ret);
+
+            --count;
             return true;
         }
 
@@ -108,43 +113,47 @@ namespace anarion {
             // push linked list
             list.get(element) = head;
             head = element;
+
+            ++count;
             return true;
         }
 
         /**
          * @brief Expands pool size.
-         * @param count
+         * @param newcount
          */
-        void append(index_t count) {
+        void append(index_t newcount) {
             index_t newBegin = size();
-            list.resize(newBegin + count);
-            for (size_type index = 0; index < count; ++index) {
+            list.resize(newBegin + newcount);
+            for (size_type index = 0; index < newcount; ++index) {
                 list.pushBack(null);
             }
-            makeContinuous(newBegin, count);
-            list.get(count + newBegin - 1) = head;
+            makeContinuous(newBegin, newcount);
+            list.get(newcount + newBegin - 1) = head;
             list.get(list.size() - 1) = head;
             head = newBegin;
+
+            count += newcount;
         }
 
         /**
          * @brief Shrink the array at the end.
-         * @param count how much to shrink.
+         * @param newcount how much to shrink.
          * @details Must go through the free list to tie up loose ends.
          */
-        void shrink(index_t count) {
-            if (count == size()) {
+        void shrink(index_t newcount) {
+            if (newcount == size()) {
                 list.clear();
                 return;
             }
             // move head out of the removing range
-            while (head >= size() - count) {
+            while (head >= size() - newcount) {
                 head = list.get(head);
             }
             index_t cur = head, enter = -1;
             while (cur != null) {
                 index_t next = list.get(cur);
-                if (next >= size() - count) {
+                if (next >= size() - newcount) {
                     enter = cur;
                 } else {
                     if (enter != static_cast<index_t>(-1)) {
@@ -155,7 +164,9 @@ namespace anarion {
                 cur = next;
             }
             // resize
-            list.resize(size() - count);
+            list.resize(size() - newcount);
+
+            count -= newcount;
         }
     };
     template <typename index_t>

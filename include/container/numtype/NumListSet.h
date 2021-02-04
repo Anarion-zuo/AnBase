@@ -18,6 +18,8 @@ class NumListSet {
     Vector<Entry> array;
     static index_t null;
 
+    index_t count = 0;
+
     void checkUnderflow() {
         if (empty()) {
             throw Underflow();
@@ -65,6 +67,7 @@ public:
     }
 
     element_t capacity() const { return array.size() - 1; }
+    element_t size() const { return count; }
 
     void pushBack(element_t element) {
         index_t index = element2index(element);
@@ -78,6 +81,7 @@ public:
         getEntry(index).next = 0;
         getHead().prev = index;
         getEntry(index).prev = prev;
+        ++count;
     }
 
     element_t first() const {
@@ -95,12 +99,14 @@ public:
         getEntry(next).prev = prev;
         getEntry(index).next = null;
         getEntry(index).prev = null;
+        --count;
     }
 
     element_t popBack() {
         checkUnderflow();
         element_t oldBack = index2element(getHead().prev);
         remove(oldBack);
+        --count;
         return oldBack;
     }
 
