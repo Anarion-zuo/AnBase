@@ -5,6 +5,8 @@
 #include <gtest/gtest.h>
 #include <data/db/storage/PageManager.h>
 #include <data/db/storage/BufferManager.h>
+#include "function/Function.h"
+#include <concurrent/base/WaitThread.h>
 
 using namespace anarion;
 using namespace anarion::db;
@@ -67,4 +69,64 @@ TEST(TestPage, TestEvict) {
     // page1 is still intact
     pageManager.loadReadRelease(0, 0, buf, 6);
     ASSERT_EQ(0, strcmp(buf, page1));
+}
+
+class PageFetchRoutine {
+protected:
+    PageManager *pageManager;
+    pageno_t pageno;
+    static const size_type sleepSec = 1;
+public:
+    PageFetchRoutine(PageManager *pageManager1, pageno_t pageno1) : pageManager(pageManager1), pageno(pageno1) {}
+    PageFetchRoutine(const PageFetchRoutine &) = default;
+    void operator()() {
+        // load arbitrary page
+        pageManager->load(pageno);
+//        printf("evictable list\n", pageManager->getBufferManager().getEvictableCount());
+        if (!pageManager->validBind(pageno)) {
+            FAIL() << "Requesting page " << pageno << " failed. Buffer bound to another page.";
+        }
+        sleep(sleepSec);
+        pageManager->release(pageno);
+    }
+};
+
+TEST(TestPage, Concurrent) {
+    // init params
+    size_type blockSize = 40960, pageSize = 6, pageCount = 200, bufferCount = 20;
+    FileBlockManager *blockManager = new FileBlockManager(Path(SString("./")), blockSize, pageSize, 1);
+    BufferManager *bufferManager = new BufferManager(pageSize, bufferCount);
+    PageManager pageManager(blockManager, 0, bufferManager, pageCount, pageSize);
+
+    // prepare threads
+    using thread_type = WaitThread<PageFetchRoutine>;
+    Vector<thread_type> threads;
+    size_type workerCount = 20;
+    threads.resize(workerCount);
+    for (size_type i = 0; i < workerCount; ++i) {
+        threads.emplaceBack(PageFetchRoutine(&pageManager, i));
+    }
+    for (size_type i = 0; i < workerCount; ++i) {
+        threads.get(i).startWait();
+    }
+    // fetch all
+    for (size_type i = 0; i < workerCount; ++i) {
+        threads.get(i).launchWait();
+    }
+    // fetch again
+    for (size_type i = 0; i < workerCount; ++i) {
+        threads.get(i).startWait();
+    }
+    for (size_type i = 0; i < workerCount; ++i) {
+        threads.get(i).launchWait();
+    }
+    // join all
+    for (size_type i = 0; i < workerCount; ++i) {
+        threads.get(i).join();
+    }
+    if (bufferCount < workerCount) {
+        ASSERT_EQ(bufferManager->getEvictableCount(), bufferCount);
+    } else {
+        ASSERT_EQ(workerCount, bufferManager->getEvictableCount());
+    }
 }
