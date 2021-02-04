@@ -34,6 +34,7 @@ namespace anarion {
         WaitThread(WaitThread &&rhs) noexcept : Thread<Callable>(forward<Thread<Callable>>(rhs)), mutex(), cond(mutex) {}
         explicit WaitThread(Callable &&callable) : Thread<Callable>(forward<Callable>(callable)), mutex(), cond(mutex) {}
         explicit WaitThread(const Callable &callable) : Thread<Callable>(callable), mutex(), cond(mutex) {}
+        WaitThread(const WaitThread &rhs) : Thread<Callable>(rhs), mutex(), cond(mutex) {}
 
         void launchWait() {
             mutex.lock();
