@@ -68,6 +68,7 @@ namespace anarion {
         ~Thread() = default;
         Thread(const Callable &routine) : routine(routine) {}
         Thread(Callable &&routine) : routine(forward<Callable>(routine)) {}
+        Thread(const Thread &rhs) : ThreadCore(), routine(rhs.routine) {}
 
         void start() {
             startPThread(start_routine);
