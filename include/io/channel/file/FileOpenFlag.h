@@ -86,6 +86,13 @@ namespace anarion {
         }
 
         /**
+         * @details Enable direct IO
+         */
+        void setDirect() {
+            oflags |= O_DIRECT;
+        }
+
+        /**
          * @details Have each syscall read operation wait until any pending writes for the same protion of the file are complete.
          */
         void setRSync() {
